@@ -1,0 +1,200 @@
+/* ============================================================
+   global.css — New Path
+   Design tokens + reset + shared utility classes.
+   Do NOT put page-specific styles here.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* ─── Design Tokens ──────────────────────────────────────── */
+:root {
+  /* Primary palette — Admin (green) */
+  --color-primary:       #3DE4B9;
+  --color-primary-light: rgba(61, 228, 185, 0.16);
+  --color-primary-dark:  #23c690;
+  --color-secondary:     #4f967d;
+  --color-accent:        #335345;
+
+  /* Text */
+  --color-text-primary:   #000000;
+  --color-text-secondary: #5c8a78;
+  --color-text-muted:     #758382;
+
+  /* Backgrounds */
+  --color-bg-white:       #ffffff;
+  --color-bg-light:       #E8F2F0;
+  --color-bg-pale:        #D5E3C9;
+  --color-bg-overlay:     rgba(61, 228, 185, 0.16);
+
+  /* Status */
+  --color-success: #22c55e;
+  --color-error:   #ef4444;
+  --color-warning: #f59e0b;
+  --color-info:    #3b82f6;
+
+  /* Border */
+  --color-border: rgba(13, 28, 23, 0.20);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.10);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+
+  /* Typography */
+  --font:           'Montserrat', sans-serif;
+  --font-xs:        12px;
+  --font-sm:        14px;
+  --font-base:      15px;
+  --font-lg:        18px;
+  --font-xl:        28px;
+  --font-2xl:       38px;
+  --fw-normal:      400;
+  --fw-medium:      500;
+  --fw-semibold:    600;
+  --fw-bold:        700;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --header-height: 64px;
+
+  /* Z-index */
+  --z-base:    0;
+  --z-raised:  2;
+  --z-sidebar: 5;
+  --z-header:  10;
+  --z-modal:   100;
+}
+
+/* Counselor theme override — blue */
+.theme-counselor {
+  --color-primary:       #3DA8E4;
+  --color-primary-light: rgba(61, 168, 228, 0.16);
+  --color-primary-dark:  #2385C6;
+  --color-secondary:     #4F7F96;
+  --color-text-secondary:#5C7890;
+  --color-bg-overlay:    rgba(61, 168, 228, 0.16);
+}
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  font-size: var(--font-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-white);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a   { color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ─── Alert / Flash Messages ─────────────────────────────── */
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-medium);
+  margin-bottom: var(--space-4);
+}
+.alert--error   { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+.alert--success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.alert--warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.alert--info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.alert--urgent  { background: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; padding-left: var(--space-4); }
+.alert--pending { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; padding-left: var(--space-4); }
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: var(--font);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.btn:hover { opacity: 0.88; transform: scale(1.02); }
+.btn--primary  { background: var(--color-primary); color: #000; }
+.btn--ghost    { background: var(--color-bg-light); color: var(--color-text-primary); }
+.btn--danger   { background: #fee2e2; color: #b91c1c; }
+.btn--full     { width: 100%; margin-bottom: var(--space-2); }
+
+/* ─── Form Elements ──────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+.form-group label {
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+.form-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: var(--font-sm);
+  background: var(--color-bg-white);
+  transition: border-color 0.2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.form-link {
+  color: var(--color-primary-dark);
+  font-size: var(--font-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.form-link:hover { text-decoration: underline; }
+
+/* ─── Logo ───────────────────────────────────────────────── */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.logo { width: 40px; height: 40px; }
+.logo-text {
+  font-size: var(--font-lg);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+}
