@@ -16,7 +16,7 @@
 <body>
     <main class="admin-layout">
 
-        <?php require_once ROOT . '/pages/admin/common/admin.sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../common/admin.sidebar.php'; ?>
 
         <section class="admin-content">
             <div class="page-header">
