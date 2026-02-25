@@ -11,7 +11,7 @@ class LoginModel
     {
         $db   = Database::getConnection();
         $stmt = $db->prepare(
-            'SELECT user_id, email, password_hash, role, display_name, first_name
+            'SELECT user_id, email, password_hash, role, display_name, first_name, onboarding_completed, current_onboarding_step
              FROM users
              WHERE email = ?
              LIMIT 1'

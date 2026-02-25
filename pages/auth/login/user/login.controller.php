@@ -46,7 +46,17 @@ if (Request::isPost()) {
                 'user'      => '/user/dashboard',
             ];
 
-            Response::redirect($destinations[$user['role']] ?? '/auth/login');
+            // Specific logic for "user" role regarding onboarding
+            if ($user['role'] === 'user') {
+                if (!$user['onboarding_completed']) {
+                    $step = $user['current_onboarding_step'] ?? 1;
+                    Response::redirect('/auth/onboarding/step' . $step);
+                } else {
+                    Response::redirect('/user/dashboard');
+                }
+            } else {
+                Response::redirect($destinations[$user['role']] ?? '/auth/login');
+            }
         }
     }
 }
