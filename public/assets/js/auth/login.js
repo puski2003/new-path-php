@@ -1,131 +1,124 @@
-/**
- * login.js — New Path
- * Ported from Java project login.js.
- * Handles: password toggle, field validation, submit loading state.
- */
 document.addEventListener("DOMContentLoaded", function () {
-  const loginForm = document.getElementById("loginForm");
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
-  const passwordToggle = document.getElementById("passwordToggle");
-  const submitBtn = document.querySelector(".form-submit-btn");
+  // Detect if this is counselor, admin, or user login
+  const isCounselorLogin =
+    document.getElementById("counselorLoginForm") !== null;
+  const isAdminLogin = document.getElementById("adminLoginForm") !== null;
+  const isUserLogin = document.getElementById("loginForm") !== null;
+
+  // Get form elements
+  let loginForm,
+    emailInput,
+    passwordInput,
+    passwordToggle,
+    keepSignedInCheckbox,
+    loginBtn;
+
+  if (isCounselorLogin) {
+    loginForm = document.getElementById("counselorLoginForm");
+    loginBtn = loginForm.querySelector(".form-submit-btn");
+  } else if (isAdminLogin) {
+    loginForm = document.getElementById("adminLoginForm");
+    loginBtn = loginForm.querySelector(".form-submit-btn");
+  } else if (isUserLogin) {
+    loginForm = document.getElementById("loginForm");
+    loginBtn = document.querySelector(".form-submit-btn"); // Standardized class
+  }
 
   if (!loginForm) return;
 
-  // ── Password visibility toggle ──────────────────────────
-  if (passwordToggle) {
+  emailInput = loginForm.querySelector("#email");
+  passwordInput = loginForm.querySelector("#password");
+  passwordToggle = loginForm.querySelector("#passwordToggle");
+  keepSignedInCheckbox = loginForm.querySelector("#keepSignedIn");
+
+  // Password visibility toggle
+  if (passwordToggle && passwordInput) {
     passwordToggle.addEventListener("click", function () {
       const type =
         passwordInput.getAttribute("type") === "password" ? "text" : "password";
       passwordInput.setAttribute("type", type);
 
+      // Update icon
       const icon = passwordToggle.querySelector("svg");
       if (type === "text") {
-        icon.innerHTML = `
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                `;
+        icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>`;
       } else {
-        icon.innerHTML = `
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                `;
+        icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
       }
     });
   }
 
-  // ── Validation helpers ──────────────────────────────────
+  // Form validation functions
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  function validatePassword(password) {
-    return password.length >= 6;
+  function showError(input, message) {
+    clearError(input);
+    input.style.borderColor = "var(--color-error, #f44336)";
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "field-error";
+    errorDiv.textContent = message;
+    input.parentNode.appendChild(errorDiv);
   }
 
-  function showFieldError(input, message) {
-    clearFieldError(input);
-    input.style.borderColor = "#e74c3c";
-    const err = document.createElement("div");
-    err.className = "field-error";
-    err.style.color = "#e74c3c";
-    err.style.fontSize = "12px";
-    err.style.marginTop = "4px";
-    err.textContent = message;
-    input.parentNode.appendChild(err);
-  }
-
-  function clearFieldError(input) {
-    const existing = input.parentNode.querySelector(".field-error");
-    if (existing) existing.remove();
+  function clearError(input) {
+    const existingError = input.parentNode.querySelector(".field-error");
+    if (existingError) existingError.remove();
     input.style.borderColor = "";
   }
 
-  // ── Real-time validation on blur ────────────────────────
+  // Real-time validation
   if (emailInput) {
     emailInput.addEventListener("blur", function () {
       if (this.value && !validateEmail(this.value)) {
-        showFieldError(this, "Please enter a valid email address");
-      } else {
-        clearFieldError(this);
+        showError(this, "Please enter a valid email address");
       }
     });
     emailInput.addEventListener("input", function () {
-      clearFieldError(this);
+      clearError(this);
     });
   }
 
   if (passwordInput) {
     passwordInput.addEventListener("blur", function () {
-      if (this.value && !validatePassword(this.value)) {
-        showFieldError(this, "Password must be at least 6 characters long");
-      } else {
-        clearFieldError(this);
+      if (this.value && this.value.length < 6) {
+        showError(this, "Password must be at least 6 characters");
       }
     });
     passwordInput.addEventListener("input", function () {
-      clearFieldError(this);
+      clearError(this);
     });
   }
 
-  // ── Form submit — validate + loading state ──────────────
+  // Form submission
   loginForm.addEventListener("submit", function (e) {
-    const email = emailInput ? emailInput.value.trim() : "";
-    const password = passwordInput ? passwordInput.value.trim() : "";
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
     let isValid = true;
 
-    if (emailInput) clearFieldError(emailInput);
-    if (passwordInput) clearFieldError(passwordInput);
-
-    if (!email) {
-      showFieldError(emailInput, "Email is required");
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      showFieldError(emailInput, "Please enter a valid email address");
+    if (!validateEmail(email)) {
+      showError(emailInput, "Valid email is required");
       isValid = false;
     }
-
-    if (!password) {
-      showFieldError(passwordInput, "Password is required");
-      isValid = false;
-    } else if (!validatePassword(password)) {
-      showFieldError(
-        passwordInput,
-        "Password must be at least 6 characters long",
-      );
+    if (password.length < 6) {
+      showError(passwordInput, "Password is too short");
       isValid = false;
     }
 
     if (!isValid) {
       e.preventDefault();
-      return;
+    } else {
+      // Show loading state
+      const originalText = loginBtn.textContent;
+      loginBtn.textContent = isUserLogin
+        ? "Logging in..."
+        : "Accessing Portal...";
+      loginBtn.disabled = true;
     }
-
-    
   });
 
-  // ── Auto-focus email ────────────────────────────────────
-  if (emailInput) {
-    emailInput.focus();
-  }
+  // Auto-focus
+  if (emailInput) emailInput.focus();
 });
