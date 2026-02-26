@@ -10,23 +10,17 @@ class Step5Model
      */
     public static function getActivePlan(int $userId): ?array
     {
-        $db = Database::getConnection();
+        $safeUserId = (int) $userId;
 
-        try {
-            // Find the most recently created active plan for the user
-            $stmt = $db->prepare(
-                "SELECT title, plan_type, start_date 
-                 FROM recovery_plans 
-                 WHERE user_id = ? AND status = 'active'
-                 ORDER BY created_at DESC 
-                 LIMIT 1"
-            );
-            $stmt->execute([$userId]);
+        $rs = Database::search(
+            "SELECT title, plan_type, start_date 
+             FROM recovery_plans 
+             WHERE user_id = $safeUserId AND status = 'active'
+             ORDER BY created_at DESC 
+             LIMIT 1"
+        );
 
-            return $stmt->fetch() ?: null;
-        } catch (PDOException $e) {
-            error_log("Failed to get active plan: " . $e->getMessage());
-            return null;
-        }
+        $plan = $rs->fetch_assoc();
+        return $plan ?: null;
     }
 }

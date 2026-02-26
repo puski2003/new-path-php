@@ -10,41 +10,31 @@ class Step4Model
      */
     public static function createPlanAndComplete(int $userId, string $planType): bool
     {
-        $db = Database::getConnection();
+        Database::setUpConnection();
 
-        try {
-            $db->beginTransaction();
+        $safeUserId = (int) $userId;
 
-            $title = $planType === 'counselor' ? 'Professional Counseling Path' : 'Self-Guided Journey';
-            $desc  = $planType === 'counselor'
-                ? 'Work with verified experts to build a tailored plan and schedule sessions.'
-                : 'Take control at your own pace with system-guided goals and daily tracking.';
-            $typeString = $planType === 'counselor' ? 'counselor' : 'self';
+        $title = $planType === 'counselor' ? 'Professional Counseling Path' : 'Self-Guided Journey';
+        $desc  = $planType === 'counselor'
+            ? 'Work with verified experts to build a tailored plan and schedule sessions.'
+            : 'Take control at your own pace with system-guided goals and daily tracking.';
+        $typeString = $planType === 'counselor' ? 'counselor' : 'self';
 
-            // Insert recovery plan
-            $planStmt = $db->prepare(
-                "INSERT INTO recovery_plans (user_id, title, description, plan_type, status, start_date, progress_percentage) 
-                 VALUES (?, ?, ?, ?, 'active', CURDATE(), 0)"
-            );
-            $planStmt->execute([
-                $userId,
-                $title,
-                $desc,
-                $typeString
-            ]);
+        $safeTitle = Database::$connection->real_escape_string($title);
+        $safeDesc  = Database::$connection->real_escape_string($desc);
+        $safeType  = Database::$connection->real_escape_string($typeString);
 
-            // Update user onboarding state
-            $onboardStmt = $db->prepare(
-                "UPDATE users SET onboarding_completed = 1, current_onboarding_step = 5 WHERE user_id = ?"
-            );
-            $onboardStmt->execute([$userId]);
+        // Insert recovery plan
+        Database::iud(
+            "INSERT INTO recovery_plans (user_id, title, description, plan_type, status, start_date, progress_percentage) 
+             VALUES ($safeUserId, '$safeTitle', '$safeDesc', '$safeType', 'active', CURDATE(), 0)"
+        );
 
-            $db->commit();
-            return true;
-        } catch (PDOException $e) {
-            $db->rollBack();
-            error_log("Failed to create plan and complete onboarding: " . $e->getMessage());
-            return false;
-        }
+        // Update user onboarding state
+        Database::iud(
+            "UPDATE users SET onboarding_completed = 1, current_onboarding_step = 5 WHERE user_id = $safeUserId"
+        );
+
+        return true;
     }
 }

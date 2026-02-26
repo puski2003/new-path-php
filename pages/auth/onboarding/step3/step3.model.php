@@ -10,27 +10,13 @@ class Step3Model
      */
     public static function saveAssessmentScore(int $userId, int $score): bool
     {
-        $db = Database::getConnection();
+        $safeUserId = (int) $userId;
 
-        try {
-            $db->beginTransaction();
+        // Advance step
+        Database::iud(
+            "UPDATE users SET current_onboarding_step = 4 WHERE user_id = $safeUserId"
+        );
 
-            // We don't have a specific `assessment_score` column in user_profiles based on schema
-            // We can store it as part of a JSON column or just increment the step.
-            // If the Java codebase recorded it, let's assume it did it somewhere, maybe `custom_notes` in plans later?
-            // For now, advancing step is enough to emulate flow.
-
-            $stepStmt = $db->prepare(
-                "UPDATE users SET current_onboarding_step = 4 WHERE user_id = ?"
-            );
-            $stepStmt->execute([$userId]);
-
-            $db->commit();
-            return true;
-        } catch (PDOException $e) {
-            $db->rollBack();
-            error_log("Failed to save assessment info: " . $e->getMessage());
-            return false;
-        }
+        return true;
     }
 }

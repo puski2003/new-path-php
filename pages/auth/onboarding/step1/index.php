@@ -10,10 +10,9 @@ if (isset($_COOKIE['jwt'])) {
     $token = $_COOKIE['jwt'];
     $payload = Auth::decode($token);
     if ($payload) {
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT onboarding_completed, current_onboarding_step FROM users WHERE user_id = ?");
-        $stmt->execute([$payload['id']]);
-        $u = $stmt->fetch();
+        $userId = (int)$payload['id'];
+        $rs = Database::search("SELECT onboarding_completed, current_onboarding_step FROM users WHERE user_id = $userId");
+        $u = $rs->fetch_assoc();
         if ($u) {
             if ($u['onboarding_completed']) {
                 Response::redirect('/user/dashboard'); // Assuming user role

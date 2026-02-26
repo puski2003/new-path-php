@@ -11,15 +11,17 @@ class LoginModel
      */
     public static function findByEmail(string $email): ?array
     {
-        $db   = Database::getConnection();
-        $stmt = $db->prepare(
+        Database::setUpConnection();
+        $safeEmail = Database::$connection->real_escape_string($email);
+
+        $rs = Database::search(
             "SELECT user_id, email, password_hash, role, display_name, first_name 
              FROM users 
-             WHERE email = ? AND role = 'admin'
+             WHERE email = '$safeEmail' AND role = 'admin'
              LIMIT 1"
         );
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+
+        $user = $rs->fetch_assoc();
         return $user ?: null;
     }
 }
