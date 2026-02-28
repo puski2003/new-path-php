@@ -50,7 +50,7 @@ class RecoveryModel
     public static function getUserActivePlans(int $userId): array
     {
         $rs = Database::search(
-            "SELECT plan_id, title, progress_percentage, assigned_status, counselor_id
+            "SELECT plan_id, title, description, progress_percentage, assigned_status, counselor_id
              FROM recovery_plans
              WHERE user_id = $userId
                AND status = 'active'
@@ -62,6 +62,7 @@ class RecoveryModel
             $plans[] = [
                 'planId' => (int)$row['plan_id'],
                 'title' => $row['title'] ?? 'Recovery Plan',
+                'description' => $row['description'] ?? '',
                 'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
                 'assignedStatus' => $row['assigned_status'] ?? null,
                 'counselorId' => isset($row['counselor_id']) ? (int)$row['counselor_id'] : null,
@@ -74,7 +75,7 @@ class RecoveryModel
     public static function getAssignedPlansForUser(int $userId): array
     {
         $rs = Database::search(
-            "SELECT plan_id, title
+            "SELECT plan_id, title, description, progress_percentage
              FROM recovery_plans
              WHERE user_id = $userId
                AND assigned_status = 'pending'
@@ -86,9 +87,33 @@ class RecoveryModel
             $plans[] = [
                 'planId' => (int)$row['plan_id'],
                 'title' => $row['title'] ?? 'Recovery Plan',
+                'description' => $row['description'] ?? '',
+                'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
             ];
         }
 
+        return $plans;
+    }
+
+    public static function getUserPausedPlans(int $userId): array
+    {
+        $rs = Database::search(
+            "SELECT plan_id, title, description, progress_percentage
+             FROM recovery_plans
+             WHERE user_id = $userId
+               AND status = 'paused'
+             ORDER BY updated_at DESC"
+        );
+
+        $plans = [];
+        while ($row = $rs->fetch_assoc()) {
+            $plans[] = [
+                'planId' => (int)$row['plan_id'],
+                'title' => $row['title'] ?? 'Recovery Plan',
+                'description' => $row['description'] ?? '',
+                'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
+            ];
+        }
         return $plans;
     }
 
@@ -316,6 +341,23 @@ class RecoveryModel
                is_sober_today = 1,
                notes = VALUES(notes),
                updated_at = NOW()"
+        );
+
+        return true;
+    }
+
+    public static function resumePlan(int $planId, int $userId): bool
+    {
+        if ($planId <= 0 || $userId <= 0) return false;
+
+        Database::iud(
+            "UPDATE recovery_plans
+             SET status = 'active',
+                 start_date = COALESCE(start_date, CURDATE()),
+                 updated_at = NOW()
+             WHERE plan_id = $planId
+               AND user_id = $userId
+               AND status = 'paused'"
         );
 
         return true;

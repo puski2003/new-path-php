@@ -29,7 +29,7 @@ if (!isset($userProfile)) {
         <div class="profile-modal-body">
             <p class="profile-modal-subtitle">Update your profile information.</p>
 
-            <form id="profileForm" action="/user/profile/update" method="post" enctype="multipart/form-data">
+            <form id="profileForm" action="/auth/profile/user/update" method="post" enctype="multipart/form-data">
 
                 <div class="form-group">
                     <label for="profilePicture">Profile Picture</label>

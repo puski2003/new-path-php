@@ -6,8 +6,7 @@
  */
 $activePage = 'dashboard';
 
-// Extract data for easier template access
-extract($data);
+
 
 ?>
 <!DOCTYPE html>
