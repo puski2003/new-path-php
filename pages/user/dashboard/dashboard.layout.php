@@ -8,20 +8,16 @@ $activePage = 'dashboard';
 
 // Extract data for easier template access
 extract($data);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard — New Path</title>
-    <link rel="stylesheet" href="/assets/css/global.css">
-    <link rel="stylesheet" href="/assets/css/components/sidebar.css">
-    <link rel="stylesheet" href="/assets/css/auth/user-profile.css">
-    <link rel="stylesheet" href="/assets/css/user/dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
+<?php
+$pageTitle = "User Dashboard — New Path";
+$pageStyle = ["user/dashboard"];
+require_once __DIR__ . '/../common/user.html.head.php';
+?>
 
 <body>
     <main class="main-container">

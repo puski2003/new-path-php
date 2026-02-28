@@ -12,3 +12,9 @@
  * After this file is required, $user is available everywhere on the page.
  */
 $user = Auth::requireRole('user');
+
+// Normalise $pageStyle to an array
+$_pageStyles = [];
+if (!empty($pageStyle)) {
+    $_pageStyles = is_array($pageStyle) ? $pageStyle : [$pageStyle];
+}
