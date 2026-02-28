@@ -163,7 +163,7 @@
     gap: var(--spacing-md);
 }
 
-.session-info {
+.upcoming-session-info {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
@@ -597,7 +597,7 @@
 
 
 .highlight-item:hover,
-.session-info:hover,
+.upcoming-session-info:hover,
 .achievement-badge:hover {
     cursor: pointer;
     opacity: 0.8;

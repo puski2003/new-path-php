@@ -65,7 +65,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                             <div class="due-now-content">
                                 <?php if (!empty($nextSession)): ?>
                                     <div class="upcoming-session">
-                                        <div class="session-info">
+                                        <div class="upcoming-session-info">
                                             <i
                                                 data-lucide="calendar"
                                                 stroke-width="1"
@@ -79,7 +79,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                     </div>
                                 <?php else: ?>
                                     <div class="upcoming-session">
-                                        <div class="session-info">
+                                        <div class="upcoming-session-info">
                                             <i
                                                 data-lucide="calendar"
                                                 stroke-width="1"
