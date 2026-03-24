@@ -1,0 +1,210 @@
+* {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    margin: 0;
+    padding: 0;
+}
+span{
+    font-size: clamp(0.5rem, 4vw, 0.9rem);
+}
+.row{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+.column{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+.milestone-progress-card {
+    width: 45%;
+}
+
+.milestone-progress-card p {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.5px;
+    font-size: var(--font-size-sm);
+    margin-left: 10px;
+}
+
+.milestone-progress-card span {
+    margin-left: 10px;
+}
+
+/* Progress Bar */
+.progress {
+    --bg: var(--color-progress-bg);
+    --fill: var(--color-progress-fill);
+    --ring1: var(--color-progress-ring-light);
+    --ring2: var(--color-progress-ring-mid);
+    --knob: var(--color-progress-knob);
+    --height: 10px;
+    --pad: var(--spacing-xs);
+    --value: 50%;
+
+    position: relative;
+    width: 100%;
+    height: calc(var(--height) + var(--pad) * 2);
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+}
+
+.progress .bar {
+    position: absolute;
+    left: var(--pad);
+    right: var(--pad);
+    top: 50%;
+    height: 5px;
+    transform: translateY(-50%);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    background-color: var(--color-progress-track);
+}
+
+.progress .bar::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--value);
+    height: var(--height);
+    background: var(--fill);
+    border-radius: inherit;
+}
+
+.progress .thumb {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--value));
+    transform: translate(-50%, -50%);
+    width: 15px;
+    height: 15px;
+    border: 0;
+    border-radius: var(--radius-full);
+    background:
+            radial-gradient(circle at center, var(--knob) 40%, transparent 41%),
+            radial-gradient(circle at center, var(--ring2) 60%, transparent 61%),
+            radial-gradient(circle at center, var(--ring1) 78%, transparent 79%);
+    box-shadow:
+            0 0 0 2px var(--color-progress-border),
+            var(--shadow-sm);
+    cursor: default;
+}
+
+.client-card{
+    width: 80%;
+    background-color: var(--color-bg-sky);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1rem 20px;
+    border-radius: 15px;
+}
+
+.client-card img{
+    width: 200px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+.client-card-content{
+
+    display: flex;
+    flex-direction: column;
+
+}
+.client-card-info{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.client-card-info span{
+    color: var(--color-text-secondary);
+}
+.client-card-buttons{
+    padding-top: 50px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+.btn-join{
+    background-color: var(--color-primary);
+    color: white;
+    border: none ;
+    border-radius: 50px;
+    padding: 7px 10px;
+    cursor: pointer;
+
+}
+.client-progress{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 80%;
+}
+
+.client-progress span{
+    color: var(--color-text-primary);
+}
+.progress-box{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+
+
+}
+
+.progress-box div{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    height: 180px;
+    width: 180px;
+    padding: 20px 0 0 20px;
+    border-radius: 30px;
+    background-color: var(--color-bg-sky);
+}
+
+.progress-box-2{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.progress-box-2 div{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    height: 100px;
+    flex: 1;
+    padding: 20px 0 0 20px;
+    border-radius: 15px;
+    background-color: var(--color-bg-sky);
+}
+
+.progress-chart{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+.progress-chart div{
+    flex: 1;
+}
+
+.session-notes{
+    width: 80%;
+}
+.session-notes span{
+    color: var(--color-primary-dark);
+}

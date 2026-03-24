@@ -5,48 +5,23 @@
     padding: 0;
 }
 
-.row{
+.row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
     width: 100%;
 }
-.column{
+
+.column {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     gap: 20px;
     width: 100%;
 }
-.toggle-section{
-    display: none;
-}
-.active-section{
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
 
-}
-.toggle-button{
-    cursor: pointer;
-    padding-bottom: 5px;
-    transition: color 0.3s ease;
-}
-
-.toggle-button:hover{
-    color: var(--color-primary-dark);
-}
-
-.active-button{
-    color:var(--color-primary-dark);
-    border-bottom: 2px solid var(--color-primary);
-}
-
-
-
-.counselor-session-history-card{
+.client-card {
     width: 80%;
     background-color: var(--color-bg-sky);
     display: flex;
@@ -55,37 +30,60 @@
     justify-content: space-between;
     padding: 1rem 20px;
     border-radius: 15px;
+    gap: 16px;
 }
 
-.counselor-session-history-card img{
+.client-card img {
     width: 200px;
     height: 150px;
     object-fit: cover;
     border-radius: 10px;
 }
-.counselor-session-history-info{
-    height: 100%;
+
+.client-card-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
 }
 
-.counselor-session-history-info span{
+.client-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.client-card-info span {
     font-size: 14px;
     color: var(--color-text-secondary);
 }
-.btn-join{
-    background-color: var(--color-primary);
-    color: white;
-    border: none ;
-    border-radius: 50px;
-    padding: 5px 7px;
-    width: 100px;
-    cursor: pointer;
 
+.client-card-buttons {
+    padding-top: 40px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
 }
 
+.client-card-buttons .btn-join {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 7px 12px;
+    cursor: pointer;
+}
 
+@media (max-width: 768px) {
+    .column {
+        flex-direction: column;
+    }
 
+    .client-card {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .client-card img {
+        width: 100%;
+        height: 180px;
+    }
+}
