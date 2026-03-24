@@ -32,10 +32,18 @@ class Request
         return $_SERVER['REQUEST_METHOD'] === 'GET';
     }
 
-    /** The current request URI path, without query string */
+    /** The current request URI path, without query string and base prefix */
     public static function path(): string
     {
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        return strtok($uri, '?') ?: '/';
+        $path = strtok($uri, '?') ?: '/';
+
+        // Strip the base path prefix (e.g. /new-path) when running under a subfolder
+        $base = defined('APP_BASE') ? APP_BASE : '';
+        if ($base && str_starts_with($path, $base)) {
+            $path = substr($path, strlen($base)) ?: '/';
+        }
+
+        return $path;
     }
 }

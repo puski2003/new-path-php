@@ -16,6 +16,11 @@
 
 define('ROOT', dirname(__DIR__));
 
+// Detect base path: when running under a subfolder (e.g. htdocs/new-path),
+// SCRIPT_NAME will be '/new-path/index.php' → base = '/new-path'
+// When using PHP built-in server, base will be '' (root).
+define('APP_BASE', rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'));
+
 // Bootstrap — load env + core helpers
 require_once ROOT . '/config/env.php';
 require_once ROOT . '/config/database.php';
