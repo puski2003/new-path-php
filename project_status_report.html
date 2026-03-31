@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Path – Project Status Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #f4f6fb; }
+  .page { max-width: 960px; margin: 0 auto; background: #fff; padding: 40px 50px; }
+
+  h1 { font-size: 26px; color: #16213e; border-bottom: 3px solid #0f3460; padding-bottom: 10px; margin-bottom: 6px; }
+  .subtitle { color: #555; margin-bottom: 30px; font-size: 13px; }
+
+  h2 { font-size: 16px; color: #0f3460; margin: 30px 0 10px; border-left: 4px solid #e94560; padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  h3 { font-size: 13px; font-weight: 700; color: #16213e; margin: 14px 0 6px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+  .stat-box { border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-box .num { font-size: 30px; font-weight: 800; }
+  .stat-box .lbl { font-size: 11px; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-green  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .stat-yellow { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+  .stat-red    { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
+  .stat-blue   { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12.5px; }
+  th { background: #0f3460; color: #fff; padding: 9px 10px; text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #e8eaf0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafc; }
+  tr:hover td { background: #eef2ff; }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .done    { background: #c8e6c9; color: #1b5e20; }
+  .partial { background: #fff3e0; color: #bf360c; }
+  .missing { background: #ffcdd2; color: #b71c1c; }
+  .outscope{ background: #e8eaf6; color: #283593; }
+  .high    { background: #ffcdd2; color: #b71c1c; }
+  .medium  { background: #fff3e0; color: #bf360c; }
+  .low     { background: #e8f5e9; color: #1b5e20; }
+
+  .note-box { background: #fff8e1; border-left: 4px solid #ffc107; padding: 12px 16px; margin: 14px 0; border-radius: 4px; font-size: 12.5px; }
+  .danger-box { background: #fce4ec; border-left: 4px solid #e91e63; padding: 12px 16px; margin: 14px 0; border-radius: 4px; font-size: 12.5px; }
+
+  ul { padding-left: 18px; }
+  ul li { margin: 4px 0; }
+
+  .section-desc { color: #555; font-size: 12.5px; margin-bottom: 12px; line-height: 1.6; }
+
+  @media print {
+    body { background: #fff; }
+    .page { padding: 20px 30px; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>New Path — Project Status Report</h1>
+<p class="subtitle">IS2202 Group 24 &nbsp;|&nbsp; Generated: 30 March 2026 &nbsp;|&nbsp; Stack: PHP + MySQL (XAMPP)</p>
+
+<!-- ─── SUMMARY ─── -->
+<div class="summary-grid">
+  <div class="stat-box stat-green">
+    <div class="num">22</div>
+    <div class="lbl">Fully Implemented</div>
+  </div>
+  <div class="stat-box stat-yellow">
+    <div class="num">8</div>
+    <div class="lbl">Partially Done</div>
+  </div>
+  <div class="stat-box stat-red">
+    <div class="num">18</div>
+    <div class="lbl">Not Implemented</div>
+  </div>
+  <div class="stat-box stat-blue">
+    <div class="num">7</div>
+    <div class="lbl">Out of Scope</div>
+  </div>
+</div>
+
+<!-- ─── 1. AUTH ─── -->
+<h2>1. Authentication &amp; Account Management</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature / Requirement</th><th style="width:14%">FR Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Login – Recovering User</td><td>FR-1</td><td><span class="badge done">Done</span></td><td>JWT HttpOnly cookie, BCrypt password verify</td></tr>
+    <tr><td>Login – Counselor</td><td>FR-1</td><td><span class="badge done">Done</span></td><td>Separate route <code>/auth/login/counselor</code></td></tr>
+    <tr><td>Login – Admin</td><td>FR-1</td><td><span class="badge done">Done</span></td><td>Separate route <code>/auth/login/admin</code></td></tr>
+    <tr><td>Logout (all roles)</td><td>FR-1</td><td><span class="badge done">Done</span></td><td>Cookie cleared on logout</td></tr>
+    <tr><td><strong>Forgot / Reset Password</strong></td><td>FR-1</td><td><span class="badge missing">Missing</span></td><td>No forgot-password flow exists anywhere. Email token reset not built.</td></tr>
+    <tr><td>Role-based access control</td><td>FR-12</td><td><span class="badge done">Done</span></td><td>JWT role enforced per route</td></tr>
+    <tr><td>Edit own profile</td><td>FR-2</td><td><span class="badge partial">Partial</span></td><td>Onboarding saves profile; no dedicated "edit profile" UI for users post-onboarding</td></tr>
+    <tr><td>Audit logging of admin actions</td><td>FR-15</td><td><span class="badge done">Done</span></td><td>IP address, user agent, old/new values stored in <code>audit_logs</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 2. ONBOARDING ─── -->
+<h2>2. Onboarding &amp; Registration</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>5-step onboarding questionnaire</td><td>UC-1</td><td><span class="badge done">Done</span></td><td>Steps 1–5: email/name/age, substance info, goals, background, preferences</td></tr>
+    <tr><td>Onboarding step resume (incomplete)</td><td>UC-1</td><td><span class="badge done">Done</span></td><td><code>current_onboarding_step</code> tracked; user redirected on login</td></tr>
+    <tr><td>Plan recommendation after onboarding</td><td>UC-2</td><td><span class="badge partial">Partial</span></td><td>Data is saved but no automatic plan recommendation engine — user must manually browse</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 3. DASHBOARD ─── -->
+<h2>3. User Dashboard &amp; Progress Tracking</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">FR Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Days sober counter</td><td>FR-4</td><td><span class="badge done">Done</span></td><td>Calculated from <code>sobriety_start_date</code></td></tr>
+    <tr><td>Next upcoming session display</td><td>FR-3</td><td><span class="badge done">Done</span></td><td>Shows counselor name + meeting link</td></tr>
+    <tr><td>Daily tasks from active recovery plan</td><td>FR-3</td><td><span class="badge done">Done</span></td><td>Priority-ordered, status-tracked</td></tr>
+    <tr><td>Recovery plan progress %</td><td>FR-4</td><td><span class="badge done">Done</span></td><td>Displayed on dashboard</td></tr>
+    <tr><td>Achievement badges (7/30/90/180/365 days)</td><td>FR-23, UC-9</td><td><span class="badge done">Done</span></td><td>Auto-awarded from sobriety date calculation</td></tr>
+    <tr><td>Community highlights on dashboard</td><td>FR-3</td><td><span class="badge done">Done</span></td><td>Latest 3 active posts shown</td></tr>
+    <tr><td><strong>Progress charts / graphs</strong></td><td>FR-4, UC-8</td><td><span class="badge missing">Missing</span></td><td>Proposal specifies visual charts (like a git commit graph). Only numbers shown — no Chart.js or similar implemented.</td></tr>
+    <tr><td><strong>Streak counter (consecutive days logged)</strong></td><td>UC-8</td><td><span class="badge missing">Missing</span></td><td>Days sober counter exists but not a "streak" based on daily logging activity</td></tr>
+    <tr><td><strong>Motivational nudges / inactivity messages</strong></td><td>FR-24, UC-11</td><td><span class="badge missing">Missing</span></td><td>No automated nudge system; no "break the streak" supportive message on slip-up</td></tr>
+    <tr><td><strong>Schedules / calendar for tasks</strong></td><td>FR-5</td><td><span class="badge missing">Missing</span></td><td>No calendar view for user's tasks or sessions from user side</td></tr>
+    <tr><td><strong>Notification system (in-app)</strong></td><td>FR-6</td><td><span class="badge missing">Missing</span></td><td>No notifications bell/panel anywhere. System does not deliver in-app notifications.</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 4. RECOVERY PLANS ─── -->
+<h2>4. Recovery Plans &amp; Tasks</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Browse &amp; activate pre-built recovery plans</td><td>UC-2, FR-19</td><td><span class="badge partial">Partial</span></td><td>Users can browse counselor-created plans, but no admin-curated "pre-built library" of plans for self-selection</td></tr>
+    <tr><td>Accept / reject counselor-assigned plans</td><td>UC-2</td><td><span class="badge done">Done</span></td><td>Pending → active on accept</td></tr>
+    <tr><td>View active, paused, completed plans</td><td>UC-2</td><td><span class="badge done">Done</span></td><td>Status-based filtering</td></tr>
+    <tr><td>Mark tasks as completed</td><td>FR-20, UC-5</td><td><span class="badge done">Done</span></td><td>Task status updated per user action</td></tr>
+    <tr><td>Resume paused plans / sobriety reset</td><td>—</td><td><span class="badge done">Done</span></td><td>Implemented in recovery model</td></tr>
+    <tr><td>Short-term and long-term goals tracking</td><td>FR-23</td><td><span class="badge done">Done</span></td><td>Progress % calculated vs. target days</td></tr>
+    <tr><td><strong>Customize / add own tasks</strong></td><td>FR-20, UC-5</td><td><span class="badge missing">Missing</span></td><td>Users can only mark tasks done; cannot add custom tasks or edit existing ones</td></tr>
+    <tr><td><strong>Log urges / slip-ups with trigger tags</strong></td><td>FR-21, UC-6</td><td><span class="badge missing">Missing</span></td><td>DB schema (<code>urge_logs</code>, <code>trigger_categories</code>) exists but no UI built</td></tr>
+    <tr><td><strong>Private journal notes</strong></td><td>FR-22, UC-7</td><td><span class="badge missing">Missing</span></td><td>DB schema (<code>journal_entries</code>) exists but no UI built</td></tr>
+    <tr><td><strong>Admin: manage plan templates library</strong></td><td>FR-10, UC-45</td><td><span class="badge missing">Missing</span></td><td>Admin panel has no pre-built plan template creator for onboarding</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 5. COUNSELOR BOOKING ─── -->
+<h2>5. Counselor Discovery &amp; Session Booking</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Browse counselor directory</td><td>UC-22, FR-27</td><td><span class="badge done">Done</span></td><td>With ratings, specialty, bio, fees displayed</td></tr>
+    <tr><td>Filter counselors by specialty</td><td>UC-22</td><td><span class="badge done">Done</span></td><td>Trauma, Addiction, Mental Health, etc.</td></tr>
+    <tr><td>View counselor profile in detail</td><td>UC-22</td><td><span class="badge done">Done</span></td><td>Credentials, availability, fee shown</td></tr>
+    <tr><td>Select time slot (slot locking system)</td><td>UC-23</td><td><span class="badge done">Done</span></td><td>15-min hold prevents double-booking</td></tr>
+    <tr><td>Payment via PayHere (LKR)</td><td>UC-23, FR-14</td><td><span class="badge done">Done</span></td><td>Merchant ID configured, sandbox/production switchable</td></tr>
+    <tr><td>Google Meet link auto-generated</td><td>—</td><td><span class="badge done">Done</span></td><td>Google Calendar API + OAuth2 refresh token</td></tr>
+    <tr><td>Session confirmation page (success)</td><td>UC-28</td><td><span class="badge done">Done</span></td><td><code>/user/sessions/book/success/</code> exists</td></tr>
+    <tr><td><strong>Optional booking message to counselor</strong></td><td>UC-24, FR-28</td><td><span class="badge missing">Missing</span></td><td>No text field to include a message with the booking request</td></tr>
+    <tr><td><strong>Booking confirmation email / receipt</strong></td><td>UC-28, FR-6</td><td><span class="badge missing">Missing</span></td><td>No email sent to user/counselor after booking is confirmed</td></tr>
+    <tr><td><strong>Booking status notifications</strong></td><td>UC-27</td><td><span class="badge missing">Missing</span></td><td>No in-app or email notification system for status changes</td></tr>
+    <tr><td><strong>Rate &amp; review counselor after session</strong></td><td>UC-30, FR-32</td><td><span class="badge missing">Missing</span></td><td>DB schema has <code>rating</code> col in <code>counselors</code> but no rating/review form or flow</td></tr>
+    <tr><td><strong>PayHere webhook / IPN callback</strong></td><td>FR-14</td><td><span class="badge missing">Missing</span></td><td>Only return URL handled; no server-side payment notification verification endpoint</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 6. COUNSELOR PANEL ─── -->
+<h2>6. Counselor Panel Features</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">FR Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Counselor dashboard (clients, sessions overview)</td><td>FR-33</td><td><span class="badge done">Done</span></td><td>Active clients, upcoming sessions, pending plans</td></tr>
+    <tr><td>View client profiles &amp; progress</td><td>FR-33</td><td><span class="badge done">Done</span></td><td>Sobriety, plan history, session history</td></tr>
+    <tr><td>Create recovery plans for clients</td><td>FR-33, UC-4</td><td><span class="badge done">Done</span></td><td>Goals and tasks included</td></tr>
+    <tr><td>Manage (view) sessions list &amp; calendar</td><td>FR-34, FR-35</td><td><span class="badge done">Done</span></td><td>Upcoming &amp; past sessions with meeting links</td></tr>
+    <tr><td>Counselor application approval flow (admin)</td><td>FR-12, UC-48</td><td><span class="badge done">Done</span></td><td>Auto account creation + email on approval/rejection</td></tr>
+    <tr><td><strong>Counselor edits own availability schedule</strong></td><td>FR-34, UC-25</td><td><span class="badge missing">Missing</span></td><td>Availability set in DB but counselors have no UI to update their own schedule</td></tr>
+    <tr><td><strong>Session notes / post-session feedback to user</strong></td><td>FR-37, UC-29</td><td><span class="badge missing">Missing</span></td><td>No counselor note-taking or feedback submission form after sessions</td></tr>
+    <tr><td><strong>View own ratings &amp; feedback dashboard</strong></td><td>FR-36, UC-31</td><td><span class="badge missing">Missing</span></td><td>No counselor feedback dashboard exists</td></tr>
+    <tr><td><strong>Respond to booking request (accept/decline)</strong></td><td>FR-35, UC-26</td><td><span class="badge missing">Missing</span></td><td>Bookings are auto-confirmed on payment — counselor has no approve/decline step</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 7. COMMUNITY ─── -->
+<h2>7. Community &amp; Forums</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Browse / search / filter community posts</td><td>UC-12, FR-25</td><td><span class="badge done">Done</span></td><td>Full-text search, type filter, trending sort</td></tr>
+    <tr><td>Create posts (with optional image)</td><td>UC-13, FR-25</td><td><span class="badge done">Done</span></td><td>Types: general, success_story, question, support_request, resource</td></tr>
+    <tr><td>Anonymous posting</td><td>FR-40</td><td><span class="badge done">Done</span></td><td>Author identity hidden; display "Anonymous"</td></tr>
+    <tr><td>Like / unlike posts</td><td>UC-15</td><td><span class="badge done">Done</span></td><td>Duplicate prevention via unique index</td></tr>
+    <tr><td>Comment on posts</td><td>UC-14</td><td><span class="badge done">Done</span></td><td>Comment count tracked</td></tr>
+    <tr><td>Edit / delete own posts</td><td>FR-25</td><td><span class="badge done">Done</span></td><td>Soft delete with <code>is_active</code> flag</td></tr>
+    <tr><td>Report inappropriate content</td><td>UC-17, FR-29</td><td><span class="badge done">Done</span></td><td>Reports saved to <code>post_reports</code> table</td></tr>
+    <tr><td>Share post (track share count)</td><td>UC-16</td><td><span class="badge partial">Partial</span></td><td>Share count incremented but no actual in-app share destination UI</td></tr>
+    <tr><td><strong>Admin moderation of reported posts</strong></td><td>UC-18, FR-8, FR-9</td><td><span class="badge missing">Missing</span></td><td>Reports stored in DB but admin has no moderation queue UI to action them (approve/delete/ban)</td></tr>
+    <tr><td><strong>Community chat room (live/real-time)</strong></td><td>Scope §4.1</td><td><span class="badge missing">Missing</span></td><td>In-scope feature. No WebSocket or real-time chat implemented at all.</td></tr>
+    <tr><td><strong>Post tags / categorization UI</strong></td><td>UC-13</td><td><span class="badge partial">Partial</span></td><td>Post types exist but no user-facing tag selection during post creation</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 8. SUPPORT GROUPS ─── -->
+<h2>8. Support Groups</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Admin creates &amp; manages support groups</td><td>UC-20, FR-8</td><td><span class="badge done">Done</span></td><td>Admin panel: add/edit/delete support groups</td></tr>
+    <tr><td><strong>User browses and joins support groups</strong></td><td>UC-19, FR-26</td><td><span class="badge missing">Missing</span></td><td>Support groups exist in DB &amp; admin but users have no page to browse/join them</td></tr>
+    <tr><td><strong>Attend group support session</strong></td><td>UC-21</td><td><span class="badge missing">Missing</span></td><td>No group session scheduling or attendance tracking for users</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 9. HELP CENTER ─── -->
+<h2>9. Help Center &amp; Emergency Resources</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Browse help centers directory</td><td>UC-37, FR-31</td><td><span class="badge done">Done</span></td><td>Active centers listed with full contact info</td></tr>
+    <tr><td>Search &amp; filter help centers</td><td>UC-38</td><td><span class="badge done">Done</span></td><td>By type, category, location</td></tr>
+    <tr><td>Access center contact info</td><td>UC-39</td><td><span class="badge done">Done</span></td><td>Phone, email, website, address all stored</td></tr>
+    <tr><td>Admin add/edit/delete help centers</td><td>UC-40, FR-11</td><td><span class="badge done">Done</span></td><td>Full CRUD in admin panel</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 10. POST-RECOVERY ─── -->
+<h2>10. Post-Recovery &amp; Job Opportunities</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">UC Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Browse job listings</td><td>UC-35, FR-30</td><td><span class="badge done">Done</span></td><td>Full details: title, company, salary, location, type</td></tr>
+    <tr><td>Filter jobs (type, category, location)</td><td>UC-35</td><td><span class="badge done">Done</span></td><td>Search + filter implemented</td></tr>
+    <tr><td>Save jobs for later</td><td>UC-33</td><td><span class="badge done">Done</span></td><td>Toggle save, view saved-only filter</td></tr>
+    <tr><td>Admin creates / manages job postings</td><td>UC-32, FR-11</td><td><span class="badge done">Done</span></td><td>Full CRUD with activate/deactivate</td></tr>
+    <tr><td><strong>External employer job submission workflow</strong></td><td>UC-36</td><td><span class="badge missing">Missing</span></td><td>No public-facing form for employers to submit ads for admin review</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 11. ADMIN ─── -->
+<h2>11. Admin Panel</h2>
+<table>
+  <thead><tr><th style="width:38%">Feature</th><th style="width:14%">FR Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Admin dashboard (users, sessions, revenue)</td><td>FR-13</td><td><span class="badge done">Done</span></td><td>Today's totals shown</td></tr>
+    <tr><td>User management (view, search, filter)</td><td>FR-7, UC-41</td><td><span class="badge done">Done</span></td><td>Role, status, engagement level filters</td></tr>
+    <tr><td>Counselor management &amp; application review</td><td>UC-48, FR-12</td><td><span class="badge done">Done</span></td><td>Approve/reject with auto email + account creation</td></tr>
+    <tr><td>Financial management (transactions, refunds)</td><td>FR-14, UC-49</td><td><span class="badge done">Done</span></td><td>View transactions &amp; refund disputes</td></tr>
+    <tr><td>Audit logs / system security</td><td>FR-15, UC-51</td><td><span class="badge done">Done</span></td><td>IP, user agent, entity changes logged</td></tr>
+    <tr><td>Analytics dashboard</td><td>FR-13, UC-46</td><td><span class="badge done">Done</span></td><td>User growth, sessions, revenue, community engagement</td></tr>
+    <tr><td>Content management (help centers, jobs, groups)</td><td>FR-11</td><td><span class="badge done">Done</span></td><td>Full CRUD for all content types</td></tr>
+    <tr><td><strong>Suspend / ban / deactivate user accounts</strong></td><td>FR-7, UC-42</td><td><span class="badge missing">Missing</span></td><td>Admin can view users but there is no suspend/ban action button</td></tr>
+    <tr><td><strong>Moderate reported community posts (action queue)</strong></td><td>FR-8, FR-9, UC-47</td><td><span class="badge missing">Missing</span></td><td>Reports in DB but no admin UI to review and action them</td></tr>
+    <tr><td><strong>Impersonate user</strong></td><td>FR-16, UC-44</td><td><span class="badge missing">Missing</span></td><td>Not implemented</td></tr>
+    <tr><td><strong>Set policy &amp; notification templates</strong></td><td>FR-17, UC-52</td><td><span class="badge missing">Missing</span></td><td>Settings page exists but no policy/template editor</td></tr>
+    <tr><td><strong>Admin manages pre-built recovery plan templates</strong></td><td>FR-10, UC-45</td><td><span class="badge missing">Missing</span></td><td>No template library management in admin panel</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 12. NON-FUNCTIONAL ─── -->
+<h2>12. Non-Functional Requirements</h2>
+<table>
+  <thead><tr><th style="width:38%">NFR</th><th style="width:14%">Ref</th><th style="width:14%">Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Secure encrypted data storage (BCrypt, JWT)</td><td>NFR-1</td><td><span class="badge done">Done</span></td><td>BCrypt passwords, HS256 JWT, HttpOnly cookies</td></tr>
+    <tr><td>SQL injection prevention</td><td>NFR-1</td><td><span class="badge done">Done</span></td><td>MySQLi real_escape_string used throughout</td></tr>
+    <tr><td>Anonymity / privacy (anonymous posts)</td><td>NFR-2</td><td><span class="badge done">Done</span></td><td>Opt-in anonymous posting</td></tr>
+    <tr><td>Responsive / user-friendly UI</td><td>NFR-3</td><td><span class="badge done">Done</span></td><td>CSS responsive across devices</td></tr>
+    <tr><td>Role-based access control</td><td>NFR-5</td><td><span class="badge done">Done</span></td><td>JWT role enforced server-side</td></tr>
+    <tr><td>Modular architecture</td><td>NFR-6</td><td><span class="badge done">Done</span></td><td>MVC-style: core/, pages/, public/ separation</td></tr>
+    <tr><td><strong>TLS/SSL (HTTPS in production)</strong></td><td>NFR-1</td><td><span class="badge partial">Partial</span></td><td>XAMPP dev only — not configured for HTTPS yet. Must enable before demo.</td></tr>
+    <tr><td><strong>High uptime / reliability</strong></td><td>NFR-4</td><td><span class="badge partial">Partial</span></td><td>Local XAMPP only. No production deployment configured.</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── OUT OF SCOPE ─── -->
+<h2>13. Out-of-Scope Items (Not Expected)</h2>
+<p class="section-desc">The following are explicitly listed as out-of-scope in the proposal (§4.2) and should NOT be implemented:</p>
+<table>
+  <thead><tr><th style="width:50%">Feature</th><th style="width:50%">Reason (from proposal)</th></tr></thead>
+  <tbody>
+    <tr><td>AI Chatbot</td><td><span class="badge outscope">Out of Scope</span> Too advanced / NLP required</td></tr>
+    <tr><td>Online Prescribed Medication Store</td><td><span class="badge outscope">Out of Scope</span> Medical/legal compliance</td></tr>
+    <tr><td>Mentor Management System</td><td><span class="badge outscope">Out of Scope</span> Future phase</td></tr>
+    <tr><td>Custom Reminders &amp; Motivational Quotes (personalized)</td><td><span class="badge outscope">Out of Scope</span> Deferred to future</td></tr>
+    <tr><td>Moderator-Defined Group Guidelines</td><td><span class="badge outscope">Out of Scope</span> Future phase</td></tr>
+    <tr><td>Job Application Management (CV upload, employer comms)</td><td><span class="badge outscope">Out of Scope</span> Redirect to external URL only</td></tr>
+    <tr><td>Drug Reporting Portal</td><td><span class="badge outscope">Out of Scope</span> Legal complexity</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── PRIORITY GAPS ─── -->
+<h2>14. Priority Gap Analysis — What To Build Next</h2>
+<p class="section-desc">Ranked by impact on marks / demo completeness. Critical = assessors will directly test this.</p>
+<table>
+  <thead><tr><th style="width:4%">#</th><th style="width:36%">Gap</th><th style="width:12%">Priority</th><th style="width:48%">What to Build</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><strong>Forgot Password / Reset Password</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Token sent to email → reset form. FR-1 is the very first common requirement. Assessors will try it.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>Progress Charts (Visual)</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Add Chart.js bar/line chart to user dashboard for recovery days over weeks/months. Very visible in demo.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>Urge / Slip-up Logging UI</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Build form using existing <code>urge_logs</code> table. Add trigger tag selection from <code>trigger_categories</code>. Core FR-21.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Private Journal Notes UI</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Build CRUD interface using existing <code>journal_entries</code> table. Core FR-22.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>Admin: Moderate Reported Posts</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Admin queue listing <code>post_reports</code> with actions: delete post, dismiss report, warn user.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><strong>Admin: Suspend / Ban Users</strong></td>
+      <td><span class="badge high">Critical</span></td>
+      <td>Add suspend button in user management. Set <code>is_active=0</code> in users table. Block login for inactive users.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><strong>Rate &amp; Review Counselor After Session</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>Post-session prompt with 1–5 star rating + comment. Updates <code>counselors.rating</code>.</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><strong>User Support Groups Browse &amp; Join</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>User-facing page to see available groups (already in admin). Join/membership system.</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><strong>Counselor: Edit Availability Schedule</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>Counselor UI to set weekly available slots (stored as JSON in <code>availability_schedule</code>).</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><strong>Booking Confirmation Email</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>Send email to user + counselor after payment confirmed. PHPMailer or mail() with session details + Meet link.</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><strong>PayHere IPN / Webhook Callback</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>Server-side endpoint to verify payment hash from PayHere and confirm session even if return URL fails.</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><strong>User: Edit Profile</strong></td>
+      <td><span class="badge medium">High</span></td>
+      <td>Allow users to update name, recovery goals, substance info post-onboarding. FR-2.</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><strong>Counselor Post-Session Notes / Feedback</strong></td>
+      <td><span class="badge low">Medium</span></td>
+      <td>Simple notes form after session completes. Stored per session. FR-37.</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td><strong>Admin: Pre-built Plan Template Library</strong></td>
+      <td><span class="badge low">Medium</span></td>
+      <td>Admin creates template plans; users can select one during onboarding step 3. FR-10.</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td><strong>Real-time Community Chat Room</strong></td>
+      <td><span class="badge low">Lower</span></td>
+      <td>In-scope per proposal §4.1. WebSocket or long-poll chat. Complex — consider for stretch goal.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─── QUICK BUG NOTES ─── -->
+<h2>15. Known Issues / Bugs to Verify</h2>
+<div class="danger-box">
+  <strong>These items may have bugs or are not end-to-end tested:</strong>
+  <ul style="margin-top:8px">
+    <li><strong>PayHere return URL</strong> — payment status only verified on browser return. If user closes browser, session may not be created. IPN callback needed.</li>
+    <li><strong>Google Meet generation</strong> — requires valid OAuth2 refresh token in <code>.env</code>. Token expires; no auto-refresh error handling shown to user.</li>
+    <li><strong>Booking hold release</strong> — check-on-read pattern means expired holds only clear when someone else tries to book. Consider a cron-style cleanup.</li>
+    <li><strong>Community post image upload</strong> — verify max file size and MIME type validation to prevent malicious uploads.</li>
+    <li><strong>Onboarding step redirect</strong> — verify users who completed onboarding aren't re-routed to onboarding on every login.</li>
+    <li><strong>Password hashing</strong> — BCrypt <code>$2a$</code> vs <code>$2y$</code> prefix compatibility. Confirm PHP's <code>password_verify()</code> handles both for Java-migrated accounts.</li>
+  </ul>
+</div>
+
+<div class="note-box">
+  <strong>Note on HTTPS:</strong> The proposal's legal feasibility section (§5.4) states all data must be encrypted in transit using TLS/SSL. XAMPP by default serves over HTTP. Before any demo or submission, enable SSL in XAMPP (<code>httpd-ssl.conf</code>) or deploy behind a reverse proxy. Assessors may check this.
+</div>
+
+<!-- ─── SUMMARY TABLE ─── -->
+<h2>16. Feature Completion Summary by Module</h2>
+<table>
+  <thead><tr><th>Module</th><th>Done</th><th>Partial</th><th>Missing</th><th>Completion</th></tr></thead>
+  <tbody>
+    <tr><td>Authentication &amp; Accounts</td><td>6</td><td>1</td><td>1</td><td>75%</td></tr>
+    <tr><td>Onboarding</td><td>2</td><td>1</td><td>0</td><td>83%</td></tr>
+    <tr><td>Dashboard &amp; Progress</td><td>5</td><td>0</td><td>4</td><td>56%</td></tr>
+    <tr><td>Recovery Plans &amp; Tasks</td><td>5</td><td>1</td><td>4</td><td>55%</td></tr>
+    <tr><td>Counselor Booking &amp; Sessions</td><td>6</td><td>0</td><td>5</td><td>55%</td></tr>
+    <tr><td>Counselor Panel</td><td>5</td><td>0</td><td>4</td><td>56%</td></tr>
+    <tr><td>Community &amp; Forums</td><td>7</td><td>2</td><td>2</td><td>73%</td></tr>
+    <tr><td>Support Groups</td><td>1</td><td>0</td><td>2</td><td>33%</td></tr>
+    <tr><td>Help Center</td><td>4</td><td>0</td><td>0</td><td>100%</td></tr>
+    <tr><td>Post-Recovery / Jobs</td><td>4</td><td>0</td><td>1</td><td>80%</td></tr>
+    <tr><td>Admin Panel</td><td>7</td><td>0</td><td>5</td><td>58%</td></tr>
+    <tr><td>Non-Functional</td><td>6</td><td>2</td><td>0</td><td>88%</td></tr>
+  </tbody>
+</table>
+
+<div style="margin-top:30px; padding-top:16px; border-top:1px solid #ddd; color:#777; font-size:11.5px; text-align:center;">
+  New Path — IS2202 Group 24 &nbsp;|&nbsp; Report generated 30 March 2026 &nbsp;|&nbsp; For internal use only
+</div>
+
+</div>
+</body>
+</html>

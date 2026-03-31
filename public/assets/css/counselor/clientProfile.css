@@ -1,0 +1,236 @@
+/* Counselor Client Profile — uses global.css design tokens */
+
+.row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    width: 100%;
+}
+
+.column {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    width: 100%;
+}
+
+/* Milestone Progress Card */
+.milestone-progress-card {
+    width: 45%;
+}
+
+.milestone-progress-card p {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-tight);
+    font-size: var(--font-size-sm);
+    margin-left: var(--spacing-sm);
+}
+
+.milestone-progress-card span {
+    margin-left: var(--spacing-sm);
+}
+
+/* Progress Bar */
+.progress {
+    --bg: var(--color-progress-bg);
+    --fill: var(--color-progress-fill);
+    --ring1: var(--color-progress-ring-light);
+    --ring2: var(--color-progress-ring-mid);
+    --knob: var(--color-progress-knob);
+    --height: 10px;
+    --pad: var(--spacing-xs);
+    --value: 50%;
+
+    position: relative;
+    width: 100%;
+    height: calc(var(--height) + var(--pad) * 2);
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+}
+
+.progress .bar {
+    position: absolute;
+    left: var(--pad);
+    right: var(--pad);
+    top: 50%;
+    height: 5px;
+    transform: translateY(-50%);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    background-color: var(--color-progress-track);
+}
+
+.progress .bar::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--value);
+    height: var(--height);
+    background: var(--fill);
+    border-radius: inherit;
+}
+
+.progress .thumb {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--value));
+    transform: translate(-50%, -50%);
+    width: 15px;
+    height: 15px;
+    border: 0;
+    border-radius: var(--radius-full);
+    background:
+        radial-gradient(circle at center, var(--knob) 40%, transparent 41%),
+        radial-gradient(circle at center, var(--ring2) 60%, transparent 61%),
+        radial-gradient(circle at center, var(--ring1) 78%, transparent 79%);
+    box-shadow:
+        0 0 0 2px var(--color-progress-border),
+        var(--shadow-sm);
+    cursor: default;
+}
+
+/* Client Card */
+.client-card {
+    width: 80%;
+    background-color: var(--color-bg-overlay);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-primary);
+}
+
+.client-card img {
+    width: 200px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.client-card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.client-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.client-card-info span {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.client-card-buttons {
+    padding-top: var(--spacing-3xl);
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+}
+
+.btn-join {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    transition: all 0.2s ease;
+}
+
+.btn-join:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* Client Progress Section */
+.client-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 80%;
+}
+
+.client-progress span {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.progress-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.progress-box div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    height: 180px;
+    width: 180px;
+    padding: var(--spacing-lg) 0 0 var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    background-color: var(--color-bg-overlay);
+    border: 1px solid var(--color-border-primary);
+    transition: all 0.2s ease;
+}
+
+.progress-box div:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.progress-box-2 {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-lg);
+}
+
+.progress-box-2 div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    height: 100px;
+    flex: 1;
+    padding: var(--spacing-lg) 0 0 var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-overlay);
+    border: 1px solid var(--color-border-primary);
+    transition: all 0.2s ease;
+}
+
+.progress-box-2 div:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.progress-chart {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.progress-chart div {
+    flex: 1;
+}
+
+.session-notes {
+    width: 80%;
+}
+
+.session-notes span {
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-sm);
+}
