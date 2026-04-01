@@ -61,7 +61,7 @@ require_once __DIR__ . '/../../common/auth.head.php';
                             <button type="submit" class="form-submit-btn">Access Dashboard</button>
 
                             <div class="form-links">
-                                <a href="/counselor/forgot-password" class="forgot-password form-link">Forgot password?</a>
+                                <a href="/auth/forgot-password" class="forgot-password form-link">Forgot password?</a>
                                 <div class="signup-link form-link">
                                     <span>Need access? </span>
                                     <a href="/counselor/register" class="create-account form-link">Register as Counselor</a>

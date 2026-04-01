@@ -61,7 +61,7 @@ require_once __DIR__ . '/../../common/auth.head.php';
                             <button type="submit" class="form-submit-btn">Access Admin Panel</button>
 
                             <div class="form-links">
-                                <a href="/admin/forgot-password" class="forgot-password form-link">Forgot password?</a>
+                                <a href="/auth/forgot-password" class="forgot-password form-link">Forgot password?</a>
                                 <div class="signup-link form-link">
                                     <span>Restricted access only</span>
                                 </div>
