@@ -101,6 +101,30 @@ require_once __DIR__ . '/../../common/auth.head.php';
                         </div>
                     </div>
 
+                    <!-- Motivation — always visible, not conditional on substance use -->
+                    <div class="question-group" style="margin-top: 28px;">
+                        <div class="question-item">
+                            <label class="question-label">What best describes your situation right now?</label>
+                            <div class="radio-group" style="grid-template-columns: repeat(3, 1fr);">
+                                <label class="radio-option">
+                                    <input type="radio" name="motivation" value="exploring" required
+                                        <?= (Request::post('motivation') === 'exploring') ? 'checked' : '' ?>>
+                                    <span class="radio-text">Just exploring</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="motivation" value="motivated"
+                                        <?= (Request::post('motivation') === 'motivated') ? 'checked' : '' ?>>
+                                    <span class="radio-text">Motivated but struggling</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="motivation" value="desperate"
+                                        <?= (Request::post('motivation') === 'desperate') ? 'checked' : '' ?>>
+                                    <span class="radio-text">It's affecting my daily life</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-actions multi-button">
                         <button type="button" class="btn btn-secondary" onclick="window.location.href='/auth/onboarding/step1'">Back</button>
                         <button type="submit" class="form-submit-btn">Next: Assessment</button>

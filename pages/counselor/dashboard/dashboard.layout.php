@@ -15,6 +15,9 @@ require_once __DIR__ . '/../common/counselor.html.head.php';
     <?php require_once __DIR__ . '/../common/counselor.sidebar.php'; ?>
 
     <section class="main-content">
+        <?php if (!empty($flashSuccess)): ?>
+            <div class="success-message" style="margin:16px 24px 0;"><?= htmlspecialchars($flashSuccess) ?></div>
+        <?php endif; ?>
         <img src="/assets/img/main-content-head.svg" alt="Main Content Head background" class="main-header-bg-image" />
 
         <div class="main-content-header">

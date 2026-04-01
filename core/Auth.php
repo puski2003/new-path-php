@@ -103,12 +103,15 @@ class Auth
     // -------------------------------------------------------------------------
     public static function clearTokenCookie(): void
     {
+        $secure = isset($_SERVER['HTTPS']);
         setcookie('jwt', '', [
             'expires'  => time() - 3600,
             'path'     => '/',
             'httponly' => true,
             'samesite' => 'Strict',
+            'secure'   => $secure,
         ]);
+        unset($_COOKIE['jwt']);
     }
 
     // -------------------------------------------------------------------------

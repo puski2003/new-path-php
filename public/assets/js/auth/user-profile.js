@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Toggle user menu dropdown
   if (userMenuBtn && userMenuDropdown) {
     userMenuBtn.addEventListener("click", function (e) {
-      e.preventDefault();
       e.stopPropagation();
       userMenuDropdown.classList.toggle("show");
     });

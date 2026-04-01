@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/dashboard.model.php';
 
+$flashSuccess = isset($_GET['updateSuccess']) ? 'Profile updated successfully.' : null;
+
 $counselorId = (int) ($user['counselorId'] ?? 0);
 $currentCounselor = CounselorDashboardModel::getCounselorById($counselorId) ?? $currentCounselor;
 $upcomingSessions = CounselorDashboardModel::getUpcomingSessionsByCounselor($counselorId);

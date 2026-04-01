@@ -66,10 +66,12 @@ $navItems = [
                     <i data-lucide="user" stroke-width="1"></i>
                     <span>Edit Profile</span>
                 </button>
-                <button class="menu-option" onclick="window.location.href='/auth/logout'">
-                    <i data-lucide="log-out" stroke-width="1"></i>
-                    <span>Logout</span>
-                </button>
+                <form method="POST" action="/auth/logout" style="margin:0;">
+                    <button type="submit" class="menu-option" style="width:100%;background:none;border:none;cursor:pointer;">
+                        <i data-lucide="log-out" stroke-width="1"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

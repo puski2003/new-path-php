@@ -23,6 +23,11 @@ require_once __DIR__ . '/../common/user.html.head.php';
         <?php require_once __DIR__ . '/../common/user.sidebar.php'; ?>
 
         <section class="main-content">
+            <?php if ($flashSuccess): ?>
+                <div class="success-message" style="margin:16px 24px 0;"><?= htmlspecialchars($flashSuccess) ?></div>
+            <?php elseif ($flashError): ?>
+                <div class="error-message" style="margin:16px 24px 0;"><?= htmlspecialchars($flashError) ?></div>
+            <?php endif; ?>
             <img
                 src="/assets/img/main-content-head.svg"
                 alt="Main Content Head background"
@@ -94,7 +99,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                                     height="30px"
                                                     color="white"
                                                 ></i>
-                                                ></i>
+                                                
                                             </div>
                                             <div class="session-details">
                                                 <h4>No Upcoming Sessions</h4>

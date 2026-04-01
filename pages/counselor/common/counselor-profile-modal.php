@@ -14,7 +14,7 @@ if (!is_array($savedAvailability)) {
         <div class="profile-modal-body">
             <p class="profile-modal-subtitle">Update your professional profile.</p>
 
-            <form id="counselorProfileForm" action="#" method="post" enctype="multipart/form-data">
+            <form id="counselorProfileForm" action="/counselor/profile/update" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="counselorProfilePicture">Profile Picture</label>
                     <div class="profile-picture-upload">
