@@ -48,6 +48,34 @@
 
             <div class="main-content-body">
 
+                <!-- Flash messages -->
+                <?php if ($flashCheckin): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashCheckin) ?></div>
+                <?php endif; ?>
+                <?php if ($flashUrge): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashUrge) ?></div>
+                <?php endif; ?>
+
+                <!-- Quick actions -->
+                <div class="recovery-quick-actions">
+                    <a href="/user/recovery/checkin" class="recovery-quick-btn <?= $checkedInToday ? 'done' : '' ?>">
+                        <i data-lucide="<?= $checkedInToday ? 'check-circle-2' : 'clipboard-list' ?>" style="width:16px;height:16px;"></i>
+                        <?= $checkedInToday ? 'Check-in Done' : 'Daily Check-in' ?>
+                    </a>
+                    <a href="/user/recovery/log-urge" class="recovery-quick-btn">
+                        <i data-lucide="activity" style="width:16px;height:16px;"></i>
+                        Log an Urge
+                    </a>
+                    <a href="/user/recovery/journal" class="recovery-quick-btn">
+                        <i data-lucide="book-open" style="width:16px;height:16px;"></i>
+                        Journal
+                    </a>
+                    <a href="/user/recovery/progress" class="recovery-quick-btn">
+                        <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
+                        Progress
+                    </a>
+                </div>
+
                 <!-- Plan status alert banner -->
                 <div class="recovery-plan-banner">
                     <?php require __DIR__ . '/../common/user.recovery-header.php'; ?>

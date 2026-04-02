@@ -213,6 +213,52 @@ class CounselorsModel
     }
 
     /**
+     * Counselors the user has had at least one completed session with,
+     * ordered by most recent session.
+     */
+    public static function getMyCounselors(int $userId): array
+    {
+        $rs = Database::search("
+            SELECT
+                c.counselor_id,
+                u.display_name AS name,
+                u.profile_picture,
+                c.specialty,
+                c.title,
+                COUNT(s.session_id) AS sessions_count,
+                MAX(s.session_datetime) AS last_session_at,
+                (SELECT s2.session_id
+                 FROM sessions s2
+                 WHERE s2.user_id = $userId
+                   AND s2.counselor_id = c.counselor_id
+                   AND s2.status = 'completed'
+                   AND s2.session_datetime >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                 ORDER BY s2.session_datetime DESC LIMIT 1) AS open_session_id
+            FROM sessions s
+            JOIN counselors c ON c.counselor_id = s.counselor_id
+            JOIN users u ON u.user_id = c.user_id
+            WHERE s.user_id = $userId AND s.status = 'completed'
+            GROUP BY c.counselor_id, u.display_name, u.profile_picture, c.specialty, c.title
+            ORDER BY last_session_at DESC
+        ");
+        $list = [];
+        if (!$rs) return $list;
+        while ($row = $rs->fetch_assoc()) {
+            $list[] = [
+                'counselor_id'    => (int)$row['counselor_id'],
+                'name'            => $row['name'] ?? 'Counselor',
+                'profile_picture' => !empty($row['profile_picture']) ? $row['profile_picture'] : '/assets/img/avatar.png',
+                'specialty'       => $row['specialty'] ?? '',
+                'title'           => $row['title'] ?? '',
+                'sessions_count'  => (int)$row['sessions_count'],
+                'last_session_at' => $row['last_session_at'],
+                'open_session_id' => isset($row['open_session_id']) ? (int)$row['open_session_id'] : null,
+            ];
+        }
+        return $list;
+    }
+
+    /**
      * Get distinct specialties for the filter dropdown
      */
     public static function getSpecialties()

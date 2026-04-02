@@ -1,6 +1,40 @@
 /* Recovery page — recovery-specific styles only.
    Layout, cards, buttons, and columns come from global.css + dashboard.css */
 
+/* ── Quick Actions Strip ───────────────────────────────────────── */
+.recovery-quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-2xl) 0;
+    flex-wrap: wrap;
+}
+
+.recovery-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--spacing-xs) var(--spacing-lg);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    background: var(--color-bg-white);
+    border: 1.5px solid var(--color-border-primary);
+    color: var(--color-text-primary);
+    transition: all 0.2s ease;
+}
+
+.recovery-quick-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.recovery-quick-btn.done {
+    background: #f0fdf4;
+    border-color: #86efac;
+    color: #15803d;
+}
+
 /* ── Plan Status Banner ─────────────────────────────────────────── */
 
 .recovery-plan-banner {

@@ -2,7 +2,7 @@
 <html lang="en">
 <?php
 $pageTitle = "Counselors";
-$pageStyle = ["user/dashboard", "user/counselors"];
+$pageStyle = ["user/dashboard", "user/counselors", "user/sessions"];
 require_once __DIR__ . '/../common/user.html.head.php';
 ?>
 
@@ -24,10 +24,10 @@ require_once __DIR__ . '/../common/user.html.head.php';
                     <p>Your path to guidance starts here.</p>
                 </div>
 
-                <?php
-                $placeholder = "Search counselors...";
-                require __DIR__ . '/../common/user.searchbar.php';
-                ?>
+                <?php if ($activeTab === 'find'):
+                    $placeholder = "Search counselors...";
+                    require __DIR__ . '/../common/user.searchbar.php';
+                endif; ?>
 
                 <div style="width: 25%"></div>
                 <img src="/assets/img/counselor-header.svg"
@@ -36,13 +36,90 @@ require_once __DIR__ . '/../common/user.html.head.php';
             </div>
 
             <div class="main-content-body">
-                <?php if (Request::get('cancelled') === '1'): ?>
-                <div class="error-message">
-                    Payment cancelled. No charge was made — please select a time slot to try again.
-                </div>
-                <?php endif; ?>
 
+                <!-- Tabs -->
+                <div class="sessions-tabs" style="border-bottom: 1px solid var(--color-border-primary);">
+                    <a href="/user/counselors?tab=my"
+                       class="tab-btn <?= $activeTab === 'my' ? 'active' : '' ?>">
+                        My Counselors
+                    </a>
+                    <a href="/user/counselors?tab=find"
+                       class="tab-btn <?= $activeTab === 'find' ? 'active' : '' ?>">
+                        Find a Counselor
+                    </a>
+                </div>
+
+                <?php if ($activeTab === 'my'): ?>
+                <!-- ── MY COUNSELORS TAB ──────────────────────────────────── -->
                 <div class="counselor-cards-container">
+                    <?php if (empty($myCounselors)): ?>
+                        <div class="no-results-message" style="margin-top: var(--spacing-2xl);">
+                            <i data-lucide="user-x" style="width:48px;height:48px;color:var(--color-text-muted);display:block;margin:0 auto var(--spacing-md);"></i>
+                            <p>You haven't completed a session with any counselor yet.</p>
+                            <a href="/user/counselors?tab=find" class="btn btn-primary">Find a Counselor</a>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($myCounselors as $mc):
+                            $lastDate = $mc['last_session_at'] ? date('M j, Y', strtotime($mc['last_session_at'])) : '—';
+                            $threadOpen = $mc['open_session_id'] !== null;
+                        ?>
+                        <div class="my-counselor-card">
+                            <div class="counselor-avatar">
+                                <img src="<?= htmlspecialchars($mc['profile_picture']) ?>"
+                                     alt="<?= htmlspecialchars($mc['name']) ?>" />
+                            </div>
+                            <div class="counselor-info">
+                                <span class="counselor-specialty"><?= htmlspecialchars($mc['specialty']) ?></span>
+                                <h3 class="counselor-name"><?= htmlspecialchars($mc['name']) ?></h3>
+                                <?php if ($mc['title']): ?>
+                                    <p class="counselor-schedule"><?= htmlspecialchars($mc['title']) ?></p>
+                                <?php endif; ?>
+                                <div class="my-counselor-meta">
+                                    <span class="meta-pill">
+                                        <i data-lucide="calendar" style="width:12px;height:12px;"></i>
+                                        Last: <?= htmlspecialchars($lastDate) ?>
+                                    </span>
+                                    <span class="meta-pill">
+                                        <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
+                                        <?= $mc['sessions_count'] ?> session<?= $mc['sessions_count'] !== 1 ? 's' : '' ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="counselor-actions">
+                                <?php if ($threadOpen): ?>
+                                    <a href="/user/sessions/follow-up?session_id=<?= $mc['open_session_id'] ?>"
+                                       class="btn btn-primary" style="font-size:var(--font-size-xs);">
+                                        <i data-lucide="message-square" style="width:14px;height:14px;margin-right:4px;"></i>
+                                        Send Follow-up
+                                    </a>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary" disabled
+                                            style="font-size:var(--font-size-xs);opacity:0.5;cursor:not-allowed;"
+                                            title="Follow-up window is closed (7 days after session)">
+                                        <i data-lucide="message-square" style="width:14px;height:14px;margin-right:4px;"></i>
+                                        Follow-up Closed
+                                    </button>
+                                <?php endif; ?>
+                                <a href="/user/counselors?id=<?= $mc['counselor_id'] ?>"
+                                   class="btn btn-secondary" style="font-size:var(--font-size-xs);">
+                                    <i data-lucide="calendar-plus" style="width:14px;height:14px;margin-right:4px;"></i>
+                                    Book Again
+                                </a>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <?php else: ?>
+                <!-- ── FIND A COUNSELOR TAB ──────────────────────────────── -->
+                <div class="counselor-cards-container">
+                    <?php if (Request::get('cancelled') === '1'): ?>
+                    <div class="error-message">
+                        Payment cancelled. No charge was made — please select a time slot to try again.
+                    </div>
+                    <?php endif; ?>
+
                     <div class="">
                         <button class="btn btn-bg-light-green filter-button" onclick="toggleFilters()">
                             <i data-lucide="filter" stroke-width="1" class="filter-icon"></i>
@@ -50,9 +127,10 @@ require_once __DIR__ . '/../common/user.html.head.php';
                         </button>
                     </div>
 
-                    <!-- Filter Panel (Hidden by default) -->
+                    <!-- Filter Panel -->
                     <div id="filterPanel" class="filter-panel" style="display: none;">
                         <form action="/user/counselors" method="GET" class="filter-form-inline">
+                            <input type="hidden" name="tab" value="find" />
                             <input type="hidden" name="q" id="searchQueryHidden" value="<?= htmlspecialchars($searchQuery) ?>" />
 
                             <div class="filter-group">
@@ -90,7 +168,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
 
                             <div class="filter-actions">
                                 <button type="submit" class="btn btn-primary">Apply</button>
-                                <a href="/user/counselors" class="btn btn-secondary">Clear</a>
+                                <a href="/user/counselors?tab=find" class="btn btn-secondary">Clear</a>
                             </div>
                         </form>
                     </div>
@@ -99,7 +177,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                     <?php if (empty($counselors)): ?>
                         <div class="no-results-message">
                             <p>No counselors found. Try adjusting your search or filters.</p>
-                            <a href="/user/counselors" class="btn btn-primary">View All Counselors</a>
+                            <a href="/user/counselors?tab=find" class="btn btn-primary">View All Counselors</a>
                         </div>
                     <?php else: ?>
                         <?php foreach ($counselors as $counselor): ?>
@@ -111,16 +189,15 @@ require_once __DIR__ . '/../common/user.html.head.php';
                     <?php if ($totalPages > 1): ?>
                         <div class="pagination">
                             <?php
-                            // Build query params string to persist filters
                             $queryParams = http_build_query([
+                                'tab' => 'find',
                                 'q' => $searchQuery,
                                 'specialty' => $selectedSpecialty,
                                 'minExperience' => $selectedMinExperience,
                                 'maxPrice' => $selectedMaxPrice,
-                                'minRating' => $selectedMinRating
+                                'minRating' => $selectedMinRating,
                             ]);
                             ?>
-
                             <?php if ($currentPage > 1): ?>
                                 <a href="/user/counselors?page=<?= $currentPage - 1 ?>&<?= $queryParams ?>"
                                     class="pagination-btn pagination-prev">
@@ -154,71 +231,54 @@ require_once __DIR__ . '/../common/user.html.head.php';
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
+
             </div>
         </section>
     </main>
 
     <script>
         function toggleFilters() {
-            var filterPanel = document.getElementById('filterPanel');
-            filterPanel.style.display = filterPanel.style.display === 'none' ? 'flex' : 'none';
+            var fp = document.getElementById('filterPanel');
+            if (fp) fp.style.display = fp.style.display === 'none' ? 'flex' : 'none';
         }
 
-        // Make searchbar work with filters
         document.addEventListener('DOMContentLoaded', function() {
             var searchInput = document.querySelector('.search-input');
             var searchButton = document.querySelector('.search-button');
 
             if (searchInput && searchButton) {
-                // Set initial value from server
                 searchInput.value = <?= json_encode($searchQuery) ?>;
 
-                // Handle search on button click
-                searchButton.addEventListener('click', function() {
-                    performSearch();
-                });
-
-                // Handle search on Enter key
+                searchButton.addEventListener('click', function() { performSearch(); });
                 searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        performSearch();
-                    }
+                    if (e.key === 'Enter') performSearch();
                 });
             }
 
             function performSearch() {
                 var query = searchInput.value;
-                var url = '/user/counselors?q=' + encodeURIComponent(query);
-
-                // Preserve existing filters
+                var url = '/user/counselors?tab=find&q=' + encodeURIComponent(query);
                 var specialty = document.getElementById('specialty');
                 if (specialty && specialty.value) url += '&specialty=' + encodeURIComponent(specialty.value);
-
                 var minExp = document.getElementById('minExperience');
                 if (minExp && minExp.value) url += '&minExperience=' + minExp.value;
-
                 var maxPrice = document.getElementById('maxPrice');
                 if (maxPrice && maxPrice.value) url += '&maxPrice=' + maxPrice.value;
-
                 var minRating = document.getElementById('minRating');
                 if (minRating && minRating.value) url += '&minRating=' + minRating.value;
-
                 window.location.href = url;
             }
 
-            // Show filter panel if any filters are active
             <?php if (!empty($selectedSpecialty) || !empty($selectedMinExperience) || !empty($selectedMaxPrice) || !empty($selectedMinRating)): ?>
-                document.getElementById('filterPanel').style.display = 'flex';
+                var fp = document.getElementById('filterPanel');
+                if (fp) fp.style.display = 'flex';
             <?php endif; ?>
         });
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        lucide.createIcons();
-    </script>
+    <script>lucide.createIcons();</script>
     <script src="/assets/js/user/counselors.js"></script>
     <script src="/assets/js/auth/user-profile.js"></script>
-
 </body>
-
 </html>

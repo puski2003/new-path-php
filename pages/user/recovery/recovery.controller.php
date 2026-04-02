@@ -42,5 +42,15 @@ $nextSessionTime = $nextSession['time'];
 $counselorName = $nextSession['counselorName'];
 $counselorNotes = "Great progress this week! Let's focus on mindfulness techniques next session.";
 
+// Flash messages from sub-pages
+$flashCheckin = isset($_GET['checkinDone']) ? 'Daily check-in saved!' : null;
+$flashUrge    = isset($_GET['urgeDone'])    ? 'Urge logged successfully.' : null;
+
+// Check if already checked in today
+$todayCheckRs = Database::search(
+    "SELECT 1 FROM daily_checkins WHERE user_id = $userId AND checkin_date = CURDATE() LIMIT 1"
+);
+$checkedInToday = $todayCheckRs && $todayCheckRs->num_rows > 0;
+
 $pageTitle = 'Recovery Plan';
 $pageStyle = ['user/dashboard', 'user/recovery'];

@@ -1,3 +1,37 @@
+/* ── My Counselor Card ─────────────────────────────────────── */
+.my-counselor-card {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-bg-mint);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    gap: var(--spacing-lg);
+    transition: box-shadow 0.2s ease;
+}
+
+.my-counselor-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.my-counselor-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+}
+
 .counselors-image {
     width: 140px;
     position: absolute;

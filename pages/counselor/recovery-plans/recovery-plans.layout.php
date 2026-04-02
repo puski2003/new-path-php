@@ -13,7 +13,7 @@
                 <p>View and manage your recovery plans</p>
             </div>
         </div>
-        <div class="main-content-body dashboard-overflow">
+        <div class="main-content-body">
             <div class="inner-body-content">
                 <div class="body-column">
                     <div class="dashboard-card counselor-toolbar-card">
