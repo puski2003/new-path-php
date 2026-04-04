@@ -14,18 +14,22 @@
                     <p>Connect with others on the same journey.</p>
                 </div>
 
-                <?php $placeholder = 'Search posts...'; require __DIR__ . '/../common/user.searchbar.php'; ?>
+                <?php $placeholder = $tab === 'people' ? 'Search people...' : 'Search posts...'; require __DIR__ . '/../common/user.searchbar.php'; ?>
 
                 <div style="width: 25%;"></div>
                 <img src="/assets/img/community.svg" alt="Community" class="community-image" />
             </div>
 
             <div class="main-content-body">
+               
+                <?php if ($tab === 'posts'): ?>
+                <!-- Posts Tab -->
                 <div class="community-content-header">
-                    <button class="btn btn-bg-light-green" type="button" aria-label="Notifications">
-                        <i data-lucide="bell" stroke-width="1.8"></i>
-                    </button>
-                    <button class="btn btn-primary" type="button" id="openPostModalBtn">Post</button>
+                     <a href="/user/community/find-people" class="btn btn-secondary" type="button" id="openPostModalBtn">
+                        <i data-lucide="user-plus" width="15" height="15" stroke-width="1.8"></i>
+                        Find People</a>
+                    <button class="btn btn-primary" type="button" id="openPostModalBtn">
+                       Create Post</button>
                 </div>
 
                 <div class="community-nav-sections">
@@ -60,6 +64,58 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
+
+                <?php else: ?>
+                <!-- Find People Tab -->
+                <div class="find-people-container">
+                    <div class="users-grid" id="usersGrid">
+                        <?php if (empty($users)): ?>
+                            <div class="empty-state">
+                                <i data-lucide="users" class="empty-state-icon" stroke-width="1.5"></i>
+                                <h4 class="empty-state-title">No users found</h4>
+                                <p class="empty-state-text">Try adjusting your search or check back later</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($users as $u): ?>
+                                <div class="user-card" data-user-id="<?= $u['userId'] ?>">
+                                    <div class="user-card-avatar">
+                                        <?php if (!empty($u['profilePicture'])): ?>
+                                            <img src="<?= htmlspecialchars($u['profilePicture']) ?>" alt="<?= htmlspecialchars($u['displayName']) ?>" />
+                                        <?php else: ?>
+                                            <img src="/assets/img/avatar.png" alt="Avatar" />
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="user-card-info">
+                                        <h4 class="user-card-name">
+                                            <a href="/user/profile/<?= $u['userId'] ?>"><?= htmlspecialchars($u['displayName']) ?></a>
+                                        </h4>
+                                        <?php if (!empty($u['username'])): ?>
+                                            <span class="user-card-username">@<?= htmlspecialchars($u['username']) ?></span>
+                                        <?php endif; ?>
+                                        <span class="user-card-followers"><?= $u['followersCount'] ?> followers</span>
+                                    </div>
+                                    <div class="user-card-actions">
+                                        <?php if ($u['isFollowing']): ?>
+                                            <button class="btn-follow following" data-user-id="<?= $u['userId'] ?>">
+                                                <i data-lucide="user-check" stroke-width="2"></i>
+                                                Following
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn-follow" data-user-id="<?= $u['userId'] ?>">
+                                                <i data-lucide="user-plus" stroke-width="2"></i>
+                                                Follow
+                                            </button>
+                                        <?php endif; ?>
+                                        <button class="btn-more" data-user-id="<?= $u['userId'] ?>">
+                                            <i data-lucide="more-horizontal" stroke-width="2"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </section>
     </main>
@@ -70,7 +126,10 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/assets/js/user/community.js"></script>
-    <script src="/assets/js/user/chat.js"></script>
+    <?php if ($tab === 'people'): ?>
+    <script src="/assets/js/user/find-people.js"></script>
+    <?php endif; ?>
+    <script src="/assets/js/user/community/chat.js"></script>
     <script src="/assets/js/auth/user-profile.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

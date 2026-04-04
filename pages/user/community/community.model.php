@@ -48,6 +48,9 @@ class CommunityModel
         while ($row = $rs->fetch_assoc()) {
             $isAnonymous = (bool)$row['is_anonymous'];
 
+            $postUserId = (int)$row['user_id'];
+            $isFollowing = DirectMessageModel::isConnected($userId, $postUserId);
+
             // Per PRD §2.5: anonymous posts must not reveal the author's identity
             $displayName = $isAnonymous ? 'Anonymous' : ($row['display_name'] ?? 'User');
             $username    = $isAnonymous ? 'anonymous' : ($row['username'] ?? 'user');
@@ -55,7 +58,7 @@ class CommunityModel
 
             $posts[] = [
                 'postId' => (int)$row['post_id'],
-                'userId' => (int)$row['user_id'],
+                'userId' => $postUserId,
                 'title' => $row['title'] ?? '',
                 'content' => $row['content'] ?? '',
                 'imageUrl' => $row['image_url'] ?? '',
@@ -69,6 +72,7 @@ class CommunityModel
                 'username' => $username,
                 'profilePictureUrl' => $profilePic,
                 'active' => false,
+                'isFollowing' => $isFollowing,
             ];
         }
 
@@ -202,5 +206,883 @@ class CommunityModel
         }
 
         return '/uploads/posts/' . $filename;
+    }
+}
+class DirectMessageModel
+{
+    public static function getUserConnections(int $userId): array
+    {
+        $sql = "
+            SELECT 
+                c.connection_id,
+                c.status,
+                c.created_at,
+                c.updated_at,
+                u.user_id,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS display_name,
+                u.username,
+                u.profile_picture,
+                CASE 
+                    WHEN c.user_id = $userId THEN c.connected_user_id 
+                    ELSE c.user_id 
+                END AS other_user_id
+            FROM user_connections c
+            JOIN users u ON (
+                u.user_id = CASE 
+                    WHEN c.user_id = $userId THEN c.connected_user_id 
+                    ELSE c.user_id 
+                END
+            )
+            WHERE (c.user_id = $userId OR c.connected_user_id = $userId)
+            AND c.status = 'accepted'
+            ORDER BY c.updated_at DESC
+        ";
+        
+        $rs = Database::search($sql);
+        $connections = [];
+        while ($row = $rs->fetch_assoc()) {
+            $connections[] = [
+                'connectionId' => (int)$row['connection_id'],
+                'otherUserId' => (int)$row['other_user_id'],
+                'displayName' => $row['display_name'] ?? 'User',
+                'username' => $row['username'] ?? 'user',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'status' => $row['status'],
+            ];
+        }
+        return $connections;
+    }
+
+    public static function getPendingConnectionRequests(int $userId): array
+    {
+        $sql = "
+            SELECT 
+                c.connection_id,
+                c.created_at,
+                u.user_id,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS display_name,
+                u.username,
+                u.profile_picture
+            FROM user_connections c
+            JOIN users u ON u.user_id = c.user_id
+            WHERE c.connected_user_id = $userId
+            AND c.status = 'pending'
+            ORDER BY c.created_at DESC
+        ";
+        
+        $rs = Database::search($sql);
+        $requests = [];
+        while ($row = $rs->fetch_assoc()) {
+            $requests[] = [
+                'connectionId' => (int)$row['connection_id'],
+                'userId' => (int)$row['user_id'],
+                'displayName' => $row['display_name'] ?? 'User',
+                'username' => $row['username'] ?? 'user',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'createdAt' => $row['created_at'],
+            ];
+        }
+        return $requests;
+    }
+
+    public static function sendConnectionRequest(int $userId, int $targetUserId): bool
+    {
+        if ($userId === $targetUserId) return false;
+        
+        $check = Database::search(
+            "SELECT connection_id FROM user_connections 
+             WHERE (user_id = $userId AND connected_user_id = $targetUserId)
+             OR (user_id = $targetUserId AND connected_user_id = $userId)
+             LIMIT 1"
+        );
+        
+        if ($check && $check->num_rows > 0) {
+            return false;
+        }
+        
+        Database::iud(
+            "INSERT INTO user_connections (user_id, connected_user_id, status, created_at)
+             VALUES ($userId, $targetUserId, 'pending', NOW())"
+        );
+        
+        return true;
+    }
+
+    public static function acceptConnection(int $userId, int $connectionId): bool
+    {
+        $check = Database::search(
+            "SELECT user_id, connected_user_id FROM user_connections 
+             WHERE connection_id = $connectionId 
+             AND connected_user_id = $userId 
+             AND status = 'pending'
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return false;
+        }
+        
+        $row = $check->fetch_assoc();
+        
+        Database::iud(
+            "UPDATE user_connections SET status = 'accepted', updated_at = NOW() 
+             WHERE connection_id = $connectionId"
+        );
+        
+        $user1Id = min((int)$row['user_id'], (int)$row['connected_user_id']);
+        $user2Id = max((int)$row['user_id'], (int)$row['connected_user_id']);
+        
+        $checkConv = Database::search(
+            "SELECT conversation_id FROM dm_conversations 
+             WHERE user1_id = $user1Id AND user2_id = $user2Id LIMIT 1"
+        );
+        
+        if (!$checkConv || $checkConv->num_rows === 0) {
+            Database::iud(
+                "INSERT INTO dm_conversations (user1_id, user2_id, created_at)
+                 VALUES ($user1Id, $user2Id, NOW())"
+            );
+        }
+        
+        return true;
+    }
+
+    public static function declineConnection(int $userId, int $connectionId): bool
+    {
+        $check = Database::search(
+            "SELECT connection_id FROM user_connections 
+             WHERE connection_id = $connectionId 
+             AND connected_user_id = $userId 
+             AND status = 'pending'
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return false;
+        }
+        
+        Database::iud(
+            "UPDATE user_connections SET status = 'declined', updated_at = NOW() 
+             WHERE connection_id = $connectionId"
+        );
+        
+        return true;
+    }
+
+    public static function removeConnection(int $userId, int $connectionId): bool
+    {
+        $check = Database::search(
+            "SELECT user_id, connected_user_id FROM user_connections 
+             WHERE connection_id = $connectionId 
+             AND (user_id = $userId OR connected_user_id = $userId)
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return false;
+        }
+        
+        $row = $check->fetch_assoc();
+        $otherUserId = (int)$row['user_id'] === $userId 
+            ? (int)$row['connected_user_id'] 
+            : (int)$row['user_id'];
+        
+        Database::iud("DELETE FROM user_connections WHERE connection_id = $connectionId");
+        
+        $user1Id = min($userId, $otherUserId);
+        $user2Id = max($userId, $otherUserId);
+        Database::iud(
+            "DELETE FROM dm_conversations WHERE user1_id = $user1Id AND user2_id = $user2Id"
+        );
+        
+        return true;
+    }
+
+    public static function getConversations(int $userId): array
+    {
+        $sql = "
+            SELECT 
+                c.conversation_id,
+                c.last_message_at,
+                c.last_message_preview,
+                u.user_id,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS display_name,
+                u.username,
+                u.profile_picture,
+                (SELECT COUNT(*) FROM direct_messages dm 
+                 WHERE dm.conversation_id = c.conversation_id 
+                 AND dm.sender_id != $userId 
+                 AND dm.is_read = 0) AS unread_count
+            FROM dm_conversations c
+            JOIN users u ON (
+                u.user_id = CASE 
+                    WHEN c.user1_id = $userId THEN c.user2_id 
+                    ELSE c.user1_id 
+                END
+            )
+            WHERE c.user1_id = $userId OR c.user2_id = $userId
+            ORDER BY COALESCE(c.last_message_at, c.created_at) DESC
+        ";
+        
+        $rs = Database::search($sql);
+        $conversations = [];
+        while ($row = $rs->fetch_assoc()) {
+            $conversations[] = [
+                'conversationId' => (int)$row['conversation_id'],
+                'userId' => (int)$row['user_id'],
+                'displayName' => $row['display_name'] ?? 'User',
+                'username' => $row['username'] ?? 'user',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'lastMessageAt' => $row['last_message_at'],
+                'lastMessagePreview' => $row['last_message_preview'] ?? '',
+                'unreadCount' => (int)$row['unread_count'],
+            ];
+        }
+        return $conversations;
+    }
+
+    public static function getConversationMessages(int $userId, int $conversationId, int $limit = 50): array
+    {
+        $check = Database::search(
+            "SELECT conversation_id FROM dm_conversations 
+             WHERE conversation_id = $conversationId 
+             AND (user1_id = $userId OR user2_id = $userId)
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return [];
+        }
+        
+        Database::iud(
+            "UPDATE direct_messages SET is_read = 1 
+             WHERE conversation_id = $conversationId 
+             AND sender_id != $userId 
+             AND is_read = 0"
+        );
+        
+        $sql = "
+            SELECT 
+                m.message_id,
+                m.sender_id,
+                m.content,
+                m.is_read,
+                m.created_at,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS sender_name,
+                u.profile_picture
+            FROM direct_messages m
+            JOIN users u ON u.user_id = m.sender_id
+            WHERE m.conversation_id = $conversationId
+            ORDER BY m.created_at ASC
+            LIMIT $limit
+        ";
+        
+        $rs = Database::search($sql);
+        $messages = [];
+        while ($row = $rs->fetch_assoc()) {
+            $messages[] = [
+                'messageId' => (int)$row['message_id'],
+                'senderId' => (int)$row['sender_id'],
+                'content' => $row['content'],
+                'isRead' => (bool)$row['is_read'],
+                'createdAt' => $row['created_at'],
+                'senderName' => $row['sender_name'] ?? 'User',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'isOwnMessage' => (int)$row['sender_id'] === $userId,
+            ];
+        }
+        return $messages;
+    }
+
+    public static function sendMessage(int $userId, int $conversationId, string $content): ?array
+    {
+        $content = trim($content);
+        if ($content === '') return null;
+        
+        $check = Database::search(
+            "SELECT user1_id, user2_id FROM dm_conversations 
+             WHERE conversation_id = $conversationId 
+             AND (user1_id = $userId OR user2_id = $userId)
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return null;
+        }
+        
+        $safeContent = addslashes($content);
+        Database::iud(
+            "INSERT INTO direct_messages (conversation_id, sender_id, content, created_at)
+             VALUES ($conversationId, $userId, '$safeContent', NOW())"
+        );
+        
+        $messageId = Database::$connection->insert_id;
+        
+        $preview = strlen($content) > 50 ? substr($content, 0, 50) . '...' : $content;
+        Database::iud(
+            "UPDATE dm_conversations 
+             SET last_message_at = NOW(), 
+                 last_message_preview = '" . addslashes($preview) . "'
+             WHERE conversation_id = $conversationId"
+        );
+        
+        return [
+            'messageId' => (int)$messageId,
+            'conversationId' => $conversationId,
+            'senderId' => $userId,
+            'content' => $content,
+            'createdAt' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    public static function getOrCreateConversation(int $userId, int $otherUserId): ?int
+    {
+        if ($userId === $otherUserId) return null;
+        
+        $user1Id = min($userId, $otherUserId);
+        $user2Id = max($userId, $otherUserId);
+        
+        $check = Database::search(
+            "SELECT conversation_id FROM dm_conversations 
+             WHERE user1_id = $user1Id AND user2_id = $user2Id
+             LIMIT 1"
+        );
+        
+        if ($check && $check->num_rows > 0) {
+            $row = $check->fetch_assoc();
+            return (int)$row['conversation_id'];
+        }
+        
+        Database::iud(
+            "INSERT INTO dm_conversations (user1_id, user2_id, created_at)
+             VALUES ($user1Id, $user2Id, NOW())"
+        );
+        
+        return (int)Database::$connection->insert_id;
+    }
+
+    public static function isConnected(int $userId, int $otherUserId): bool
+    {
+        $sql = "
+            SELECT connection_id FROM user_connections 
+            WHERE ((user_id = $userId AND connected_user_id = $otherUserId)
+            OR (user_id = $otherUserId AND connected_user_id = $userId))
+            AND status = 'accepted'
+            LIMIT 1
+        ";
+        
+        $check = Database::search($sql);
+        return $check && $check->num_rows > 0;
+    }
+
+    public static function getConnectionStatus(int $userId, int $otherUserId): ?string
+    {
+        $sql = "
+            SELECT status FROM user_connections 
+            WHERE (user_id = $userId AND connected_user_id = $otherUserId)
+            OR (user_id = $otherUserId AND connected_user_id = $userId)
+            LIMIT 1
+        ";
+        
+        $check = Database::search($sql);
+        if ($check && $check->num_rows > 0) {
+            $row = $check->fetch_assoc();
+            return $row['status'];
+        }
+        return null;
+    }
+
+    public static function getUnreadCount(int $userId): int
+    {
+        $sql = "
+            SELECT COUNT(*) as cnt FROM direct_messages dm
+            JOIN dm_conversations dc ON dc.conversation_id = dm.conversation_id
+            WHERE (dc.user1_id = $userId OR dc.user2_id = $userId)
+            AND dm.sender_id != $userId
+            AND dm.is_read = 0
+        ";
+        
+        $check = Database::search($sql);
+        if ($check && $row = $check->fetch_assoc()) {
+            return (int)$row['cnt'];
+        }
+        return 0;
+    }
+
+    public static function getBlockedUsers(int $userId): array
+    {
+        $sql = "
+            SELECT user_id FROM user_connections 
+            WHERE connected_user_id = $userId AND status = 'blocked'
+            UNION
+            SELECT connected_user_id FROM user_connections 
+            WHERE user_id = $userId AND status = 'blocked'
+        ";
+        
+        $rs = Database::search($sql);
+        $blocked = [];
+        while ($row = $rs->fetch_assoc()) {
+            $blocked[] = (int)$row['user_id'];
+        }
+        return $blocked;
+    }
+
+    public static function followUser(int $userId, int $targetUserId): bool
+    {
+        if ($userId === $targetUserId) return false;
+        
+        $existing = Database::search(
+            "SELECT connection_id, status FROM user_connections 
+             WHERE (user_id = $userId AND connected_user_id = $targetUserId)
+             OR (user_id = $targetUserId AND connected_user_id = $userId)
+             LIMIT 1"
+        );
+        
+        if ($existing && $existing->num_rows > 0) {
+            $row = $existing->fetch_assoc();
+            if ($row['status'] === 'blocked') {
+                return false;
+            }
+            if ($row['status'] === 'accepted') {
+                return true;
+            }
+            Database::iud(
+                "UPDATE user_connections SET status = 'accepted', updated_at = NOW() 
+                 WHERE connection_id = " . (int)$row['connection_id']
+            );
+        } else {
+            Database::iud(
+                "INSERT INTO user_connections (user_id, connected_user_id, status, created_at, updated_at)
+                 VALUES ($userId, $targetUserId, 'accepted', NOW(), NOW())"
+            );
+        }
+        
+        $user1Id = min($userId, $targetUserId);
+        $user2Id = max($userId, $targetUserId);
+        $checkConv = Database::search(
+            "SELECT conversation_id FROM dm_conversations 
+             WHERE user1_id = $user1Id AND user2_id = $user2Id LIMIT 1"
+        );
+        if (!$checkConv || $checkConv->num_rows === 0) {
+            Database::iud(
+                "INSERT INTO dm_conversations (user1_id, user2_id, created_at)
+                 VALUES ($user1Id, $user2Id, NOW())"
+            );
+        }
+        
+        return true;
+    }
+
+    public static function unfollowUser(int $userId, int $targetUserId): bool
+    {
+        Database::iud(
+            "DELETE FROM user_connections 
+             WHERE user_id = $userId AND connected_user_id = $targetUserId AND status = 'accepted'"
+        );
+        
+        $user1Id = min($userId, $targetUserId);
+        $user2Id = max($userId, $targetUserId);
+        Database::iud(
+            "DELETE FROM dm_conversations WHERE user1_id = $user1Id AND user2_id = $user2Id"
+        );
+        
+        return true;
+    }
+
+    public static function blockUser(int $userId, int $targetUserId): bool
+    {
+        $existing = Database::search(
+            "SELECT connection_id FROM user_connections 
+             WHERE user_id = $userId AND connected_user_id = $targetUserId
+             LIMIT 1"
+        );
+        
+        if ($existing && $existing->num_rows > 0) {
+            Database::iud(
+                "UPDATE user_connections SET status = 'blocked', updated_at = NOW() 
+                 WHERE user_id = $userId AND connected_user_id = $targetUserId"
+            );
+        } else {
+            Database::iud(
+                "INSERT INTO user_connections (user_id, connected_user_id, status, created_at, updated_at)
+                 VALUES ($userId, $targetUserId, 'blocked', NOW(), NOW())"
+            );
+        }
+        
+        Database::iud(
+            "DELETE FROM user_connections 
+             WHERE user_id = $targetUserId AND connected_user_id = $userId"
+        );
+        
+        return true;
+    }
+
+    public static function unblockUser(int $userId, int $targetUserId): bool
+    {
+        Database::iud(
+            "DELETE FROM user_connections 
+             WHERE user_id = $userId AND connected_user_id = $targetUserId AND status = 'blocked'"
+        );
+        return true;
+    }
+}
+
+
+class SupportGroupModel
+{
+    public static function getUserGroups(int $userId): array
+    {
+        $sql = "
+            SELECT 
+                sg.group_id,
+                sg.name,
+                sg.description,
+                sg.category,
+                sg.meeting_schedule,
+                sg.meeting_link,
+                sg.max_members,
+                sgm.role,
+                sgm.joined_at,
+                (SELECT COUNT(*) FROM support_group_members sgm2 
+                 WHERE sgm2.group_id = sg.group_id) AS member_count,
+                 (SELECT COUNT(*) FROM support_group_messages sgm3 
+                  WHERE sgm3.group_id = sg.group_id 
+                  AND sgm3.created_at > COALESCE(
+                      (SELECT MAX(created_at) FROM support_group_messages 
+                       WHERE group_id = sg.group_id 
+                       AND user_id = $userId), '1970-01-01'
+                  )
+                  AND sgm3.user_id != $userId) AS unread_count
+            FROM support_groups sg
+            JOIN support_group_members sgm ON sgm.group_id = sg.group_id
+            WHERE sgm.user_id = $userId
+            AND sg.is_active = 1
+            ORDER BY sg.name ASC
+        ";
+        
+        $rs = Database::search($sql);
+        $groups = [];
+        while ($row = $rs->fetch_assoc()) {
+            $groups[] = [
+                'groupId' => (int)$row['group_id'],
+                'name' => $row['name'],
+                'description' => $row['description'] ?? '',
+                'category' => $row['category'] ?? '',
+                'meetingSchedule' => $row['meeting_schedule'] ?? '',
+                'meetingLink' => $row['meeting_link'] ?? '',
+                'maxMembers' => $row['max_members'] ? (int)$row['max_members'] : null,
+                'role' => $row['role'],
+                'joinedAt' => $row['joined_at'],
+                'memberCount' => (int)$row['member_count'],
+                'unreadCount' => (int)$row['unread_count'],
+            ];
+        }
+        return $groups;
+    }
+
+    public static function getAvailableGroups(int $userId): array
+    {
+        $sql = "
+            SELECT 
+                sg.group_id,
+                sg.name,
+                sg.description,
+                sg.category,
+                sg.meeting_schedule,
+                sg.max_members,
+                (SELECT COUNT(*) FROM support_group_members sgm2 
+                 WHERE sgm2.group_id = sg.group_id) AS member_count,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM support_group_members sgm3 
+                        WHERE sgm3.group_id = sg.group_id 
+                        AND sgm3.user_id = $userId
+                    ) THEN 1 
+                    ELSE 0 
+                END AS is_member
+            FROM support_groups sg
+            WHERE sg.is_active = 1
+            ORDER BY sg.category ASC, sg.name ASC
+        ";
+        
+        $rs = Database::search($sql);
+        $groups = [];
+        while ($row = $rs->fetch_assoc()) {
+            $isFull = $row['max_members'] && (int)$row['member_count'] >= (int)$row['max_members'];
+            $groups[] = [
+                'groupId' => (int)$row['group_id'],
+                'name' => $row['name'],
+                'description' => $row['description'] ?? '',
+                'category' => $row['category'] ?? '',
+                'meetingSchedule' => $row['meeting_schedule'] ?? '',
+                'maxMembers' => $row['max_members'] ? (int)$row['max_members'] : null,
+                'memberCount' => (int)$row['member_count'],
+                'isMember' => (bool)$row['is_member'],
+                'isFull' => $isFull,
+            ];
+        }
+        return $groups;
+    }
+
+    public static function joinGroup(int $userId, int $groupId): bool
+    {
+        $checkGroup = Database::search(
+            "SELECT group_id, max_members FROM support_groups 
+             WHERE group_id = $groupId AND is_active = 1
+             LIMIT 1"
+        );
+        
+        if (!$checkGroup || $checkGroup->num_rows === 0) {
+            return false;
+        }
+        
+        $group = $checkGroup->fetch_assoc();
+        
+        if ($group['max_members']) {
+            $memberCount = Database::search(
+                "SELECT COUNT(*) as cnt FROM support_group_members WHERE group_id = $groupId"
+            );
+            $countRow = $memberCount->fetch_assoc();
+            if ((int)$countRow['cnt'] >= (int)$group['max_members']) {
+                return false;
+            }
+        }
+        
+        $checkMember = Database::search(
+            "SELECT membership_id FROM support_group_members 
+             WHERE group_id = $groupId AND user_id = $userId
+             LIMIT 1"
+        );
+        
+        if ($checkMember && $checkMember->num_rows > 0) {
+            return true;
+        }
+        
+        Database::iud(
+            "INSERT INTO support_group_members (group_id, user_id, role, joined_at)
+             VALUES ($groupId, $userId, 'member', NOW())"
+        );
+        
+        return true;
+    }
+
+    public static function leaveGroup(int $userId, int $groupId): bool
+    {
+        $check = Database::search(
+            "SELECT role FROM support_group_members 
+             WHERE group_id = $groupId AND user_id = $userId
+             AND role != 'leader'
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return false;
+        }
+        
+        Database::iud(
+            "DELETE FROM support_group_members 
+             WHERE group_id = $groupId AND user_id = $userId"
+        );
+        
+        return true;
+    }
+
+    public static function getGroupMessages(int $groupId, int $userId, int $limit = 50): array
+    {
+        $check = Database::search(
+            "SELECT membership_id FROM support_group_members 
+             WHERE group_id = $groupId AND user_id = $userId
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return [];
+        }
+        
+        $sql = "
+            SELECT 
+                m.message_id,
+                m.user_id,
+                m.content,
+                m.is_pinned,
+                m.is_deleted,
+                m.created_at,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS sender_name,
+                u.username,
+                u.profile_picture,
+                sgm.role AS member_role
+            FROM support_group_messages m
+            JOIN users u ON u.user_id = m.user_id
+            LEFT JOIN support_group_members sgm ON sgm.group_id = m.group_id AND sgm.user_id = m.user_id
+            WHERE m.group_id = $groupId
+            AND m.is_deleted = 0
+            ORDER BY m.created_at ASC
+            LIMIT $limit
+        ";
+        
+        $rs = Database::search($sql);
+        $messages = [];
+        while ($row = $rs->fetch_assoc()) {
+            $messages[] = [
+                'messageId' => (int)$row['message_id'],
+                'userId' => (int)$row['user_id'],
+                'content' => $row['content'],
+                'isPinned' => (bool)$row['is_pinned'],
+                'createdAt' => $row['created_at'],
+                'senderName' => $row['sender_name'] ?? 'User',
+                'username' => $row['username'] ?? 'user',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'memberRole' => $row['member_role'] ?? 'member',
+                'isOwnMessage' => (int)$row['user_id'] === $userId,
+            ];
+        }
+        return $messages;
+    }
+
+    public static function sendMessage(int $userId, int $groupId, string $content): ?array
+    {
+        $content = trim($content);
+        if ($content === '') return null;
+        
+        $check = Database::search(
+            "SELECT membership_id FROM support_group_members 
+             WHERE group_id = $groupId AND user_id = $userId
+             LIMIT 1"
+        );
+        
+        if (!$check || $check->num_rows === 0) {
+            return null;
+        }
+        
+        $safeContent = addslashes($content);
+        Database::iud(
+            "INSERT INTO support_group_messages (group_id, user_id, content, created_at)
+             VALUES ($groupId, $userId, '$safeContent', NOW())"
+        );
+        
+        $messageId = Database::$connection->insert_id;
+        
+        return [
+            'messageId' => (int)$messageId,
+            'groupId' => $groupId,
+            'userId' => $userId,
+            'content' => $content,
+            'createdAt' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    public static function getGroupDetails(int $groupId, int $userId): ?array
+    {
+        $sql = "
+            SELECT 
+                sg.group_id,
+                sg.name,
+                sg.description,
+                sg.category,
+                sg.meeting_schedule,
+                sg.meeting_link,
+                sg.max_members,
+                sg.is_active,
+                sg.created_at,
+                (SELECT COUNT(*) FROM support_group_members sgm2 
+                 WHERE sgm2.group_id = sg.group_id) AS member_count,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM support_group_members sgm3 
+                        WHERE sgm3.group_id = sg.group_id 
+                        AND sgm3.user_id = $userId
+                    ) THEN 1 
+                    ELSE 0 
+                END AS is_member,
+                (SELECT role FROM support_group_members 
+                 WHERE group_id = sg.group_id AND user_id = $userId) AS user_role
+            FROM support_groups sg
+            WHERE sg.group_id = $groupId
+        ";
+        
+        $rs = Database::search($sql);
+        if ($rs && $row = $rs->fetch_assoc()) {
+            return [
+                'groupId' => (int)$row['group_id'],
+                'name' => $row['name'],
+                'description' => $row['description'] ?? '',
+                'category' => $row['category'] ?? '',
+                'meetingSchedule' => $row['meeting_schedule'] ?? '',
+                'meetingLink' => $row['meeting_link'] ?? '',
+                'maxMembers' => $row['max_members'] ? (int)$row['max_members'] : null,
+                'isActive' => (bool)$row['is_active'],
+                'createdAt' => $row['created_at'],
+                'memberCount' => (int)$row['member_count'],
+                'isMember' => (bool)$row['is_member'],
+                'userRole' => $row['user_role'] ?? null,
+            ];
+        }
+        return null;
+    }
+
+    public static function getGroupMembers(int $groupId, int $limit = 20): array
+    {
+        $sql = "
+            SELECT 
+                u.user_id,
+                COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username) AS display_name,
+                u.username,
+                u.profile_picture,
+                sgm.role,
+                sgm.joined_at
+            FROM support_group_members sgm
+            JOIN users u ON u.user_id = sgm.user_id
+            WHERE sgm.group_id = $groupId
+            ORDER BY 
+                CASE sgm.role 
+                    WHEN 'leader' THEN 1 
+                    WHEN 'moderator' THEN 2 
+                    ELSE 3 
+                END,
+                sgm.joined_at ASC
+            LIMIT $limit
+        ";
+        
+        $rs = Database::search($sql);
+        $members = [];
+        while ($row = $rs->fetch_assoc()) {
+            $members[] = [
+                'userId' => (int)$row['user_id'],
+                'displayName' => $row['display_name'] ?? 'User',
+                'username' => $row['username'] ?? 'user',
+                'profilePicture' => $row['profile_picture'] ?? '',
+                'role' => $row['role'],
+                'joinedAt' => $row['joined_at'],
+            ];
+        }
+        return $members;
+    }
+
+    public static function getUnreadGroupMessageCount(int $userId): int
+    {
+        $sql = "
+            SELECT SUM(unread.cnt) as total_unread
+            FROM (
+                SELECT 
+                    sg.group_id,
+                    (SELECT COUNT(*) FROM support_group_messages m
+                     WHERE m.group_id = sg.group_id
+                     AND m.user_id != $userId
+                     AND m.created_at > COALESCE(
+                         (SELECT MAX(created_at) FROM support_group_messages 
+                          WHERE group_id = sg.group_id 
+                          AND user_id = $userId), '1970-01-01'
+                     )) AS cnt
+                FROM support_groups sg
+                JOIN support_group_members sgm ON sgm.group_id = sg.group_id
+                WHERE sgm.user_id = $userId AND sg.is_active = 1
+            ) unread
+        ";
+        
+        $check = Database::search($sql);
+        if ($check && $row = $check->fetch_assoc()) {
+            return (int)($row['total_unread'] ?? 0);
+        }
+        return 0;
     }
 }

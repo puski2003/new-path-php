@@ -44,6 +44,15 @@ if ($path === '/') {
     Response::redirect('/auth/login');
 }
 
+// Handle dynamic routes
+$routeParams = [];
+
+// /user/profile/{id}
+if (preg_match('#^/user/profile/(\d+)$#', $path, $matches)) {
+    $routeParams = ['id' => (int)$matches[1]];
+    $pagePath = ROOT . '/pages/user/profile/index.php';
+}
+
 // Serve the page if it exists
 if (file_exists($pagePath)) {
     require_once $pagePath;

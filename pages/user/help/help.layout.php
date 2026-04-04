@@ -87,7 +87,12 @@
 
                     <div class="help-section support-services">
                         <h3 class="section-title">Support Services</h3>
-                        <div class="services-grid" id="servicesGrid"></div>
+                        <div class="services-grid" id="servicesGrid">
+                            <?php foreach ($helpServices as $service): ?>
+                                <?php require __DIR__ . '/../common/user.help-service-card.php'; ?>
+                            <?php endforeach; ?>
+                            <?php require __DIR__ . '/../common/user.help-service-empty-state.php'; ?>
+                        </div>
                     </div>
 
                     <div class="help-section quick-actions">
@@ -144,47 +149,11 @@
         </div>
     </div>
 
-    <script>
-        window.supportServices = <?= json_encode(array_map(function ($center) {
-                                    $availability = (string)($center['availability'] ?? 'Available');
-                                    $status = 'available';
-                                    if (stripos($availability, 'weekend') !== false || stripos($availability, 'busy') !== false) {
-                                        $status = 'busy';
-                                    }
-                                    if (stripos($availability, 'offline') !== false || stripos($availability, 'closed') !== false) {
-                                        $status = 'offline';
-                                    }
-
-                                    $type = strtolower((string)($center['type'] ?? 'resources'));
-                                    $category = strtolower((string)($center['category'] ?? 'community'));
-
-                                    $contactLabel = 'Contact';
-                                    if (!empty($center['phoneNumber'])) $contactLabel = 'Call: ' . $center['phoneNumber'];
-                                    elseif ($type === 'chat') $contactLabel = 'Start Chat';
-                                    elseif ($type === 'appointment') $contactLabel = 'Schedule';
-                                    elseif ($type === 'resources') $contactLabel = 'Browse';
-
-                                    return [
-                                        'id' => (int)$center['helpCenterId'],
-                                        'title' => (string)$center['name'],
-                                        'organization' => (string)($center['organization'] ?? ''),
-                                        'type' => $type !== '' ? $type : 'resources',
-                                        'category' => $category !== '' ? $category : 'community',
-                                        'phoneNumber' => (string)($center['phoneNumber'] ?? ''),
-                                        'email' => (string)($center['email'] ?? ''),
-                                        'website' => (string)($center['website'] ?? ''),
-                                        'address' => (string)($center['address'] ?? ''),
-                                        'city' => (string)($center['city'] ?? ''),
-                                        'state' => (string)($center['state'] ?? ''),
-                                        'zipCode' => (string)($center['zipCode'] ?? ''),
-                                        'availability' => $availability !== '' ? $availability : 'Available',
-                                        'description' => (string)($center['description'] ?? ''),
-                                        'specialties' => (string)($center['specialties'] ?? ''),
-                                        'status' => $status,
-                                        'contact' => $contactLabel,
-                                    ];
-                                }, $helpCenters), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-    </script>
+    <div hidden>
+        <?php foreach ($helpServices as $service): ?>
+            <?php require __DIR__ . '/../common/user.help-service-detail.php'; ?>
+        <?php endforeach; ?>
+    </div>
     <script src="/assets/js/user/helpCenter.js"></script>
     <script src="/assets/js/auth/user-profile.js"></script>
     <script src="/assets/js/user/log-urge-popup.js"></script>

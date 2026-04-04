@@ -18,9 +18,10 @@ const FOLLOWUP_WINDOW_DAYS  = 7;
 
 /* ── Fetch session + counselor info ─────────────────────────── */
 $rs = Database::search("
-    SELECT s.session_id, s.user_id, s.counselor_id, s.session_datetime, s.status,
+    SELECT s.session_id, s.user_id, s.counselor_id, s.session_datetime, s.status, s.updated_at,
            COALESCE(u.display_name, u.username) AS counselor_name,
            u.profile_picture                    AS counselor_avatar,
+           u.user_id                            AS counselor_user_id,
            c.title                              AS counselor_title,
            c.specialty
     FROM sessions s
@@ -37,8 +38,11 @@ if (!$rs || $rs->num_rows === 0) {
 }
 $session = $rs->fetch_assoc();
 
-$sessionTs = strtotime($session['session_datetime']);
-$expiresTs = $sessionTs + (FOLLOWUP_WINDOW_DAYS * 86400);
+// Use updated_at as completion timestamp (it is stamped when status → completed).
+// Fall back to session_datetime for legacy rows that pre-date this field.
+$completedTs = !empty($session['updated_at']) ? strtotime($session['updated_at']) : strtotime($session['session_datetime']);
+$sessionTs   = strtotime($session['session_datetime']); // kept for display only
+$expiresTs   = $completedTs + (FOLLOWUP_WINDOW_DAYS * 86400);
 $daysLeft  = max(0, (int)ceil(($expiresTs - time()) / 86400));
 $isExpired = time() > $expiresTs;
 
@@ -63,7 +67,49 @@ if ($msgsRs) {
 }
 $isLocked = $isExpired || $msgCount >= FOLLOWUP_MAX_MESSAGES;
 
-/* ── Handle POST ─────────────────────────────────────────────── */
+/* ── AJAX send ───────────────────────────────────────────────── */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && Request::get('ajax') === 'send') {
+    header('Content-Type: application/json');
+    $msg = trim((string) (Request::post('message') ?? ''));
+
+    if ($isLocked) {
+        echo json_encode(['success' => false, 'error' => 'Thread is closed']);
+        exit;
+    }
+    if ($msg === '' || strlen($msg) > 1000) {
+        echo json_encode(['success' => false, 'error' => 'Invalid message']);
+        exit;
+    }
+
+    Database::setUpConnection();
+    $safeMsg = Database::$connection->real_escape_string($msg);
+    Database::iud("INSERT INTO session_messages (session_id, sender_id, message) VALUES ($sessionId, $userId, '$safeMsg')");
+
+    $counselorUserId = (int) ($session['counselor_user_id'] ?? 0);
+    if ($counselorUserId > 0) {
+        $t = Database::$connection->real_escape_string('New follow-up message');
+        $m = Database::$connection->real_escape_string('Your client sent a follow-up message.');
+        $l = Database::$connection->real_escape_string("/counselor/sessions/follow-up?session_id=$sessionId");
+        Database::iud("INSERT INTO notifications (user_id, type, title, message, link) VALUES ($counselorUserId, 'followup_message', '$t', '$m', '$l')");
+    }
+
+    $myAvatar = $user['profilePictureUrl'] ?? '/assets/img/avatar.png';
+    echo json_encode([
+        'success'  => true,
+        'message'  => [
+            'isMe'    => true,
+            'sender'  => 'You',
+            'avatar'  => $myAvatar,
+            'text'    => $msg,
+            'time'    => date('M j, g:i A'),
+        ],
+        'msgCount' => $msgCount + 1,
+        'daysLeft' => $daysLeft,
+    ]);
+    exit;
+}
+
+/* ── Form POST fallback ──────────────────────────────────────── */
 $sendError = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $msg = trim(Request::post('message') ?? '');
@@ -77,6 +123,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $safeMsg = Database::$connection->real_escape_string($msg);
         Database::iud("INSERT INTO session_messages (session_id, sender_id, message)
                         VALUES ($sessionId, $userId, '$safeMsg')");
+
+        // Notify counselor about new follow-up message
+        $counselorUserId = (int)($session['counselor_user_id'] ?? 0);
+        if ($counselorUserId > 0) {
+            $notifTitle = Database::$connection->real_escape_string('New follow-up message');
+            $notifMsg   = Database::$connection->real_escape_string('Your client sent a follow-up message from your session.');
+            $notifLink  = Database::$connection->real_escape_string("/counselor/sessions/follow-up?session_id=$sessionId");
+            Database::iud("INSERT INTO notifications (user_id, type, title, message, link)
+                            VALUES ($counselorUserId, 'followup_message', '$notifTitle', '$notifMsg', '$notifLink')");
+        }
+
         Response::redirect("/user/sessions/follow-up?session_id=$sessionId");
     }
 }
@@ -199,20 +256,20 @@ $pageStyle = ['user/sessions', 'user/follow-up'];
                     </a>
                 </div>
                 <?php else: ?>
-                <form method="POST" class="followup-compose">
+                <form method="POST" class="followup-compose" id="fuForm">
                     <input type="hidden" name="session_id" value="<?= $sessionId ?>">
                     <?php if ($sendError): ?>
                         <p class="followup-error"><?= htmlspecialchars($sendError) ?></p>
                     <?php endif; ?>
                     <div class="followup-input-row">
-                        <textarea name="message" class="followup-textarea"
+                        <textarea name="message" id="fuTextarea" class="followup-textarea"
                                   placeholder="Write a follow-up message…"
                                   maxlength="1000" rows="3" required></textarea>
-                        <button type="submit" class="btn btn-primary followup-send-btn">
+                        <button type="submit" class="btn btn-primary followup-send-btn" id="fuSendBtn">
                             <i data-lucide="send" style="width:16px;height:16px;"></i>
                         </button>
                     </div>
-                    <p class="followup-hint">
+                    <p class="followup-hint" id="fuHint">
                         <?= FOLLOWUP_MAX_MESSAGES - $msgCount ?> message<?= (FOLLOWUP_MAX_MESSAGES - $msgCount) !== 1 ? 's' : '' ?> remaining
                         · <?= $daysLeft ?> day<?= $daysLeft !== 1 ? 's' : '' ?> left
                     </p>
@@ -227,9 +284,66 @@ $pageStyle = ['user/sessions', 'user/follow-up'];
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
 lucide.createIcons();
-// Scroll messages to bottom
-const msgs = document.querySelector('.followup-messages');
+
+const msgs    = document.querySelector('.followup-messages');
 if (msgs) msgs.scrollTop = msgs.scrollHeight;
+
+const form    = document.getElementById('fuForm');
+const textarea = document.getElementById('fuTextarea');
+const sendBtn  = document.getElementById('fuSendBtn');
+const hint     = document.getElementById('fuHint');
+const sessionId = <?= $sessionId ?>;
+const myAvatar  = <?= json_encode($user['profilePictureUrl'] ?? '/assets/img/avatar.png') ?>;
+
+if (form) {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        sendBtn.disabled = true;
+
+        const fd = new FormData();
+        fd.append('session_id', sessionId);
+        fd.append('message', text);
+
+        fetch('/user/sessions/follow-up?session_id=' + sessionId + '&ajax=send', {
+            method: 'POST',
+            body: fd,
+        })
+        .then(r => r.json())
+        .then(function (data) {
+            if (!data.success) return;
+            textarea.value = '';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'followup-message message-mine';
+            bubble.innerHTML =
+                '<div class="message-bubble-wrap">' +
+                    '<span class="message-sender">You</span>' +
+                    '<div class="message-bubble">' + escHtml(data.message.text) + '</div>' +
+                    '<span class="message-time">' + escHtml(data.message.time) + '</span>' +
+                '</div>' +
+                '<img src="' + escHtml(myAvatar) + '" class="message-avatar" alt="" />';
+
+            const empty = msgs.querySelector('.followup-empty-state');
+            if (empty) { msgs.classList.remove('empty'); empty.remove(); }
+
+            msgs.appendChild(bubble);
+            msgs.scrollTop = msgs.scrollHeight;
+
+            const rem = 5 - data.msgCount;
+            if (hint) hint.textContent = rem + ' message' + (rem !== 1 ? 's' : '') + ' remaining · ' + data.daysLeft + ' day' + (data.daysLeft !== 1 ? 's' : '') + ' left';
+
+            if (data.msgCount >= 5) location.reload();
+        })
+        .finally(function () { sendBtn.disabled = false; });
+    });
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 <script src="/assets/js/auth/user-profile.js"></script>
 </body>

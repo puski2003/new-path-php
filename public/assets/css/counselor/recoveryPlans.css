@@ -1,204 +1,172 @@
-@import './dashboard.css';
+/* Counselor recovery plans list — mirrors user/counselors card layout */
+@import './base.css';
 
-.inner-body-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xl);
-}
-
-.theme-counselor .counselor-toolbar-card,
-.theme-counselor .counselor-list-card {
-    background: var(--color-bg-white);
-    border: 2px solid var(--color-border-secondary);
-}
-
-.plans-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.plans-header h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-}
-
-.plans-grid {
+/* ── Container ── */
+.rp-plans-container {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
-.empty-state {
-    background: var(--color-bg-cream);
-    border: 1px dashed var(--color-border-primary);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-2xl);
-    text-align: center;
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-}
-
-.empty-state p {
-    margin-bottom: var(--spacing-xs);
-}
-
-/* Plan Card */
-.plan-card {
-    background: var(--color-bg-cream);
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+/* ── Plan row card (mirrors .counselor-card) ── */
+.rp-plan-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    background-color: var(--color-primary-light);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl) var(--spacing-2xl);
     gap: var(--spacing-lg);
-    transition: all 0.2s ease;
+    transition: box-shadow 0.2s ease;
+    border: 1px solid rgba(61, 168, 228, 0.15);
 }
 
-.plan-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+.rp-plan-row:hover {
+    box-shadow: 0 4px 20px rgba(61, 168, 228, 0.18);
 }
 
-.plan-card-content {
+/* ── Plan image ── */
+.rp-plan-thumb {
+    flex-shrink: 0;
+}
+
+.rp-plan-thumb img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(61, 168, 228, 0.2);
+}
+
+/* ── Info block ── */
+.rp-plan-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 4px;
+    min-width: 0;
 }
 
-.plan-title {
-    font-size: var(--font-size-base);
-    color: var(--color-text-primary);
-    font-weight: var(--font-weight-semibold);
-}
-
-.plan-status {
-    display: inline-block;
-    width: fit-content;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-pill);
+.rp-plan-label {
     font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+}
+
+.rp-plan-title {
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
-    text-transform: capitalize;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.status-active {
-    background: #b5edd1;
-    color: #065f46;
+.rp-plan-client {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
-.status-completed {
-    background: #bfdbfe;
-    color: #1d4ed8;
-}
-
-.status-paused {
-    background: #fbbc05;
-    color: rgba(159, 90, 2, 0.95);
-}
-
-.status-cancelled {
-    background: #ffbcbc;
-    color: #f43a3a;
-}
-
-.status-draft {
-    background: #e0e0e0;
-    color: #666;
-}
-
-.plan-description {
+.rp-plan-desc {
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin-top: 2px;
 }
 
-.plan-progress {
+/* ── Pills row ── */
+.rp-plan-pills {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-xs);
+    flex-wrap: wrap;
 }
 
-.progress-bar-small {
-    flex: 1;
-    max-width: 200px;
-    height: 8px;
-    background: var(--color-bg-pale-green, #e0e0e0);
+.rp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    background: var(--color-bg-white);
+    border: 1px solid rgba(61, 168, 228, 0.22);
     border-radius: var(--radius-pill);
-    overflow: hidden;
+    padding: 3px 10px;
 }
 
-.progress-fill-small {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
-    border-radius: var(--radius-pill);
-    transition: width 0.3s ease;
-}
+.rp-pill i,
+.rp-pill svg { width: 12px; height: 12px; }
 
-.progress-text {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-    font-weight: var(--font-weight-medium);
-}
-
-.plan-card-actions {
+/* ── Actions column ── */
+.rp-plan-actions {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
-    align-items: flex-start;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
 }
 
-.btn-view {
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    padding: var(--spacing-xs) var(--spacing-md);
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    font-size: var(--font-size-sm);
+/* ── Toolbar ── */
+.rp-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-xl);
+    gap: var(--spacing-md);
+}
+
+.rp-toolbar-title {
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
-    transition: all 0.2s ease;
+    color: var(--color-text-primary);
 }
 
-.btn-view:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
+/* ── Empty state ── */
+.rp-empty {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-xl);
+    border: 1px dashed rgba(61, 168, 228, 0.3);
+    color: var(--color-text-muted);
+    margin: var(--spacing-lg) var(--spacing-xl);
 }
 
-.btn-delete-plan {
-    background: #ffbcbc;
-    color: #f43a3a;
-    border: none;
-    padding: var(--spacing-xs) var(--spacing-md);
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    transition: all 0.2s ease;
+.rp-empty i,
+.rp-empty svg {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto var(--spacing-md);
+    opacity: 0.35;
 }
 
-.btn-delete-plan:hover {
-    background: #fecaca;
-}
+.rp-empty p { font-size: var(--font-size-sm); margin-bottom: var(--spacing-md); }
 
-.plan-image {
-    width: 150px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
-}
-
+/* ── Responsive ── */
 @media (max-width: 768px) {
-    .plans-header {
+    .rp-plan-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: var(--spacing-lg);
+    }
+
+    .rp-plan-actions {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .rp-toolbar {
         flex-direction: column;
         align-items: stretch;
-        gap: var(--spacing-md);
     }
 }

@@ -5,12 +5,51 @@
     bottom:0px;
 }
 
+/* Main Tab Navigation (Posts / Find People) */
+.community-main-tabs {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-xl) 0;
+    border-bottom: 2px solid var(--color-border-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.community-main-tab {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-pill) var(--radius-pill) 0 0;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+}
+
+.community-main-tab:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-light-green);
+}
+
+.community-main-tab.active {
+    color: var(--color-text-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.community-main-tab svg {
+    width: 16px;
+    height: 16px;
+}
+
 .community-content-header {
     display: flex;
     justify-content: flex-end;
     padding: var(--spacing-md) var(--spacing-xl);
     gap: var(--spacing-md);
-
 }
 
 /* Community Navigation Sections */
@@ -78,6 +117,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    text-decoration: none   ;
 }
 
 .filter-btn:hover {
@@ -91,9 +131,7 @@
     transition: transform 0.2s ease;
 }
 
-.filter-btn:hover .filter-icon {
-    transform: rotate(180deg);
-}
+
 
 /* Community Posts Container */
 .community-posts-container {
@@ -1208,4 +1246,48 @@
     color: var(--color-text-primary);
     margin: 0 0 var(--spacing-sm) 0;
     line-height: 1.3;
+}
+
+/* Follow Button on Post Header */
+.btn-follow-post {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    background: var(--color-primary);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-follow-post:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-follow-post svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-follow-post.following {
+    background: var(--color-bg-light-green);
+    color: var(--color-text-secondary);
+}
+
+.btn-follow-post.following:hover {
+    background: #fee;
+    color: #dc2626;
+}
+
+.author-name-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.author-name-link:hover .author-name {
+    color: var(--color-primary);
 }

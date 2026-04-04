@@ -115,7 +115,10 @@
         </section>
     </main>
 
+    <?php require_once __DIR__ . '/../common/user.followup-popup.php'; ?>
+
     <script src="/assets/js/user/sessions.js"></script>
+    <script src="/assets/js/user/followUp.js"></script>
     <script src="/assets/js/auth/user-profile.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();

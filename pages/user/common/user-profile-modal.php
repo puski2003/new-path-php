@@ -9,9 +9,10 @@ if (!isset($userProfile)) {
     $uid = (int) $user['id'];
     $rs = Database::search(
         "SELECT u.user_id, u.email, u.first_name, u.last_name, u.display_name,
-                u.profile_picture, u.phone_number, u.age, u.gender,
+                u.profile_picture, u.bio, u.phone_number, u.age, u.gender,
                 up.emergency_contact_name, up.emergency_contact_phone,
-                up.sobriety_start_date, up.recovery_type
+                up.sobriety_start_date, up.recovery_type,
+                COALESCE(up.is_anonymous, 1) as is_anonymous
          FROM users u
          LEFT JOIN user_profiles up ON up.user_id = u.user_id
          WHERE u.user_id = $uid"
@@ -84,6 +85,15 @@ if (!isset($userProfile)) {
                 </div>
 
                 <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea class="form-input"
+                        id="bio"
+                        name="bio"
+                        rows="3"
+                        placeholder="Tell others about yourself..."><?= htmlspecialchars($userProfile['bio'] ?? '') ?></textarea>
+                </div>
+
+                <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email"
                         class="form-input"
@@ -141,6 +151,22 @@ if (!isset($userProfile)) {
                         id="emergencyContactPhone"
                         name="emergencyContactPhone"
                         value="<?= htmlspecialchars($userProfile['emergency_contact_phone'] ?? '') ?>" />
+                </div>
+
+                <!-- Privacy Section -->
+                <div class="form-divider"></div>
+                <h4 class="form-section-title">Privacy Settings</h4>
+
+                <div class="form-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" 
+                               id="isAnonymous" 
+                               name="isAnonymous" 
+                               value="1"
+                               <?= !empty($userProfile['is_anonymous']) ? 'checked' : '' ?> />
+                        <span>Anonymous Mode</span>
+                    </label>
+                    <p class="form-help">When enabled, other users will see "Anonymous User" instead of your name and profile picture in community posts.</p>
                 </div>
 
                 <!-- Recovery Tracking Section -->

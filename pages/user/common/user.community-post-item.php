@@ -5,17 +5,42 @@ $isOwner = ((int)($user['id'] ?? 0) === $postUserId);
 $avatar = !empty($currentPost['profilePictureUrl']) ? $currentPost['profilePictureUrl'] : '/assets/img/avatar.png';
 $displayName = !empty($currentPost['anonymous']) ? 'Anonymous User' : ($currentPost['displayName'] ?? ($currentPost['username'] ?? 'User'));
 $createdAt = !empty($currentPost['createdAt']) ? date('M d \a\t H:i', strtotime($currentPost['createdAt'])) : '';
+$isFollowing = !empty($currentPost['isFollowing']) ? $currentPost['isFollowing'] : false;
+$isAnonymous = !empty($currentPost['anonymous']);
 ?>
 <div class="community-post" data-post-id="<?= $postId ?>">
     <div class="post-header">
         <div class="post-author">
-            <img src="<?= htmlspecialchars($avatar) ?>" alt="<?= htmlspecialchars($displayName) ?>" class="author-avatar" />
+            <?php if (!$isAnonymous): ?>
+                <a href="/user/profile/<?= $postUserId ?>">
+                    <img src="<?= htmlspecialchars($avatar) ?>" alt="<?= htmlspecialchars($displayName) ?>" class="author-avatar" />
+                </a>
+            <?php else: ?>
+                <img src="/assets/img/avatar.png" alt="Anonymous" class="author-avatar" />
+            <?php endif; ?>
 
             <div class="author-info">
-                <h4 class="author-name"><?= htmlspecialchars($displayName) ?></h4>
+                <?php if (!$isAnonymous): ?>
+                    <a href="/user/profile/<?= $postUserId ?>" class="author-name-link">
+                        <h4 class="author-name"><?= htmlspecialchars($displayName) ?></h4>
+                    </a>
+                <?php else: ?>
+                    <h4 class="author-name"><?= htmlspecialchars($displayName) ?></h4>
+                <?php endif; ?>
                 <span class="post-time"><?= htmlspecialchars($createdAt) ?></span>
             </div>
         </div>
+        
+        <?php if (!$isOwner && !$isAnonymous): ?>
+            <button class="btn-follow-post <?= $isFollowing ? 'following' : '' ?>" data-user-id="<?= $postUserId ?>">
+                <?php if ($isFollowing): ?>
+                    <i data-lucide="user-check" stroke-width="2"></i>
+                <?php else: ?>
+                    <i data-lucide="user-plus" stroke-width="2"></i>
+                <?php endif; ?>
+                <span><?= $isFollowing ? 'Following' : 'Follow' ?></span>
+            </button>
+        <?php endif; ?>
         <div class="post-menu-container">
             <button class="post-menu-btn" data-post-id="<?= $postId ?>">
                 <i data-lucide="more-horizontal" class="menu-icon"></i>

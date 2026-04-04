@@ -1,9 +1,10 @@
 <?php
 $navItems = [
-    ['Dashboard', '/counselor/dashboard', 'home', 'dashboard'],
-    ['Clients', '/counselor/clients', 'heart-pulse', 'clients'],
-    ['Sessions', '/counselor/sessions', 'video', 'sessions'],
-    ['Recovery Plans', '/counselor/recovery-plans', 'clipboard-plus', 'recovery'],
+    ['Today',           '/counselor/dashboard',       'home',           'dashboard'],
+    ['Schedule',        '/counselor/sessions',        'calendar-days',  'sessions'],
+    ['Clients',         '/counselor/clients',         'heart-pulse',    'clients'],
+    ['Recovery Plans',  '/counselor/recovery-plans',  'clipboard-plus', 'recovery'],
+    ['Profile',         '/counselor/profile',         'user-round',     'profile'],
 ];
 ?>
 <section class="sidebar">

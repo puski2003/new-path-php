@@ -33,6 +33,7 @@ $emergencyName  = e_str(trim($_POST['emergencyContactName'] ?? ''));
 $emergencyPhone = e_str(trim($_POST['emergencyContactPhone'] ?? ''));
 $sobrietyDate   = !empty($_POST['sobrietyStartDate']) ? "'" . e_str($_POST['sobrietyStartDate']) . "'" : 'NULL';
 $recoveryType   = e_str(trim($_POST['recoveryType'] ?? ''));
+$isAnonymous    = isset($_POST['isAnonymous']) ? 1 : 0;
 
 // Handle Profile Picture Upload
 $profilePicUpdate = "";
@@ -78,18 +79,19 @@ try {
     $hasProfile = $rs->fetch_assoc();
 
     if ($hasProfile) {
-        $queryProfile = "UPDATE user_profiles SET 
+        $queryProfile = "UPDATE user_profiles SET
                 emergency_contact_name = '$emergencyName',
                 emergency_contact_phone = '$emergencyPhone',
                 sobriety_start_date = $sobrietyDate,
-                recovery_type = '$recoveryType'
+                recovery_type = '$recoveryType',
+                is_anonymous = $isAnonymous
              WHERE user_id = $userId";
         Database::iud($queryProfile);
     } else {
-        $queryProfile = "INSERT INTO user_profiles 
-            (user_id, emergency_contact_name, emergency_contact_phone, sobriety_start_date, recovery_type) 
-            VALUES 
-            ($userId, '$emergencyName', '$emergencyPhone', $sobrietyDate, '$recoveryType')";
+        $queryProfile = "INSERT INTO user_profiles
+            (user_id, emergency_contact_name, emergency_contact_phone, sobriety_start_date, recovery_type, is_anonymous)
+            VALUES
+            ($userId, '$emergencyName', '$emergencyPhone', $sobrietyDate, '$recoveryType', $isAnonymous)";
         Database::iud($queryProfile);
     }
 

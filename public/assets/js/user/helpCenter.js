@@ -1,10 +1,10 @@
-const supportServices = Array.isArray(window.supportServices) ? window.supportServices : [];
-
 let currentPage = 1;
 const itemsPerPage = 6;
-let filteredServices = [...supportServices];
+let filteredServices = [];
 
 let servicesGrid;
+let serviceCards = [];
+let servicesEmptyState;
 let helpSearch;
 let categoryFilter;
 let typeFilter;
@@ -16,7 +16,7 @@ let paginationNumbers;
 document.addEventListener('DOMContentLoaded', function () {
   initializeElements();
   setupEventListeners();
-  renderServices();
+  applyFilters();
   updatePagination();
 });
 
@@ -29,6 +29,9 @@ function initializeElements() {
   prevBtn = document.getElementById('prevBtn');
   nextBtn = document.getElementById('nextBtn');
   paginationNumbers = document.getElementById('paginationNumbers');
+  servicesEmptyState = document.getElementById('servicesEmptyState');
+  serviceCards = Array.from(document.querySelectorAll('.service-card'));
+  filteredServices = [...serviceCards];
 }
 
 function setupEventListeners() {
@@ -54,6 +57,7 @@ function setupEventListeners() {
 
   setupEmergencyActions();
   setupQuickActions();
+  setupServiceCardListeners();
 
   window.showCenterDetails = function (centerId) {
     showCenterDetails(centerId);
@@ -73,49 +77,35 @@ function setupEventListeners() {
 }
 
 function handleSearch() {
-  const searchTerm = (helpSearch?.value || '').toLowerCase().trim();
-
-  if (searchTerm === '') {
-    filteredServices = [...supportServices];
-  } else {
-    filteredServices = supportServices.filter(
-      (service) =>
-        String(service.title || '').toLowerCase().includes(searchTerm) ||
-        String(service.description || '').toLowerCase().includes(searchTerm) ||
-        String(service.category || '').toLowerCase().includes(searchTerm)
-    );
-  }
-
   currentPage = 1;
-  renderServices();
+  applyFilters();
   updatePagination();
 }
 
 function handleFilter() {
+  currentPage = 1;
+  applyFilters();
+  updatePagination();
+}
+
+function applyFilters() {
+  const searchTerm = (helpSearch?.value || '').toLowerCase().trim();
   const categoryValue = categoryFilter ? categoryFilter.value : 'all';
   const typeValue = typeFilter ? typeFilter.value : 'all';
 
-  filteredServices = supportServices.filter((service) => {
-    const serviceCategory = String(service.category || '').toLowerCase();
-    const serviceType = String(service.type || '').toLowerCase();
-    const categoryMatch = categoryValue === 'all' || serviceCategory === categoryValue;
-    const typeMatch = typeValue === 'all' || serviceType === typeValue;
-    return categoryMatch && typeMatch;
+  filteredServices = serviceCards.filter((card) => {
+    const cardCategory = String(card.dataset.category || '').toLowerCase();
+    const cardType = String(card.dataset.type || '').toLowerCase();
+    const searchText = String(card.dataset.searchText || '').toLowerCase();
+
+    const categoryMatch = categoryValue === 'all' || cardCategory === categoryValue;
+    const typeMatch = typeValue === 'all' || cardType === typeValue;
+    const searchMatch = searchTerm === '' || searchText.includes(searchTerm);
+
+    return categoryMatch && typeMatch && searchMatch;
   });
 
-  if (helpSearch && helpSearch.value.trim() !== '') {
-    const searchTerm = helpSearch.value.toLowerCase().trim();
-    filteredServices = filteredServices.filter(
-      (service) =>
-        String(service.title || '').toLowerCase().includes(searchTerm) ||
-        String(service.description || '').toLowerCase().includes(searchTerm) ||
-        String(service.category || '').toLowerCase().includes(searchTerm)
-    );
-  }
-
-  currentPage = 1;
   renderServices();
-  updatePagination();
 }
 
 function renderServices() {
@@ -123,65 +113,26 @@ function renderServices() {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const servicesToShow = filteredServices.slice(startIndex, endIndex);
+  const visibleIds = new Set(filteredServices.slice(startIndex, endIndex).map((card) => card.dataset.serviceId));
 
-  if (servicesToShow.length === 0) {
-    servicesGrid.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <i data-lucide="search-x" style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;"></i>
-        <h3>No services found</h3>
-        <p>Try adjusting your search or filters</p>
-      </div>
-    `;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    return;
+  serviceCards.forEach((card) => {
+    const shouldShow = visibleIds.has(card.dataset.serviceId);
+    card.style.display = shouldShow ? '' : 'none';
+  });
+
+  if (servicesEmptyState) {
+    servicesEmptyState.style.display = filteredServices.length === 0 ? '' : 'none';
   }
 
-  servicesGrid.innerHTML = servicesToShow
-    .map(
-      (service) => `
-      <div class="service-card" data-service-id="${service.id}">
-        <div class="service-header">
-          <div class="service-info">
-            <h4>${escapeHtml(service.title || '')}</h4>
-            ${service.organization ? `<p class="organization-name">${escapeHtml(service.organization)}</p>` : ''}
-          </div>
-          <span class="service-category">${escapeHtml(service.category || '')}</span>
-        </div>
-        <p class="service-description">${escapeHtml(service.description || '')}</p>
-        <div class="service-meta">
-          <span class="service-availability status-${escapeHtml(service.status || 'available')}">${escapeHtml(service.availability || 'Available')}</span>
-          <span class="service-type">${formatServiceType(service.type)}</span>
-        </div>
-        <div class="service-actions">
-          <button class="btn btn-primary service-contact-btn" data-service-id="${service.id}">${escapeHtml(service.contact || 'Contact')}</button>
-          <button class="btn btn-link service-details-btn" data-service-id="${service.id}">View Details</button>
-        </div>
-      </div>
-    `
-    )
-    .join('');
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-  setupServiceCardListeners();
-}
-
-function formatServiceType(type) {
-  const t = String(type || '').toLowerCase();
-  const typeMap = {
-    hotline: 'Phone Support',
-    chat: 'Live Chat',
-    appointment: 'Appointment',
-    resources: 'Self-Help Resources',
-  };
-  return typeMap[t] || type || '';
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function setupServiceCardListeners() {
   document.querySelectorAll('.service-contact-btn').forEach((btn) => {
     btn.addEventListener('click', function () {
-      const serviceId = parseInt(this.dataset.serviceId, 10);
-      handleServiceContact(serviceId);
+      handleServiceContact(this);
     });
   });
 
@@ -193,65 +144,39 @@ function setupServiceCardListeners() {
   });
 }
 
-function handleServiceContact(serviceId) {
-  const service = supportServices.find((s) => Number(s.id) === Number(serviceId));
-  if (!service) return;
+function handleServiceContact(button) {
+  const phoneNumber = button.dataset.phone || '';
+  const website = button.dataset.website || '';
+  const email = button.dataset.email || '';
+  const title = button.dataset.title || 'this service';
 
-  if (service.phoneNumber) {
-    window.location.href = `tel:${service.phoneNumber}`;
+  if (phoneNumber) {
+    window.location.href = `tel:${phoneNumber}`;
     return;
   }
-  if (service.website) {
-    window.open(service.website, '_blank');
+  if (website) {
+    window.open(website, '_blank');
     return;
   }
-  if (service.email) {
-    window.location.href = `mailto:${service.email}`;
+  if (email) {
+    window.location.href = `mailto:${email}`;
     return;
   }
 
-  alert(`Contacting ${service.title}...`);
+  alert(`Contacting ${title}...`);
 }
 
 function showCenterDetails(serviceId) {
-  const center = supportServices.find((s) => Number(s.id) === Number(serviceId));
-  if (!center) return;
-
   const modal = document.getElementById('centerDetailsModal');
   const modalName = document.getElementById('modalCenterName');
   const modalContent = document.getElementById('modalCenterContent');
-  if (!modal || !modalName || !modalContent) return;
+  const template = document.getElementById(`serviceDetails-${serviceId}`);
+  const card = document.querySelector(`.service-card[data-service-id="${serviceId}"]`);
 
-  modalName.textContent = center.title || 'Center Details';
+  if (!modal || !modalName || !modalContent || !template || !card) return;
 
-  const location = [center.address, center.city, center.state, center.zipCode]
-    .filter((part) => part && String(part).trim() !== '')
-    .join(', ');
-
-  modalContent.innerHTML = `
-    <div class="center-details">
-      <div class="detail-section">
-        <h4>Contact Information</h4>
-        ${center.phoneNumber ? `<p><strong>Phone:</strong> <a href="tel:${escapeHtml(center.phoneNumber)}">${escapeHtml(center.phoneNumber)}</a></p>` : ''}
-        ${center.email ? `<p><strong>Email:</strong> <a href="mailto:${escapeHtml(center.email)}">${escapeHtml(center.email)}</a></p>` : ''}
-        ${center.website ? `<p><strong>Website:</strong> <a href="${escapeHtml(center.website)}" target="_blank" rel="noopener">${escapeHtml(center.website)}</a></p>` : ''}
-      </div>
-
-      ${location ? `<div class="detail-section"><h4>Location</h4><p>${escapeHtml(location)}</p></div>` : ''}
-
-      <div class="detail-section">
-        <h4>Service Details</h4>
-        <p><strong>Type:</strong> ${escapeHtml(formatServiceType(center.type))}</p>
-        <p><strong>Category:</strong> ${escapeHtml(center.category || 'Not specified')}</p>
-        ${center.availability ? `<p><strong>Availability:</strong> ${escapeHtml(center.availability)}</p>` : ''}
-        ${center.organization ? `<p><strong>Organization:</strong> ${escapeHtml(center.organization)}</p>` : ''}
-      </div>
-
-      ${center.description ? `<div class="detail-section"><h4>Description</h4><p>${escapeHtml(center.description)}</p></div>` : ''}
-      ${center.specialties ? `<div class="detail-section"><h4>Specialties</h4><p>${escapeHtml(center.specialties)}</p></div>` : ''}
-    </div>
-  `;
-
+  modalName.textContent = card.dataset.serviceTitle || 'Center Details';
+  modalContent.replaceChildren(...Array.from(template.childNodes).map((node) => node.cloneNode(true)));
   modal.style.display = 'block';
 }
 
@@ -346,13 +271,4 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }

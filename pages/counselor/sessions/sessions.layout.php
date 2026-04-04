@@ -1,54 +1,92 @@
-<?php $activePage = 'sessions'; ?>
+<?php
+$activePage = 'sessions';
+?>
 <!DOCTYPE html>
 <html lang="en">
-<?php $pageTitle = 'Counselor Sessions'; $pageStyle = ['counselor/sessions']; require __DIR__ . '/../common/counselor.html.head.php'; ?>
+<?php $pageTitle = 'Schedule'; $pageStyle = ['counselor/sessions']; require __DIR__ . '/../common/counselor.html.head.php'; ?>
 <body>
 <main class="main-container theme-counselor">
     <?php require __DIR__ . '/../common/counselor.sidebar.php'; ?>
+
     <section class="main-content">
-        <img src="/assets/img/main-content-head.svg" alt="Main Content Head background" class="main-header-bg-image" />
-        <div class="main-content-header">
-            <div class="main-content-header-text">
-                <h2>My Sessions</h2>
-                <p>View and manage your sessions</p>
-            </div>
-        </div>
+        <?php require __DIR__ . '/../common/counselor.page-header.php'; ?>
+
         <div class="main-content-body dashboard-overflow">
             <div class="inner-body-content">
                 <div class="body-column">
-                    <div class="dashboard-card counselor-toolbar-card">
-                        <div class="counselor-toolbar">
-                            <button class="btn btn-bg-light-green filter-button" type="button">
-                                <i data-lucide="filter" class="filter-icon" stroke-width="1"></i>
-                                <span>Filter</span>
-                            </button>
-                            <?php require __DIR__ . '/../common/counselor.searchbar.php'; ?>
-                        </div>
-                    </div>
+
+                    <?php require __DIR__ . '/../common/counselor.toolbar.php'; ?>
 
                     <div class="dashboard-card counselor-tab-card">
                         <div class="counselor-tab-row">
-                            <span onclick="showSection('sec1')" class="toggle-button active-button" id="toggle1">Upcoming</span>
-                            <span onclick="showSection('sec2')" class="toggle-button" id="toggle2">History</span>
+                            <span onclick="showSection('tab-today')"     class="toggle-button active-button" id="btn-today">Today</span>
+                            <span onclick="showSection('tab-upcoming')"  class="toggle-button"               id="btn-upcoming">Upcoming</span>
+                            <span onclick="showSection('tab-completed')" class="toggle-button"               id="btn-completed">Completed</span>
+                            <span onclick="showSection('tab-cancelled')" class="toggle-button"               id="btn-cancelled">Cancelled / No-show</span>
                         </div>
                     </div>
 
-                    <div class="dashboard-card counselor-list-card">
-                        <section class="toggle-section active-section" id="sec1">
-                            <?php $hasUpcoming = false; foreach ($sessions as $session): if (!$session['isUpcoming']) continue; $hasUpcoming = true; $isUpcoming = true; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
-                            <?php if (!$hasUpcoming): ?><div class="counselor-empty-state"><p>No upcoming sessions scheduled.</p></div><?php endif; ?>
+                    <?php $cardTitle = null; $cardAction = null; $cardClass = 'counselor-list-card';
+                    require __DIR__ . '/../common/counselor.section-card.php'; ?>
+
+                        <!-- Today -->
+                        <section class="toggle-section active-section" id="tab-today">
+                            <?php if (!empty($tabToday)): ?>
+                                <?php foreach ($tabToday as $session): $isUpcoming = true; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
+                            <?php else: ?>
+                                <?php $emptyStateMessage = 'No sessions scheduled for today.'; require __DIR__ . '/../common/counselor.empty-state.php'; ?>
+                            <?php endif; ?>
                         </section>
-                        <section class="toggle-section" id="sec2">
-                            <?php $hasHistory = false; foreach ($sessions as $session): if ($session['isUpcoming']) continue; $hasHistory = true; $isUpcoming = false; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
-                            <?php if (!$hasHistory): ?><div class="counselor-empty-state"><p>No session history available.</p></div><?php endif; ?>
+
+                        <!-- Upcoming -->
+                        <section class="toggle-section" id="tab-upcoming">
+                            <?php if (!empty($tabUpcoming)): ?>
+                                <?php foreach ($tabUpcoming as $session): $isUpcoming = true; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
+                            <?php else: ?>
+                                <?php $emptyStateMessage = 'No upcoming sessions.'; require __DIR__ . '/../common/counselor.empty-state.php'; ?>
+                            <?php endif; ?>
                         </section>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+                        <!-- Completed -->
+                        <section class="toggle-section" id="tab-completed">
+                            <?php if (!empty($tabCompleted)): ?>
+                                <?php foreach ($tabCompleted as $session): $isUpcoming = false; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
+                            <?php else: ?>
+                                <?php $emptyStateMessage = 'No completed sessions yet.'; require __DIR__ . '/../common/counselor.empty-state.php'; ?>
+                            <?php endif; ?>
+                        </section>
+
+                        <!-- Cancelled / No-show -->
+                        <section class="toggle-section" id="tab-cancelled">
+                            <?php if (!empty($tabCancelled)): ?>
+                                <?php foreach ($tabCancelled as $session): $isUpcoming = false; require __DIR__ . '/../common/counselor.session-card.php'; endforeach; ?>
+                            <?php else: ?>
+                                <?php $emptyStateMessage = 'No cancelled or missed sessions.'; require __DIR__ . '/../common/counselor.empty-state.php'; ?>
+                            <?php endif; ?>
+                        </section>
+
+                    </div><!-- /.counselor-list-card -->
+
+                </div><!-- /.body-column -->
+            </div><!-- /.inner-body-content -->
+        </div><!-- /.main-content-body -->
     </section>
 </main>
-<script src="/assets/js/counselor/sessions.js"></script>
+
+<?php require __DIR__ . '/../common/counselor.followup-popup.php'; ?>
+
+<script>
+function showSection(id) {
+    document.querySelectorAll('.toggle-section').forEach(s => s.classList.remove('active-section'));
+    document.querySelectorAll('.toggle-button').forEach(b => b.classList.remove('active-button'));
+    const section = document.getElementById(id);
+    if (section) section.classList.add('active-section');
+    const btnMap = { 'tab-today': 'btn-today', 'tab-upcoming': 'btn-upcoming', 'tab-completed': 'btn-completed', 'tab-cancelled': 'btn-cancelled' };
+    const btn = document.getElementById(btnMap[id]);
+    if (btn) btn.classList.add('active-button');
+}
+</script>
+<script src="/assets/js/counselor/followUp.js"></script>
 <script>lucide.createIcons();</script>
 </body>
 </html>

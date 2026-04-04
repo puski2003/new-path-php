@@ -348,8 +348,9 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
-
+ gap:var(--spacing-xs);
 }
+
 
 .btn:hover {
   opacity: 0.9;
@@ -790,6 +791,7 @@ body {
   gap: var(--spacing-xs);
   margin: var(--spacing-sm);
   margin-right: var(--spacing-sm);
+  text-decoration: none;
 }
 
 .user-details {

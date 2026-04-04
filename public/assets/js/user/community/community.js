@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Community functionality
-    let currentFilter = 'all';
-    let currentPage = 1;
-    let isLoading = false;
     let pendingDeletePostId = null;
 
     // Initialize posting functionality first
@@ -20,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize post menu dropdowns
     initializePostMenus();
+    
+    // Initialize follow buttons
+    initializeFollowButtons();
     
     // Initialize delete confirmation modal
     initializeDeleteConfirmationModal();
@@ -281,26 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
         allDropdowns.forEach(dropdown => {
             dropdown.classList.remove('show');
         });
-    }
-
-    function showCreatePostModal() {
-        console.log('showCreatePostModal called');
-        const modal = document.getElementById('postModalOverlay');
-        console.log('Modal element:', modal);
-        
-        if (modal) {
-            modal.style.display = 'flex';
-            // Force reflow
-            modal.offsetHeight;
-            modal.classList.add('show');
-            
-            const titleInput = document.getElementById('postTitle');
-            if (titleInput) {
-                setTimeout(() => titleInput.focus(), 100);
-            }
-        } else {
-            console.error('Modal element not found!');
-        }
     }
 
     function initializeDeleteConfirmationModal() {
@@ -567,165 +547,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function handlePostSubmission(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        const isEditMode = document.getElementById('isEditMode').value === 'true';
-        
-        // Show loading state
-        const submitBtn = document.getElementById('submitPost');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = isEditMode ? 'Updating...' : 'Posting...';
-        }
-
-        console.log(isEditMode ? 'Updating post...' : 'Creating post...');
-
-        // Submit to backend (form action is already set correctly)
-        fetch(e.target.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.redirected) {
-                // Server sent a redirect (success case)
-                window.location.href = response.url;
-                return;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.success) {
-                console.log(isEditMode ? 'Post updated successfully!' : 'Post created successfully!');
-                const modal = document.getElementById('postModalOverlay');
-                if (modal) {
-                    modal.classList.remove('show');
-                    setTimeout(() => modal.style.display = 'none', 300);
-                }
-                resetPostForm();
-                window.location.reload();
-            } else if (data) {
-                console.error('Failed to ' + (isEditMode ? 'update' : 'create') + ' post:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error ' + (isEditMode ? 'updating' : 'creating') + ' post:', error);
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = isEditMode ? 'Update Post' : 'Post';
-            }
-        });
-    }
-
-    // Update the createPostElement function to include edit data
-    function createPostElement(post) {
-        const postDiv = document.createElement('div');
-        postDiv.className = 'community-post';
-        postDiv.setAttribute('data-post-id', post.postId);
-        
-        const currentUserId = window.currentUser ? window.currentUser.userId : null;
-        const isOwner = currentUserId && currentUserId === post.userId;
-        
-        // Create owner-specific menu options
-        const ownerOptions = isOwner ? `
-            <button class="menu-option edit-post" data-post-id="${post.postId}">
-                <i data-lucide="edit-2"></i>
-                <span>Edit Post</span>
-            </button>
-            <button class="menu-option delete-post-btn" data-post-id="${post.postId}">
-                <i data-lucide="trash-2"></i>
-                <span>Delete Post</span>
-            </button>
-            <div class="menu-divider"></div>
-        ` : '';
-        
-        const ownerForms = isOwner ? `
-            <form id="deleteForm-${post.postId}" 
-                  action="/user/community/posts/delete" 
-                  method="post" 
-                  style="display: none;">
-                <input type="hidden" name="postId" value="${post.postId}" />
-            </form>
-            
-            <div id="editData-${post.postId}" style="display: none;"
-                 data-post-id="${post.postId}"
-                 data-content="${post.content || ''}"
-                 data-title="${post.title || ''}"
-                 data-post-type="${post.postType || 'general'}"
-                 data-anonymous="${post.anonymous || false}"
-                 data-image-url="${post.imageUrl || ''}">
-            </div>
-        ` : '';
-        
-        postDiv.innerHTML = `
-            <div class="post-header">
-                <div class="post-author">
-                    <img src="${post.profilePictureUrl || '/assets/img/avatar.png'}" 
-                         alt="${post.displayName || 'User'}" 
-                         class="author-avatar">
-                    <div class="author-info">
-                        <h4 class="author-name">${post.anonymous ? 'Anonymous User' : (post.displayName || post.username)}</h4>
-                        <span class="post-time">${formatDate(post.createdAt)}</span>
-                    </div>
-                </div>
-                <div class="post-menu-container">
-                    <button class="post-menu-btn" data-post-id="${post.postId}">
-                        <i data-lucide="more-horizontal" class="menu-icon"></i>
-                    </button>
-                    <div class="post-menu-dropdown" id="postMenu-${post.postId}">
-                        ${ownerOptions}
-                        <button class="menu-option report-post" data-post-id="${post.postId}">
-                            <i data-lucide="flag"></i>
-                            <span>Report Post</span>
-                        </button>
-                        <button class="menu-option save-post" data-post-id="${post.postId}">
-                            <i data-lucide="bookmark"></i>
-                            <span>Save Post</span>
-                        </button>
-                        <button class="menu-option share-post" data-post-id="${post.postId}">
-                            <i data-lucide="share"></i>
-                            <span>Share Post</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="post-content">
-                <p class="post-text">${post.content}</p>
-                ${post.imageUrl ? `<div class="post-image"><img src="${post.imageUrl}" class="content-image" alt="Post image"></div>` : ''}
-            </div>
-            <div class="post-actions">
-                <button class="action-btn like-btn ${post.active ? 'liked' : ''}" data-post-id="${post.postId}">
-                    <i data-lucide="heart" class="action-icon ${post.active ? 'filled' : ''}"></i>
-                    <span class="action-count">${post.likesCount || 0}</span>
-                    <span class="action-text">Like</span>
-                </button>
-                <button class="action-btn comment-btn" data-post-id="${post.postId}">
-                    <i data-lucide="message-circle" class="action-icon"></i>
-                    <span class="action-count">${post.commentsCount || 0}</span>
-                    <span class="action-text">Comment</span>
-                </button>
-                <button class="action-btn share-btn" data-post-id="${post.postId}">
-                    <i data-lucide="share-2" class="action-icon"></i>
-                    <span class="action-count">${post.sharesCount || 0}</span>
-                    <span class="action-text">Share</span>
-                </button>
-            </div>
-            ${ownerForms}
-        `;
-        
-        // Initialize Lucide icons for this post
-        setTimeout(() => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        }, 0);
-        
-        return postDiv;
-    }
-
     function setupLikeFunctionality() {
         document.addEventListener('click', function(e) {
             if (e.target.closest('.like-btn')) {
@@ -762,91 +583,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function loadMorePosts() {
-        if (!isLoading) {
-            currentPage++;
-            loadPosts(false);
-        }
-    }
-
-    function showEmptyState() {
-        const container = document.getElementById('postsContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="empty-posts">
-                    <h3>No posts yet</h3>
-                    <p>Be the first to share something with the community!</p>
-                </div>
-            `;
-        }
-    }
-
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-        
-        if (diffInHours < 1) return 'Just now';
-        if (diffInHours === 1) return '1 hour ago';
-        if (diffInHours < 24) return `${diffInHours} hours ago`;
-        
-        const diffInDays = Math.floor(diffInHours / 24);
-        return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
-    }
-
-    function handlePostSubmission(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        const isEditMode = document.getElementById('isEditMode').value === 'true';
-        
-        // Show loading state
-        const submitBtn = document.getElementById('submitPost');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = isEditMode ? 'Updating...' : 'Posting...';
-        }
-
-        console.log(isEditMode ? 'Updating post...' : 'Creating post...');
-
-        // Submit to backend (form action is already set correctly)
-        fetch(e.target.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.redirected) {
-                // Server sent a redirect (success case)
-                window.location.href = response.url;
-                return;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.success) {
-                console.log(isEditMode ? 'Post updated successfully!' : 'Post created successfully!');
-                const modal = document.getElementById('postModalOverlay');
-                if (modal) {
-                    modal.classList.remove('show');
-                    setTimeout(() => modal.style.display = 'none', 300);
-                }
-                resetPostForm();
-                window.location.reload();
-            } else if (data) {
-                console.error('Failed to ' + (isEditMode ? 'update' : 'create') + ' post:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error ' + (isEditMode ? 'updating' : 'creating') + ' post:', error);
-        })
-        .finally(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = isEditMode ? 'Update Post' : 'Post';
-            }
-        });
-    }
-
     // Add missing stub functions to prevent errors
     function handleReportPost(postId) {
         console.log('Report post:', postId);
@@ -863,8 +599,43 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Share functionality not implemented yet');
     }
 
-    function loadPosts(reset) {
-        console.log('loadPosts called, reset:', reset);
-        // This function can be empty for now since posts are loaded server-side
+    function initializeFollowButtons() {
+        document.addEventListener('click', function(e) {
+            const followBtn = e.target.closest('.btn-follow-post');
+            if (followBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFollowClick(followBtn);
+            }
+        });
+    }
+    
+    function handleFollowClick(btn) {
+        const userId = btn.dataset.userId;
+        const isFollowing = btn.classList.contains('following');
+        
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        
+        const action = isFollowing ? 'unfollow' : 'follow';
+        
+        fetch(`/user/community?ajax=${action}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isFollowing) {
+                    btn.classList.remove('following');
+                    btn.innerHTML = '<i data-lucide="user-plus" stroke-width="2"></i><span>Follow</span>';
+                } else {
+                    btn.classList.add('following');
+                    btn.innerHTML = '<i data-lucide="user-check" stroke-width="2"></i><span>Following</span>';
+                }
+                lucide.createIcons();
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 });
