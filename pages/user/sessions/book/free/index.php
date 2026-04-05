@@ -12,10 +12,10 @@
  *   session_type — video|audio|chat|in_person
  */
 
-require_once __DIR__ . '/../../../../common/user.head.php';
+require_once __DIR__ . '/../../../common/user.head.php';
 require_once __DIR__ . '/../book.model.php';
-require_once __DIR__ . '/../../../../../../core/GoogleMeetService.php';
-require_once __DIR__ . '/../../../../../../core/Mailer.php';
+require_once ROOT . '/core/GoogleMeetService.php';
+require_once ROOT . '/core/Mailer.php';
 
 if (!Request::isPost()) {
     Response::redirect('/user/sessions');
@@ -111,7 +111,7 @@ Database::iud(
          payhere_order_id, processed_at, created_at, updated_at)
      VALUES
         ('$uuid', $sessionId, $userId, $counselorId,
-         0.00, 'LKR', 'reschedule_credit', 'completed',
+         0.00, 'LKR', 'session', 'completed',
          '$safeRef', NOW(), NOW(), NOW())"
 );
 
