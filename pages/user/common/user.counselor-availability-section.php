@@ -43,13 +43,13 @@ $counselorIdField = (int)($counselor['counselor_id'] ?? 0);
     let unavailableSlotsByDate = {};
 
     const dayIndexToName = {
-        0: null,
+        0: 'sunday',
         1: 'monday',
         2: 'tuesday',
         3: 'wednesday',
         4: 'thursday',
         5: 'friday',
-        6: null
+        6: 'saturday'
     };
 
     let currentDate = new Date();
@@ -76,46 +76,35 @@ $counselorIdField = (int)($counselor['counselor_id'] ?? 0);
     }
 
     function buildScheduleSlotsForDay(date) {
-        const dayIndex = date.getDay();
-        const dayName = dayIndexToName[dayIndex];
-
-        if (!dayName || !counselorAvailability[dayName]) {
-            return [];
-        }
+        const dayName = dayIndexToName[date.getDay()];
+        if (!dayName || !counselorAvailability[dayName]) return [];
 
         const schedule = counselorAvailability[dayName];
-        const startHour = parseInt(String(schedule.start || '0').split(':')[0], 10);
-        const endHour = parseInt(String(schedule.end || '0').split(':')[0], 10);
-
-        if (Number.isNaN(startHour) || Number.isNaN(endHour) || endHour <= startHour) {
-            return [];
-        }
+        // Support both old format {start,end} and new [{start,end},...]
+        const ranges = Array.isArray(schedule) ? schedule : [schedule];
 
         const slots = [];
-        for (let hour = startHour; hour < endHour; hour++) {
-            const slotDate = new Date(
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate(),
-                hour,
-                0,
-                0,
-                0
-            );
+        for (const range of ranges) {
+            const startHour = parseInt(String(range.start || '0').split(':')[0], 10);
+            const endHour   = parseInt(String(range.end   || '0').split(':')[0], 10);
+            if (Number.isNaN(startHour) || Number.isNaN(endHour) || endHour <= startHour) continue;
 
-            if (slotDate.getTime() <= Date.now()) {
-                continue;
+            for (let hour = startHour; hour < endHour; hour++) {
+                const slotDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, 0, 0, 0);
+                if (slotDate.getTime() <= Date.now()) continue;
+
+                const ampm        = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                slots.push({
+                    value:   hour.toString().padStart(2, '0') + ':00',
+                    display: displayHour + ':00 ' + ampm
+                });
             }
-
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-            slots.push({
-                value: hour.toString().padStart(2, '0') + ':00',
-                display: displayHour + ':00 ' + ampm
-            });
         }
 
-        return slots;
+        // Sort by time value and deduplicate (in case ranges overlap)
+        slots.sort((a, b) => a.value.localeCompare(b.value));
+        return slots.filter((s, i, arr) => i === 0 || s.value !== arr[i - 1].value);
     }
 
     function isDayAvailable(date) {

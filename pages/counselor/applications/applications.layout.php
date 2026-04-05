@@ -1,31 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply as a Counselor - NewPath</title>
-    <link rel="stylesheet" href="/assets/css/global.css">
-    <link rel="stylesheet" href="/assets/css/auth/auth.css">
-    <style>
-        .application-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .application-header { text-align: center; margin-bottom: 2rem; }
-        .application-header h1 { color: #2c3e50; margin-bottom: 0.5rem; }
-        .application-header p { color: #666; font-size: 1.1rem; }
-        .form-section { margin-bottom: 2rem; }
-        .section-title { font-size: 1.3rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-        .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
-        .form-group { flex: 1; }
-        .required { color: #e74c3c; }
-        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #3498db; }
-        textarea { resize: vertical; min-height: 100px; }
-        .submit-btn { width: 100%; background: #3498db; color: white; padding: 1rem; border: none; border-radius: 6px; font-size: 1.1rem; cursor: pointer; }
-        .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .back-link { display: inline-block; margin-bottom: 1rem; color: #3498db; text-decoration: none; }
-        @media (max-width: 768px) { .application-container { margin: 1rem; padding: 1rem; } .form-row { flex-direction: column; } }
-    </style>
-</head>
+<?php
+$pageTitle = 'Apply as a Counselor - NewPath';
+$authCss = ['counselor-application.css'];
+require_once __DIR__ . '/../../auth/common/auth.head.php';
+?>
 <body>
 <div class="application-container">
     <a href="/" class="back-link">&larr; Back to Home</a>

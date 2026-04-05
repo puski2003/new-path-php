@@ -5,7 +5,7 @@ class CommunityModel
     public static function getPosts(int $userId, array $params = []): array
     {
         $q = trim((string)($params['q'] ?? ''));
-        $scope = trim((string)($params['scope'] ?? 'all')); // all|mine|trending
+        $scope = trim((string)($params['scope'] ?? 'all')); // all|mine|trending|saved
 
         $where = "WHERE p.is_active = 1";
         if ($q !== '') {
@@ -14,6 +14,8 @@ class CommunityModel
         }
         if ($scope === 'mine') {
             $where .= " AND p.user_id = $userId";
+        } elseif ($scope === 'saved') {
+            $where .= " AND EXISTS (SELECT 1 FROM saved_posts sp WHERE sp.post_id = p.post_id AND sp.user_id = $userId)";
         }
 
         $order = $scope === 'trending'
@@ -35,7 +37,8 @@ class CommunityModel
                 p.created_at,
                 COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'User') AS display_name,
                 u.username,
-                u.profile_picture
+                u.profile_picture,
+                (SELECT COUNT(1) FROM saved_posts sp WHERE sp.post_id = p.post_id AND sp.user_id = $userId) AS is_saved
             FROM community_posts p
             JOIN users u ON u.user_id = p.user_id
             $where
@@ -73,6 +76,7 @@ class CommunityModel
                 'profilePictureUrl' => $profilePic,
                 'active' => false,
                 'isFollowing' => $isFollowing,
+                'isSaved' => (bool)($row['is_saved'] ?? false),
             ];
         }
 
@@ -177,6 +181,145 @@ class CommunityModel
             );
             return ['liked' => true];
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Comments
+    // ------------------------------------------------------------------
+
+    public static function getComments(int $postId): array
+    {
+        if ($postId <= 0) return [];
+
+        $rs = Database::search("
+            SELECT c.comment_id, c.user_id, c.content, c.is_anonymous, c.created_at,
+                   COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'User') AS display_name,
+                   u.profile_picture
+            FROM post_comments c
+            JOIN users u ON u.user_id = c.user_id
+            WHERE c.post_id = $postId
+              AND c.is_active = 1
+              AND c.parent_comment_id IS NULL
+            ORDER BY c.created_at ASC
+            LIMIT 50
+        ");
+
+        $comments = [];
+        if (!$rs) return [];
+        while ($row = $rs->fetch_assoc()) {
+            $isAnon = (bool)$row['is_anonymous'];
+            $comments[] = [
+                'commentId'      => (int)$row['comment_id'],
+                'userId'         => (int)$row['user_id'],
+                'content'        => $row['content'],
+                'anonymous'      => $isAnon,
+                'displayName'    => $isAnon ? 'Anonymous' : ($row['display_name'] ?? 'User'),
+                'profilePicture' => $isAnon ? '' : ($row['profile_picture'] ?? ''),
+                'createdAt'      => $row['created_at'],
+            ];
+        }
+        return $comments;
+    }
+
+    public static function addComment(int $userId, int $postId, string $content): ?array
+    {
+        if ($userId <= 0 || $postId <= 0 || trim($content) === '') return null;
+
+        $safe = addslashes(trim($content));
+        Database::iud(
+            "INSERT INTO post_comments (post_id, user_id, content, is_anonymous, is_active, likes_count, created_at, updated_at)
+             VALUES ($postId, $userId, '$safe', 0, 1, 0, NOW(), NOW())"
+        );
+        Database::iud(
+            "UPDATE community_posts
+             SET comments_count = comments_count + 1, updated_at = NOW()
+             WHERE post_id = $postId AND is_active = 1"
+        );
+
+        $rs = Database::search("
+            SELECT c.comment_id, c.user_id, c.content, c.is_anonymous, c.created_at,
+                   COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'User') AS display_name,
+                   u.profile_picture
+            FROM post_comments c
+            JOIN users u ON u.user_id = c.user_id
+            WHERE c.user_id = $userId AND c.post_id = $postId AND c.is_active = 1
+            ORDER BY c.comment_id DESC LIMIT 1
+        ");
+        $row = $rs ? $rs->fetch_assoc() : null;
+        if (!$row) return null;
+
+        return [
+            'commentId'      => (int)$row['comment_id'],
+            'userId'         => (int)$row['user_id'],
+            'content'        => $row['content'],
+            'anonymous'      => false,
+            'displayName'    => $row['display_name'] ?? 'User',
+            'profilePicture' => $row['profile_picture'] ?? '',
+            'createdAt'      => $row['created_at'],
+        ];
+    }
+
+    // ------------------------------------------------------------------
+    // Save
+    // ------------------------------------------------------------------
+
+    public static function toggleSave(int $userId, int $postId): array
+    {
+        if ($userId <= 0 || $postId <= 0) return ['saved' => false];
+
+        $existing = Database::search(
+            "SELECT saved_id FROM saved_posts WHERE user_id = $userId AND post_id = $postId LIMIT 1"
+        );
+        if ($existing && $existing->num_rows > 0) {
+            Database::iud("DELETE FROM saved_posts WHERE user_id = $userId AND post_id = $postId");
+            return ['saved' => false];
+        }
+
+        Database::iud(
+            "INSERT IGNORE INTO saved_posts (user_id, post_id, created_at) VALUES ($userId, $postId, NOW())"
+        );
+        return ['saved' => true];
+    }
+
+    // ------------------------------------------------------------------
+    // Report
+    // ------------------------------------------------------------------
+
+    public static function reportPost(int $userId, int $postId, string $reason, string $description): bool
+    {
+        if ($userId <= 0 || $postId <= 0 || trim($reason) === '') return false;
+
+        // Idempotent: one pending report per user per post is enough
+        $existing = Database::search(
+            "SELECT report_id FROM post_reports
+             WHERE reporter_id = $userId AND post_id = $postId AND status = 'pending'
+             LIMIT 1"
+        );
+        if ($existing && $existing->num_rows > 0) return true;
+
+        $safeReason = addslashes(trim($reason));
+        $safeDesc   = addslashes(trim($description));
+        $descSql    = $safeDesc !== '' ? "'$safeDesc'" : 'NULL';
+
+        Database::iud(
+            "INSERT INTO post_reports (post_id, reporter_id, reason, description, status, created_at)
+             VALUES ($postId, $userId, '$safeReason', $descSql, 'pending', NOW())"
+        );
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Share (counter only — no persistent per-user record in schema)
+    // ------------------------------------------------------------------
+
+    public static function incrementShareCount(int $postId): void
+    {
+        if ($postId <= 0) return;
+        Database::iud(
+            "UPDATE community_posts
+             SET shares_count = shares_count + 1, updated_at = NOW()
+             WHERE post_id = $postId AND is_active = 1"
+        );
     }
 
     public static function handleUpload(array $file): ?string

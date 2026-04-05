@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const communityActionUrl = '/user/community';
     const usersGrid = document.getElementById('usersGrid');
     
     if (usersGrid) {
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const action = isFollowing ? 'unfollow' : 'follow';
         
-        fetch(`/user/community/find-people?ajax=${action}`, {
+        fetch(`${communityActionUrl}?ajax=${action}`, {
             method: 'POST',
             body: formData
         })
@@ -95,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('user_id', userId);
         
-        fetch('/user/community/find-people?ajax=block', {
+        fetch(`${communityActionUrl}?ajax=block`, {
             method: 'POST',
             body: formData
         })

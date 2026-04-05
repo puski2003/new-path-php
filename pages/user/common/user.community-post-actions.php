@@ -20,7 +20,7 @@ $sharesCount = (int)($currentPost['sharesCount'] ?? 0);
 
     <button class="action-btn share-btn" data-post-id="<?= $postId ?>">
         <i data-lucide="share-2" class="action-icon"></i>
-        <span class="action-count"><?= $sharesCount ?></span>
+       
         <span class="action-text">Share</span>
     </button>
 </div>

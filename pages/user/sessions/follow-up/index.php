@@ -141,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ── Layout vars ─────────────────────────────────────────────── */
 $pageTitle = 'Follow-up Thread';
 $pageStyle = ['user/sessions', 'user/follow-up'];
+$pageScripts = ['/assets/js/components/followup-thread.js'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -281,7 +282,6 @@ $pageStyle = ['user/sessions', 'user/follow-up'];
     </section>
 </main>
 
-<script src="https://unpkg.com/lucide@latest"></script>
 <script>
 lucide.createIcons();
 
@@ -345,6 +345,6 @@ function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
-<script src="/assets/js/auth/user-profile.js"></script>
+<?php require_once __DIR__ . '/../../common/user.footer.php'; ?>
 </body>
 </html>

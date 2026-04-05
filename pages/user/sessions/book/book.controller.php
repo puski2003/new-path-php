@@ -68,14 +68,22 @@ if (!$bookingError) {
 }
 
 // ------------------------------------------------------------------
-// Build PayHere order details
+// Check for an active free-rebook credit (approved reschedule)
+// ------------------------------------------------------------------
+$freeCredit = null;
+if (!$bookingError && $holdId > 0) {
+    $freeCredit = BookingModel::getActiveFreeCredit($userId, (int)$counselorId);
+}
+
+// ------------------------------------------------------------------
+// Build PayHere order details (only when paying)
 // ------------------------------------------------------------------
 $payhereOrderId  = $holdId > 0 ? ('HOLD-' . $holdId) : '';
 $sessionFee      = $counselor['fee'] ?? 0;
-$platformFee     = round($sessionFee * 0.10, 2);
-$amount          = round($sessionFee + $platformFee, 2);
+$platformFee     = $freeCredit ? 0 : round($sessionFee * 0.10, 2);
+$amount          = $freeCredit ? 0 : round($sessionFee + $platformFee, 2);
 $amountFormatted = number_format($amount, 2, '.', '');
-$payhereHash     = $holdId > 0 ? BookingModel::generatePayHereHash($payhereOrderId, $amountFormatted) : null;
+$payhereHash     = ($holdId > 0 && !$freeCredit) ? BookingModel::generatePayHereHash($payhereOrderId, number_format($sessionFee + round($sessionFee * 0.10, 2), 2, '.', '')) : null;
 
 // Return / Cancel URLs (absolute for PayHere)
 $scheme       = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';

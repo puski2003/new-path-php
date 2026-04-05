@@ -3,6 +3,10 @@ $activePage         = 'recovery';
 $pageHeaderTitle    = 'Recovery Plans';
 $pageHeaderSubtitle = 'Create and manage client recovery plans';
 $prefilledUserId    = (int) (Request::get('userId') ?? 0);
+$pageScripts = [
+    '/assets/js/components/toast.js',
+    '/assets/js/counselor/createRecoveryPlan.js',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -193,7 +197,6 @@ $prefilledUserId    = (int) (Request::get('userId') ?? 0);
         </div>
     </section>
 </main>
-<script src="/assets/js/counselor/createRecoveryPlan.js"></script>
-<script>lucide.createIcons();</script>
+<?php require __DIR__ . '/../../common/counselor.footer.php'; ?>
 </body>
 </html>

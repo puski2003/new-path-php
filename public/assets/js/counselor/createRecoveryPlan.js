@@ -288,37 +288,20 @@ function escapeHtml(str) {
 }
 
 function showNotification(message, type) {
-    const existing = document.querySelector('.rp-notification');
-    if (existing) existing.remove();
-
-    const note = document.createElement('div');
-    note.className = 'rp-notification';
-    note.textContent = message;
-    note.style.cssText = [
-        'position:fixed', 'top:20px', 'right:20px', 'z-index:9999',
-        'padding:14px 22px', 'border-radius:10px',
-        'font-size:14px', 'font-weight:500',
-        'box-shadow:0 4px 16px rgba(0,0,0,0.12)',
-        'background:' + (type === 'success' ? '#22c55e' : '#f43a3a'),
-        'color:#fff',
-        'animation:slideInRight 0.3s ease',
-    ].join(';');
-
-    document.body.appendChild(note);
-    setTimeout(function () { note.style.opacity = '0'; note.style.transition = 'opacity 0.3s'; }, 3500);
-    setTimeout(function () { note.remove(); }, 3900);
+    if (window.NewPathToast) {
+        window.NewPathToast.show(message, type === 'success' ? 'success' : 'error');
+    }
 }
 
 function exportPDF() {
     alert('PDF export will be implemented with a backend service.');
 }
 
-// Inject keyframe for notification animation once
+// Inject keyframe for loading icon once
 (function () {
     if (document.getElementById('rp-anim-style')) return;
     const s = document.createElement('style');
     s.id = 'rp-anim-style';
-    s.textContent = '@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}'
-        + '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
     document.head.appendChild(s);
 })();

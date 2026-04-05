@@ -7,7 +7,7 @@ $searchQuery = Request::get('q') ?? '';
 $tab = 'posts';
 
 $scope = Request::get('scope') ?? 'all';
-if (!in_array($scope, ['all', 'mine', 'trending'], true)) {
+if (!in_array($scope, ['all', 'mine', 'trending', 'saved'], true)) {
     $scope = 'all';
 }
 

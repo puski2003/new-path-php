@@ -1,5 +1,5 @@
 <?php
-$session    = $session ?? [];
+$session  ??= [];
 $isUpcoming = !empty($isUpcoming);
 
 $sessionTs  = !empty($session['sessionDatetime']) ? strtotime((string) $session['sessionDatetime']) : null;
@@ -25,11 +25,7 @@ $typeLabel = match ($sessionType) {
         </div>
         <?php if ($isUpcoming): ?>
             <div class="session-action-row">
-                <?php if (!empty($session['meetingLink'])): ?>
-                    <a class="btn-join" href="<?= htmlspecialchars($session['meetingLink']) ?>" target="_blank" rel="noopener">Join</a>
-                <?php else: ?>
-                    <button class="btn-join" type="button" disabled>No Link</button>
-                <?php endif; ?>
+                <a class="btn-join" href="/counselor/sessions/workspace?session_id=<?= (int)($session['sessionId'] ?? 0) ?>">Join</a>
             </div>
         <?php else: ?>
             <div class="session-action-row">

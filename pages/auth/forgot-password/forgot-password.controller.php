@@ -43,7 +43,7 @@ if (Request::isPost()) {
                     <p style='color:#999;font-size:0.85rem;'>If you didn't request this, you can safely ignore this email.</p>
                 </div>";
 
-            Mailer::send($email, 'NewPath — Reset your password', $html);
+            Mailer::send($email, 'NewPath  Reset your password', $html);
         }
 
         // Always show success — do not reveal whether the email was found

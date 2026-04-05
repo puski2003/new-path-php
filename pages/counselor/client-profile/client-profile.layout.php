@@ -7,6 +7,7 @@ $completedPct = $clientProfile['totalSessions'] > 0
 
 $pageHeaderTitle    = 'Clients';
 $pageHeaderSubtitle = 'Your path to guidance starts here.';
+$pageScripts = ['/assets/js/counselor/clientProfile.js'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -140,7 +141,6 @@ $pageHeaderSubtitle = 'Your path to guidance starts here.';
         </div>
     </section>
 </main>
-<script src="/assets/js/counselor/clientProfile.js"></script>
-<script>lucide.createIcons();</script>
+<?php require __DIR__ . '/../common/counselor.footer.php'; ?>
 </body>
 </html>

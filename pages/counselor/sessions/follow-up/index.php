@@ -136,6 +136,7 @@ $pageTitle          = 'Follow-up Thread';
 $pageStyle          = ['counselor/followUp'];
 $pageHeaderTitle    = 'Follow-up Thread';
 $pageHeaderSubtitle = 'Post-session messages with your client';
+$pageScripts        = ['/assets/js/components/followup-thread.js'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -331,5 +332,6 @@ function escHtml(str) {
         .replace(/"/g, '&quot;');
 }
 </script>
+<?php require __DIR__ . '/../../common/counselor.footer.php'; ?>
 </body>
 </html>

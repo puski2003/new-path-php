@@ -50,8 +50,12 @@ $navItems = [
         <a class="btn btn-primary" href="/user/help">Get Help Now</a>
     </div>
 
+    <!-- Notification Bell -->
+    
+
     <!-- User Info -->
     <div class="user-info" id="userMenuBtn" style="cursor: pointer;">
+        
         <img src="<?= !empty($user['profilePictureUrl']) ? htmlspecialchars($user['profilePictureUrl']) : '/assets/img/avatar.png' ?>"
             alt="User Icon"
             class="user-icon" />

@@ -10,6 +10,10 @@ foreach ($goals as $goal) {
 
 $pageHeaderTitle    = 'Recovery Plans';
 $pageHeaderSubtitle = 'Create and manage client recovery plans';
+$pageScripts = [
+    '/assets/js/components/toast.js',
+    '/assets/js/counselor/createRecoveryPlan.js',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -232,7 +236,6 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
         </div>
     </section>
 </main>
-<script src="/assets/js/counselor/createRecoveryPlan.js"></script>
-<script>lucide.createIcons();</script>
+<?php require __DIR__ . '/../../common/counselor.footer.php'; ?>
 </body>
 </html>

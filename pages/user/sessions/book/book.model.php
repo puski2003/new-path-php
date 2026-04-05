@@ -152,7 +152,7 @@ class BookingModel
         $rs = Database::search(
             "SELECT c.counselor_id, c.title, c.specialty, c.consultation_fee, c.availability_schedule,
                     COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'Counselor') AS name,
-                    u.profile_picture, u.email
+                    u.user_id, u.profile_picture, u.email
              FROM counselors c
              JOIN users u ON u.user_id = c.user_id
              WHERE c.counselor_id = $counselorId
@@ -165,6 +165,7 @@ class BookingModel
         }
         return [
             'counselorId' => (int)$row['counselor_id'],
+            'userId'      => (int)$row['user_id'],
             'name'        => $row['name'],
             'title'       => $row['title'] ?: 'Counselor',
             'specialty'   => $row['specialty'] ?: 'Counseling',
@@ -172,6 +173,19 @@ class BookingModel
             'profilePic'  => $row['profile_picture'] ?: '/assets/img/avatar.png',
             'email'       => $row['email'] ?? null,
         ];
+    }
+
+    /**
+     * Fetch the email address for a user by user_id.
+     * Returns empty string if not found.
+     */
+    public static function getUserEmail(int $userId): string
+    {
+        $rs = Database::search(
+            "SELECT email FROM users WHERE user_id = $userId LIMIT 1"
+        );
+        $row = $rs ? $rs->fetch_assoc() : null;
+        return (string)($row['email'] ?? '');
     }
 
     // ------------------------------------------------------------------
@@ -243,6 +257,46 @@ class BookingModel
                  $formattedAmount, 'LKR', 'session', 'completed',
                  '$safeOrderId', '$safePaymentId', '$safeStatusCode',
                  NOW(), NOW(), NOW())"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Reschedule free-credit helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * Return an unused approved reschedule credit for this user+counselor, or null.
+     */
+    public static function getActiveFreeCredit(int $userId, int $counselorId): ?array
+    {
+        $rs = Database::search(
+            "SELECT rr.request_id, rr.counselor_id
+             FROM reschedule_requests rr
+             WHERE rr.user_id      = $userId
+               AND rr.counselor_id = $counselorId
+               AND rr.status       = 'approved'
+               AND rr.credit_used  = 0
+             ORDER BY rr.reviewed_at DESC
+             LIMIT 1"
+        );
+        $row = $rs ? $rs->fetch_assoc() : null;
+        if (!$row) return null;
+        return [
+            'requestId'   => (int)$row['request_id'],
+            'counselorId' => (int)$row['counselor_id'],
+        ];
+    }
+
+    /**
+     * Mark a reschedule credit as consumed. Safe to call only after the
+     * session has been successfully created.
+     */
+    public static function consumeFreeCredit(int $requestId, int $userId): void
+    {
+        Database::iud(
+            "UPDATE reschedule_requests
+             SET credit_used = 1
+             WHERE request_id = $requestId AND user_id = $userId AND credit_used = 0"
         );
     }
 

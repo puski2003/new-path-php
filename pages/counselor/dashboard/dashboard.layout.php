@@ -2,6 +2,7 @@
 $activePage = 'dashboard';
 $displayName = trim((string) ($currentCounselor['displayName'] ?? 'Counselor'));
 $welcomeName = $displayName !== '' ? (explode(' ', $displayName)[0] ?? 'Counselor') : 'Counselor';
+$pageScripts = [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,8 +116,6 @@ require_once __DIR__ . '/../common/counselor.html.head.php';
     </section>
 </main>
 
-<script>
-    lucide.createIcons();
-</script>
+<?php require __DIR__ . '/../common/counselor.footer.php'; ?>
 </body>
 </html>

@@ -173,6 +173,5 @@ $pageStyle = ['user/recovery', 'user/log-urge'];
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>lucide.createIcons();</script>
-<script src="/assets/js/auth/user-profile.js"></script>
 </body>
 </html>

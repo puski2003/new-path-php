@@ -2,6 +2,12 @@
 
 class UserProfileModel
 {
+    private static function escape(string $value): string
+    {
+        Database::setUpConnection();
+        return Database::$connection->real_escape_string($value);
+    }
+
     public static function getProfile(int $userId, ?int $viewerId = null): ?array
     {
         $sql = "
@@ -56,7 +62,7 @@ class UserProfileModel
 
     public static function getUsers(int $viewerId, array $params = []): array
     {
-        $search = addslashes(trim((string)($params['q'] ?? '')));
+        $search = trim((string)($params['q'] ?? ''));
         
         $blockedBy = DirectMessageModel::getBlockedUsers($viewerId);
         $blockedByIds = array_merge($blockedBy, [$viewerId]);
@@ -65,11 +71,12 @@ class UserProfileModel
         $where = "u.is_active = 1 AND u.user_id NOT IN ($excludeList) AND COALESCE(up.is_anonymous, 1) = 0";
 
         if ($search !== '') {
+            $safeSearch = self::escape($search);
             $where .= " AND (
-                u.username LIKE '%$search%'
-                OR u.first_name LIKE '%$search%'
-                OR u.last_name LIKE '%$search%'
-                OR u.display_name LIKE '%$search%'
+                u.username LIKE '%$safeSearch%'
+                OR u.first_name LIKE '%$safeSearch%'
+                OR u.last_name LIKE '%$safeSearch%'
+                OR u.display_name LIKE '%$safeSearch%'
             )";
         }
 
@@ -178,8 +185,8 @@ class UserProfileModel
 
     public static function updateProfile(int $userId, array $data): bool
     {
-        $displayName = addslashes(trim((string)($data['display_name'] ?? '')));
-        $bio = addslashes(trim((string)($data['bio'] ?? '')));
+        $displayName = self::escape(trim((string)($data['display_name'] ?? '')));
+        $bio = self::escape(trim((string)($data['bio'] ?? '')));
         
         Database::iud(
             "UPDATE users SET display_name = '$displayName', bio = '$bio' WHERE user_id = $userId"

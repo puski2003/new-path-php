@@ -1,17 +1,26 @@
-function showSection(id){
-    document.querySelectorAll('.toggle-section').forEach(section =>{
-        section.classList.remove('active-section')
-    });
+function showSection(id) {
+  document.querySelectorAll(".toggle-section").forEach(function (section) {
+    section.classList.remove("active-section");
+  });
 
-    document.getElementById(id).classList.add('active-section');
+  document.querySelectorAll(".toggle-button").forEach(function (button) {
+    button.classList.remove("active-button");
+  });
 
-    document.querySelectorAll('.toggle-button').forEach(button =>{
-        button.classList.remove('active-button')
-    });
+  const section = document.getElementById(id);
+  if (section) {
+    section.classList.add("active-section");
+  }
 
-    if(id == 'sec1'){
-        document.getElementById('toggle1').classList.add('active-button');
-    }else if(id == 'sec2'){
-        document.getElementById('toggle2').classList.add('active-button');
-    }
+  const buttonMap = {
+    "tab-today": "btn-today",
+    "tab-upcoming": "btn-upcoming",
+    "tab-completed": "btn-completed",
+    "tab-cancelled": "btn-cancelled",
+  };
+
+  const button = document.getElementById(buttonMap[id]);
+  if (button) {
+    button.classList.add("active-button");
+  }
 }

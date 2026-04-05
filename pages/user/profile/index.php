@@ -5,7 +5,7 @@ require_once __DIR__ . '/../community/community.model.php';
 require_once __DIR__ . '/../common/user-profile.model.php';
 
 $userId = (int)$user['id'];
-$profileUserId = (int)($routeParams['id'] ?? 0);
+$profileUserId = (int)(Request::get('id') ?? 0);
 
 if ($profileUserId <= 0) {
     header('Location: /user/community/find-people');
@@ -32,36 +32,15 @@ if ($ajaxAction) {
     header('Content-Type: application/json');
     
     switch ($ajaxAction) {
-        case 'follow':
-            $result = DirectMessageModel::followUser($userId, $profileUserId);
-            $profile = UserProfileModel::getProfile($profileUserId, $userId);
-            echo json_encode(['success' => $result, 'profile' => $profile]);
-            break;
-            
-        case 'unfollow':
-            $result = DirectMessageModel::unfollowUser($userId, $profileUserId);
-            $profile = UserProfileModel::getProfile($profileUserId, $userId);
-            echo json_encode(['success' => $result, 'profile' => $profile]);
-            break;
-            
-        case 'block':
-            $result = DirectMessageModel::blockUser($userId, $profileUserId);
-            echo json_encode(['success' => $result]);
-            break;
-            
         case 'update_profile':
             $data = [
                 'display_name' => Request::post('display_name') ?? '',
+                'bio' => Request::post('bio') ?? '',
             ];
             $result = UserProfileModel::updateProfile($userId, $data);
             echo json_encode(['success' => $result]);
             break;
-            
-        case 'start_chat':
-            $conversationId = DirectMessageModel::getOrCreateConversation($userId, $profileUserId);
-            echo json_encode(['success' => $conversationId !== null, 'conversation_id' => $conversationId]);
-            break;
-            
+
         default:
             echo json_encode(['success' => false, 'error' => 'Unknown action']);
     }

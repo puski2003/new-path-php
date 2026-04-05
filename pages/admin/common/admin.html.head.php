@@ -1,7 +1,11 @@
 <?php
 $pageTitle = $pageTitle ?? 'Admin';
+$pageStyle = $pageStyle ?? [];
 $extraCss = $extraCss ?? [];
 $extraJs = $extraJs ?? [];
+$_pageStyles = is_array($pageStyle) ? $pageStyle : [$pageStyle];
+$_extraCss = is_array($extraCss) ? $extraCss : [$extraCss];
+$_renderCss = array_merge($_pageStyles, $_extraCss);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,8 +37,10 @@ $extraJs = $extraJs ?? [];
     <link rel="stylesheet" href="/assets/css/admin/components/toggle-switch.css">
     <link rel="stylesheet" href="/assets/css/admin/components/file-upload.css">
     <script src="/assets/js/components/alert.js" defer></script>
-    <?php foreach ($extraCss as $css): ?>
-        <link rel="stylesheet" href="<?= htmlspecialchars($css) ?>">
+    <?php foreach ($_renderCss as $css): ?>
+        <?php if (empty($css)) continue; ?>
+        <?php $_href = preg_match('#^(?:https?:)?//#', $css) || str_starts_with($css, '/') ? $css : '/assets/css/' . ltrim($css, '/') . '.css'; ?>
+        <link rel="stylesheet" href="<?= htmlspecialchars($_href) ?>">
     <?php endforeach; ?>
 </head>
 <body>

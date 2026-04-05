@@ -11,18 +11,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize posting functionality first
     initializePostModal();
-    
+
     // Initialize category tags
     initializeCategoryTags();
-    
+
     // Initialize post menu dropdowns
     initializePostMenus();
-    
+
     // Initialize follow buttons
     initializeFollowButtons();
-    
+
     // Initialize delete confirmation modal
     initializeDeleteConfirmationModal();
+
+    // Initialize new feature handlers
+    initializeReportModal();
+    initializeComments();
+    initializeShareButtons();
 
     // Post creation functionality
     const postButton = document.querySelector('.community-content-header .btn-primary');
@@ -583,20 +588,324 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add missing stub functions to prevent errors
+    // ----------------------------------------------------------------
+    // Report
+    // ----------------------------------------------------------------
+
     function handleReportPost(postId) {
-        console.log('Report post:', postId);
-        alert('Report functionality not implemented yet');
+        const overlay = document.getElementById('reportModalOverlay');
+        const postIdInput = document.getElementById('reportPostId');
+        const reasonSelect = document.getElementById('reportReason');
+        const descTextarea = document.getElementById('reportDescription');
+        if (!overlay) return;
+        if (postIdInput) postIdInput.value = postId;
+        if (reasonSelect) reasonSelect.value = '';
+        if (descTextarea) descTextarea.value = '';
+        overlay.style.display = 'flex';
+        overlay.offsetHeight;
+        overlay.classList.add('show');
     }
+
+    function initializeReportModal() {
+        const overlay = document.getElementById('reportModalOverlay');
+        const closeBtn = document.getElementById('reportModalClose');
+        const cancelBtn = document.getElementById('cancelReport');
+        const submitBtn = document.getElementById('submitReport');
+
+        if (!overlay) return;
+
+        const close = () => {
+            overlay.classList.remove('show');
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', close);
+        if (cancelBtn) cancelBtn.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function () {
+                const postId = parseInt(document.getElementById('reportPostId').value, 10);
+                const reason = document.getElementById('reportReason').value.trim();
+                const description = document.getElementById('reportDescription').value.trim();
+
+                if (!reason) {
+                    document.getElementById('reportReason').focus();
+                    return;
+                }
+
+                submitBtn.disabled = true;
+
+                fetch('/user/community/posts/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postId, reason, description }),
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        close();
+                        showToast('Report submitted. Thank you.');
+                    } else {
+                        showToast(data.message || 'Failed to submit report.');
+                    }
+                })
+                .catch(() => showToast('Network error. Please try again.'))
+                .finally(() => { submitBtn.disabled = false; });
+            });
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Save
+    // ----------------------------------------------------------------
 
     function handleSavePost(postId) {
-        console.log('Save post:', postId);
-        alert('Save functionality not implemented yet');
+        const btn = document.querySelector(`.save-post[data-post-id="${postId}"]`);
+        if (!btn) return;
+
+        fetch('/user/community/posts/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: Number(postId) }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            const saved = data.saved;
+            btn.setAttribute('data-saved', saved ? 'true' : 'false');
+            const icon = btn.querySelector('i[data-lucide]');
+            const label = btn.querySelector('span');
+            if (icon) {
+                icon.setAttribute('data-lucide', saved ? 'bookmark-check' : 'bookmark');
+                lucide.createIcons({ nodes: [icon] });
+            }
+            if (label) label.textContent = saved ? 'Saved' : 'Save Post';
+            showToast(saved ? 'Post saved.' : 'Post unsaved.');
+        })
+        .catch(() => showToast('Network error. Please try again.'));
     }
 
+    // ----------------------------------------------------------------
+    // Share — copy link to clipboard + increment share counter
+    // ----------------------------------------------------------------
+
     function handleSharePost(postId) {
-        console.log('Share post:', postId);
-        alert('Share functionality not implemented yet');
+        const url = window.location.origin + '/user/community#post-' + postId;
+
+        const copyDone = () => {
+            // Increment share count on server
+            fetch('/user/community/posts/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId: Number(postId) }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const shareBtn = document.querySelector(`.share-btn[data-post-id="${postId}"]`);
+                    if (shareBtn) {
+                        const count = shareBtn.querySelector('.action-count');
+                        if (count) count.textContent = (parseInt(count.textContent, 10) || 0) + 1;
+                    }
+                }
+            })
+            .catch(() => {});
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Link copied to clipboard.');
+                copyDone();
+            }).catch(() => fallbackCopy(url, copyDone));
+        } else {
+            fallbackCopy(url, copyDone);
+        }
+    }
+
+    function fallbackCopy(text, callback) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast('Link copied to clipboard.');
+            if (callback) callback();
+        } catch (_) {
+            showToast('Could not copy link.');
+        }
+        document.body.removeChild(ta);
+    }
+
+    function initializeShareButtons() {
+        // Wire the share-btn in the action bar (separate from the dropdown .share-post handled by initializePostMenus)
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.share-btn');
+            if (!btn) return;
+            e.preventDefault();
+            handleSharePost(btn.getAttribute('data-post-id'));
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // Comments
+    // ----------------------------------------------------------------
+
+    function initializeComments() {
+        // Toggle comment section on comment-btn click
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.comment-btn');
+            if (!btn) return;
+            e.preventDefault();
+            const postId = btn.getAttribute('data-post-id');
+            toggleCommentSection(postId);
+        });
+
+        // Submit comment form
+        document.addEventListener('submit', function (e) {
+            const form = e.target.closest('.comment-form');
+            if (!form) return;
+            e.preventDefault();
+            const postId = form.getAttribute('data-post-id');
+            const input = form.querySelector('.comment-input');
+            const content = input ? input.value.trim() : '';
+            if (!content) return;
+            submitComment(postId, content, input);
+        });
+    }
+
+    function toggleCommentSection(postId) {
+        const section = document.getElementById('comments-' + postId);
+        if (!section) return;
+
+        const isHidden = section.style.display === 'none' || section.style.display === '';
+        if (isHidden) {
+            section.style.display = 'block';
+            loadComments(postId);
+            const input = section.querySelector('.comment-input');
+            if (input) setTimeout(() => input.focus(), 50);
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function loadComments(postId) {
+        const list = document.getElementById('comments-list-' + postId);
+        if (!list) return;
+
+        list.innerHTML = '<p style="color:var(--color-text-muted,#999);font-size:.85rem;padding:8px 0;">Loading…</p>';
+
+        fetch('/user/community/posts/comments?post_id=' + postId)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { list.innerHTML = ''; return; }
+            renderComments(list, data.comments);
+        })
+        .catch(() => { list.innerHTML = ''; });
+    }
+
+    function renderComments(container, comments) {
+        container.innerHTML = '';
+        if (!comments || comments.length === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'comments-empty';
+            empty.textContent = 'No comments yet. Be the first!';
+            container.appendChild(empty);
+            return;
+        }
+        comments.forEach(c => container.appendChild(buildCommentEl(c)));
+    }
+
+    function buildCommentEl(c) {
+        const wrap = document.createElement('div');
+        wrap.className = 'community-comment';
+
+        const img = document.createElement('img');
+        img.src = c.profilePicture || '/assets/img/avatar.png';
+        img.alt = '';
+        img.className = 'comment-avatar';
+
+        const body = document.createElement('div');
+        body.className = 'comment-body';
+
+        const meta = document.createElement('div');
+        meta.className = 'comment-meta';
+
+        const author = document.createElement('span');
+        author.className = 'comment-author';
+        author.textContent = c.displayName || 'User';
+
+        const time = document.createElement('span');
+        time.className = 'comment-time';
+        if (c.createdAt) {
+            time.textContent = new Date(c.createdAt).toLocaleString(undefined, {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        meta.appendChild(author);
+        meta.appendChild(time);
+
+        const text = document.createElement('p');
+        text.className = 'comment-text';
+        text.textContent = c.content || '';
+
+        body.appendChild(meta);
+        body.appendChild(text);
+        wrap.appendChild(img);
+        wrap.appendChild(body);
+
+        return wrap;
+    }
+
+    function submitComment(postId, content, inputEl) {
+        fetch('/user/community/posts/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: Number(postId), content }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { showToast(data.error || 'Failed to post comment.'); return; }
+            if (inputEl) inputEl.value = '';
+
+            // Append the new comment to the list
+            const list = document.getElementById('comments-list-' + postId);
+            if (list) {
+                const empty = list.querySelector('.comments-empty');
+                if (empty) empty.remove();
+                list.appendChild(buildCommentEl(data.comment));
+            }
+
+            // Update comment count in action bar
+            const commentBtn = document.querySelector(`.comment-btn[data-post-id="${postId}"]`);
+            if (commentBtn) {
+                const countEl = commentBtn.querySelector('.action-count');
+                if (countEl) countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
+            }
+        })
+        .catch(() => showToast('Network error. Please try again.'));
+    }
+
+    // ----------------------------------------------------------------
+    // Shared toast helper
+
+    function showToast(message) {
+        let toast = document.getElementById('communityToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'communityToast';
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:6px;font-size:.875rem;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.style.opacity = '1';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
     }
 
     function initializeFollowButtons() {

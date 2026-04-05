@@ -4,7 +4,7 @@ $navItems = [
     ['Schedule',        '/counselor/sessions',        'calendar-days',  'sessions'],
     ['Clients',         '/counselor/clients',         'heart-pulse',    'clients'],
     ['Recovery Plans',  '/counselor/recovery-plans',  'clipboard-plus', 'recovery'],
-    ['Profile',         '/counselor/profile',         'user-round',     'profile'],
+    
 ];
 ?>
 <section class="sidebar">
@@ -49,35 +49,3 @@ $navItems = [
 <form id="counselorLogoutForm" method="POST" action="/auth/logout" style="display: none;"></form>
 
 <?php require_once __DIR__ . '/counselor-profile-modal.php'; ?>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const userInfo = document.getElementById('counselorInfoClick');
-    const dropdown = document.getElementById('counselorMenuDropdown');
-    const editBtn = document.getElementById('editCounselorProfileBtn');
-    const logoutBtn = document.getElementById('counselorLogoutBtn');
-    const logoutForm = document.getElementById('counselorLogoutForm');
-
-    userInfo?.addEventListener('click', (event) => {
-        event.stopPropagation();
-        dropdown?.classList.toggle('show');
-    });
-
-    editBtn?.addEventListener('click', (event) => {
-        event.stopPropagation();
-        dropdown?.classList.remove('show');
-        openCounselorProfileModal();
-    });
-
-    logoutBtn?.addEventListener('click', (event) => {
-        event.stopPropagation();
-        logoutForm?.submit();
-    });
-
-    document.addEventListener('click', (event) => {
-        if (userInfo && dropdown && !userInfo.contains(event.target)) {
-            dropdown.classList.remove('show');
-        }
-    });
-});
-</script>

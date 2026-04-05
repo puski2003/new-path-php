@@ -120,19 +120,50 @@
                                 <div class="price-breakdown">
                                     <div class="price-row">
                                         <span>Session Fee</span>
-                                        <span>LKR <?= number_format($sessionFee, 2) ?></span>
+                                        <?php if ($freeCredit): ?>
+                                            <span style="text-decoration:line-through;color:var(--color-text-muted);">LKR <?= number_format($sessionFee, 2) ?></span>
+                                        <?php else: ?>
+                                            <span>LKR <?= number_format($sessionFee, 2) ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="price-row">
                                         <span>Platform Fee (10%)</span>
-                                        <span>LKR <?= number_format($platformFee, 2) ?></span>
+                                        <?php if ($freeCredit): ?>
+                                            <span style="text-decoration:line-through;color:var(--color-text-muted);">LKR <?= number_format(round($sessionFee * 0.10, 2), 2) ?></span>
+                                        <?php else: ?>
+                                            <span>LKR <?= number_format($platformFee, 2) ?></span>
+                                        <?php endif; ?>
                                     </div>
+                                    <?php if ($freeCredit): ?>
+                                    <div class="price-row" style="color:var(--color-primary);font-weight:600;">
+                                        <span>Reschedule Credit</span>
+                                        <span>- LKR <?= number_format($sessionFee + round($sessionFee * 0.10, 2), 2) ?></span>
+                                    </div>
+                                    <?php endif; ?>
                                     <div class="price-divider"></div>
                                     <div class="price-row total">
                                         <span>Total</span>
-                                        <span>LKR <?= number_format($amount, 2) ?></span>
+                                        <span><?= $freeCredit ? 'Free' : 'LKR ' . number_format($amount, 2) ?></span>
                                     </div>
                                 </div>
 
+                                <?php if ($freeCredit): ?>
+                                <!-- Free rebook — no payment needed -->
+                                <div class="free-rebook-notice">
+                                    <i data-lucide="circle-check" stroke-width="1.5"></i>
+                                    <span>Your counselor approved your reschedule request. This session is free of charge.</span>
+                                </div>
+                                <form method="post" action="/user/sessions/book/free" id="freeRebookForm">
+                                    <input type="hidden" name="hold_id"    value="<?= (int)$holdId ?>">
+                                    <input type="hidden" name="credit_id"  value="<?= (int)$freeCredit['requestId'] ?>">
+                                    <input type="hidden" name="session_type" value="<?= htmlspecialchars($sessionType) ?>">
+                                    <button type="submit" class="btn btn-primary proceed-btn" id="freeRebookBtn">
+                                        <i data-lucide="calendar-check" stroke-width="1.5"></i>
+                                        Confirm Free Rebook
+                                    </button>
+                                </form>
+
+                                <?php else: ?>
                                 <!-- Pay Button -->
                                 <div class="payment-form">
                                     <button type="button" id="payhere-submit"
@@ -148,13 +179,13 @@
                                     <i data-lucide="shield-check" stroke-width="1.5"></i>
                                     <span>Secure payment powered by PayHere</span>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Booking Policies -->
                                 <div class="booking-policies">
                                     <h5>Booking Policies</h5>
                                     <ul>
-                                        <li><i data-lucide="check" stroke-width="2"></i> Free cancellation up to 24 hours before session</li>
-                                        <li><i data-lucide="check" stroke-width="2"></i> Reschedule anytime with 12 hours notice</li>
+                                        <li><i data-lucide="check" stroke-width="2"></i> Reschedule request required for paid sessions</li>
                                         <li><i data-lucide="check" stroke-width="2"></i> Full refund if counselor doesn't show up</li>
                                     </ul>
                                 </div>
@@ -274,7 +305,6 @@
     </script>
     <?php endif; ?>
 
-    <script src="/assets/js/auth/user-profile.js"></script>
     <script>if (typeof lucide !== 'undefined') lucide.createIcons();</script>
 </body>
 </html>

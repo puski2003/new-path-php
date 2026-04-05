@@ -1047,3 +1047,89 @@
 .fu-popup-empty svg { width: 40px; height: 40px; opacity: 0.45; }
 .fu-popup-empty h4 { font-size: var(--font-size-base); color: var(--color-text-secondary); margin: 0; }
 .fu-popup-empty p { font-size: var(--font-size-sm); margin: 0; }
+
+/* ── Session action modals (cancel / review) ─────────────── */
+.session-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1100;
+    opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+.session-modal-overlay.show { opacity: 1; visibility: visible; }
+.session-modal {
+    background: #fff; border-radius: var(--radius-lg);
+    width: 90%; max-width: 480px; max-height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,.18);
+    transform: scale(.95) translateY(-12px);
+    transition: transform .25s ease;
+    overflow: hidden;
+}
+.session-modal-overlay.show .session-modal { transform: scale(1) translateY(0); }
+.session-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--color-border-primary);
+}
+.session-modal-header h3 { margin: 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.session-modal-close {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--color-text-muted); line-height: 1;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm); transition: background .15s ease;
+}
+.session-modal-close:hover { background: var(--color-bg-light-green); }
+.session-modal-body { padding: var(--spacing-xl); overflow-y: auto; flex: 1; }
+.session-modal-actions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+
+/* Star rating */
+.star-rating { display: flex; gap: 4px; margin-bottom: var(--spacing-xs); }
+.star-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 2rem; color: var(--color-border-primary);
+    line-height: 1; padding: 0;
+    transition: color .15s ease, transform .1s ease;
+}
+.star-btn.active, .star-btn.hovered { color: #f59e0b; }
+.star-btn:hover { transform: scale(1.15); }
+
+/* Danger button */
+.btn-danger {
+    background: #dc2626; color: #fff; border: 1px solid #dc2626;
+    transition: background .2s ease;
+}
+.btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+
+/* Inline error / flash */
+.session-error-msg {
+    background: #fef2f2; border: 1px solid #fca5a5;
+    color: #b91c1c; border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm); margin-bottom: var(--spacing-md);
+}
+
+/* ── Free rebook notice ───────────────────────────────────────── */
+.free-rebook-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: #15803d;
+    margin-bottom: var(--spacing-md);
+}
+
+.free-rebook-notice i {
+    flex-shrink: 0;
+    margin-top: 1px;
+    width: 16px;
+    height: 16px;
+    color: #16a34a;
+}
+
+#freeRebookForm { margin-bottom: 0; }

@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$pageScripts = [
+    '/assets/js/components/toast.js',
+    '/assets/js/user/recovery.js',
+];
+?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>
 
 <body>
@@ -106,10 +112,7 @@
         </section>
     </main>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
-    <script src="/assets/js/user/recovery.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
+    <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 
 </html>

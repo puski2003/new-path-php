@@ -46,7 +46,6 @@
         lucide.createIcons();
     </script>
     <script src="/assets/js/user/counselors.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
 </body>
 
 </html>

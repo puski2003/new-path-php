@@ -7,7 +7,7 @@
     gap: var(--spacing-md);
     flex-direction: column;
     z-index: var(--z-sidebar);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .sidebar-item {

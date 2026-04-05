@@ -1,5 +1,11 @@
 <?php
 $activePage = 'sessions';
+$pageScripts = [
+    '/assets/js/components/followup-thread.js',
+    '/assets/js/counselor/sessions.js',
+    '/assets/js/counselor/followUp.js',
+    '/assets/js/counselor/rescheduleRequests.js',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +17,7 @@ $activePage = 'sessions';
     <section class="main-content">
         <?php require __DIR__ . '/../common/counselor.page-header.php'; ?>
 
-        <div class="main-content-body dashboard-overflow">
+        <div class="main-content-body ">
             <div class="inner-body-content">
                 <div class="body-column">
 
@@ -23,6 +29,7 @@ $activePage = 'sessions';
                             <span onclick="showSection('tab-upcoming')"  class="toggle-button"               id="btn-upcoming">Upcoming</span>
                             <span onclick="showSection('tab-completed')" class="toggle-button"               id="btn-completed">Completed</span>
                             <span onclick="showSection('tab-cancelled')" class="toggle-button"               id="btn-cancelled">Cancelled / No-show</span>
+                            <span onclick="showSection('tab-reschedule')" class="toggle-button"              id="btn-reschedule">Reschedule Requests <span class="reschedule-badge" id="rescheduleBadge" style="display:none;"></span></span>
                         </div>
                     </div>
 
@@ -65,28 +72,47 @@ $activePage = 'sessions';
                             <?php endif; ?>
                         </section>
 
+                        <!-- Reschedule Requests (loaded via AJAX) -->
+                        <section class="toggle-section" id="tab-reschedule">
+                            <div id="reschedule-requests-list">
+                                <p class="empty-state-text">Loading requests…</p>
+                            </div>
+                        </section>
+
                     </div><!-- /.counselor-list-card -->
 
                 </div><!-- /.body-column -->
             </div><!-- /.inner-body-content -->
         </div><!-- /.main-content-body -->
     </section>
+    <!-- Reschedule request review modal -->
+    <div class="session-modal-overlay" id="rescheduleReviewOverlay" style="display:none;">
+        <div class="session-modal">
+            <div class="session-modal-header">
+                <h3 id="rescheduleReviewTitle">Review Request</h3>
+                <button type="button" class="session-modal-close" id="closeRescheduleReview">&times;</button>
+            </div>
+            <div class="session-modal-body">
+                <p id="rescheduleReviewMeta" style="color:var(--color-text-secondary);margin-bottom:var(--spacing-md);font-size:var(--font-size-sm);"></p>
+                <p id="rescheduleReviewReason" style="margin-bottom:var(--spacing-lg);"></p>
+                <div class="form-group">
+                    <label for="rescheduleReviewNote">Note to client <span class="optional">(optional)</span></label>
+                    <textarea class="form-input" id="rescheduleReviewNote" rows="3" maxlength="500"
+                        placeholder="Briefly explain your decision…"></textarea>
+                </div>
+                <p id="rescheduleReviewError" style="color:#dc2626;font-size:var(--font-size-sm);display:none;"></p>
+                <div class="session-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="closeRescheduleReview2">Cancel</button>
+                    <button type="button" class="btn btn-danger"    id="rejectRescheduleBtn">Decline</button>
+                    <button type="button" class="btn btn-primary"   id="approveRescheduleBtn">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <?php require __DIR__ . '/../common/counselor.followup-popup.php'; ?>
 
-<script>
-function showSection(id) {
-    document.querySelectorAll('.toggle-section').forEach(s => s.classList.remove('active-section'));
-    document.querySelectorAll('.toggle-button').forEach(b => b.classList.remove('active-button'));
-    const section = document.getElementById(id);
-    if (section) section.classList.add('active-section');
-    const btnMap = { 'tab-today': 'btn-today', 'tab-upcoming': 'btn-upcoming', 'tab-completed': 'btn-completed', 'tab-cancelled': 'btn-cancelled' };
-    const btn = document.getElementById(btnMap[id]);
-    if (btn) btn.classList.add('active-button');
-}
-</script>
-<script src="/assets/js/counselor/followUp.js"></script>
-<script>lucide.createIcons();</script>
+<?php require __DIR__ . '/../common/counselor.footer.php'; ?>
 </body>
 </html>

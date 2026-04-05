@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$pageScripts = [
+    '/assets/js/components/followup-thread.js',
+    '/assets/js/user/sessions.js',
+    '/assets/js/user/followUp.js',
+];
+?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>
 
 <body>
@@ -117,12 +124,7 @@
 
     <?php require_once __DIR__ . '/../common/user.followup-popup.php'; ?>
 
-    <script src="/assets/js/user/sessions.js"></script>
-    <script src="/assets/js/user/followUp.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
-    <script>
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    </script>
+    <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 
 </html>

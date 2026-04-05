@@ -19,6 +19,9 @@ if ($sessionData === null) {
 $isUpcomingSession = in_array($sessionData['status'], ['scheduled', 'confirmed', 'in_progress'], true)
     && strtotime((string)$sessionData['sessionDateTime']) >= time();
 
+// Auto-open review modal if redirected from the sessions list ?review=1
+$autoOpenReview = Request::get('review') === '1' && !$isUpcomingSession && !$sessionData['hasReview'];
+
 // Show a success banner when redirected from booking payment
 $justBooked = Request::get('booked') === '1';
 

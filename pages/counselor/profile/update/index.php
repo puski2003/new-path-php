@@ -26,15 +26,26 @@ $email           = esc($_POST['email']            ?? '');
 $phone           = esc($_POST['phoneNumber']      ?? '');
 $fee             = !empty($_POST['consultationFee']) ? (float) $_POST['consultationFee'] : 0;
 
-// Build availability JSON from day checkboxes + time selects
-$days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+// Build availability JSON — multi-slot format: {day: [{start, end}, ...]}
+$allDays      = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+$validTimes   = [];
+for ($h = 6; $h <= 22; $h++) { $validTimes[] = sprintf('%02d:00', $h); }
+
 $availability = [];
-foreach ($days as $day) {
-    if (!empty($_POST["{$day}_enabled"])) {
-        $availability[$day] = [
-            'start' => $_POST["{$day}_start"] ?? '09:00',
-            'end'   => $_POST["{$day}_end"]   ?? '17:00',
-        ];
+foreach ($allDays as $day) {
+    if (empty($_POST["{$day}_enabled"])) continue;
+
+    $rawSlots = $_POST["{$day}_slots"] ?? [];
+    $slots    = [];
+    foreach ((array)$rawSlots as $slot) {
+        $start = trim((string)($slot['start'] ?? ''));
+        $end   = trim((string)($slot['end']   ?? ''));
+        if (in_array($start, $validTimes, true) && in_array($end, $validTimes, true) && $start < $end) {
+            $slots[] = ['start' => $start, 'end' => $end];
+        }
+    }
+    if (!empty($slots)) {
+        $availability[$day] = $slots;
     }
 }
 $availJson = esc(json_encode($availability));

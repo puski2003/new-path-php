@@ -88,35 +88,146 @@ if (!is_array($savedAvailability)) {
 
                 <div class="form-divider"></div>
                 <h4 class="form-section-title">Availability Schedule</h4>
-                <p class="form-help">Set your available hours for each day. Toggle the day to enable or disable it.</p>
+                <p class="form-help">Toggle days on/off. Add multiple time slots per day (e.g. 9–12 and 14–17).</p>
 
+                <?php
+                // Helper: render <option> tags for hours 06:00–22:00
+                function renderTimeOptions(string $selected): string {
+                    $out = '';
+                    for ($h = 6; $h <= 22; $h++) {
+                        $val   = sprintf('%02d:00', $h);
+                        $label = date('g:i A', mktime($h, 0, 0));
+                        $sel   = $selected === $val ? ' selected' : '';
+                        $out  .= "<option value=\"{$val}\"{$sel}>{$label}</option>";
+                    }
+                    return $out;
+                }
+
+                // Normalize a saved day value to an array of [{start,end}]
+                function normalizeSlots(mixed $raw): array {
+                    if (empty($raw)) return [];
+                    // Old format: {start:'09:00', end:'17:00'}
+                    if (isset($raw['start'])) return [$raw];
+                    // New format: [{start,end}, ...]
+                    return array_values((array)$raw);
+                }
+
+                $allDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+                ?>
                 <div class="availability-list">
-                    <?php
-                    $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-                    foreach ($days as $day):
-                        $dayConfig = $savedAvailability[$day] ?? [];
+                    <?php foreach ($allDays as $day):
+                        $slots   = normalizeSlots($savedAvailability[$day] ?? null);
+                        $enabled = !empty($slots);
+                        // Always show at least one default row when editing
+                        if (empty($slots)) $slots = [['start' => '09:00', 'end' => '17:00']];
                     ?>
-                        <div class="availability-row">
-                            <label class="day-toggle">
-                                <input type="checkbox" name="<?= $day ?>_enabled" id="<?= $day ?>_enabled" <?= !empty($dayConfig) ? 'checked' : '' ?>>
-                                <span class="day-label"><?= ucfirst($day) ?></span>
+                    <div class="avail-day-row" id="day_<?= $day ?>">
+                        <div class="avail-day-header">
+                            <label class="avail-day-toggle">
+                                <input type="checkbox"
+                                       name="<?= $day ?>_enabled"
+                                       id="<?= $day ?>_enabled"
+                                       <?= $enabled ? 'checked' : '' ?>
+                                       onchange="toggleAvailDay('<?= $day ?>')">
+                                <span class="avail-day-name"><?= ucfirst($day) ?></span>
                             </label>
-                            <div class="time-range">
-                                <select name="<?= $day ?>_start" class="time-select">
-                                    <?php foreach (['09:00', '10:00', '11:00', '12:00', '13:00', '14:00'] as $time): ?>
-                                        <option value="<?= $time ?>" <?= ($dayConfig['start'] ?? '') === $time ? 'selected' : '' ?>><?= date('g:i A', strtotime($time)) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <span>to</span>
-                                <select name="<?= $day ?>_end" class="time-select">
-                                    <?php foreach (['12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'] as $time): ?>
-                                        <option value="<?= $time ?>" <?= (($dayConfig['end'] ?? '17:00') === $time) ? 'selected' : '' ?>><?= date('g:i A', strtotime($time)) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <button type="button" class="avail-add-slot"
+                                    onclick="addAvailSlot('<?= $day ?>')"
+                                    <?= !$enabled ? 'style="display:none"' : '' ?>>
+                                + Add Slot
+                            </button>
                         </div>
+                        <div class="avail-slots-container"
+                             id="<?= $day ?>_slots"
+                             <?= !$enabled ? 'style="display:none"' : '' ?>>
+                            <?php foreach ($slots as $i => $slot): ?>
+                            <div class="avail-slot-row">
+                                <select name="<?= $day ?>_slots[<?= $i ?>][start]" class="avail-time-select">
+                                    <?= renderTimeOptions($slot['start'] ?? '09:00') ?>
+                                </select>
+                                <span class="avail-to">to</span>
+                                <select name="<?= $day ?>_slots[<?= $i ?>][end]" class="avail-time-select">
+                                    <?= renderTimeOptions($slot['end'] ?? '17:00') ?>
+                                </select>
+                                <?php if ($i > 0): ?>
+                                <button type="button" class="avail-remove-slot" onclick="removeAvailSlot(this)">×</button>
+                                <?php endif; ?>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <?php endforeach; ?>
                 </div>
+
+                <script>
+                function toggleAvailDay(day) {
+                    var cb      = document.getElementById(day + '_enabled');
+                    var slots   = document.getElementById(day + '_slots');
+                    var addBtn  = document.querySelector('#day_' + day + ' .avail-add-slot');
+                    if (cb.checked) {
+                        slots.style.display  = '';
+                        addBtn.style.display = '';
+                    } else {
+                        slots.style.display  = 'none';
+                        addBtn.style.display = 'none';
+                    }
+                }
+
+                function makeTimeSelect(name, selected) {
+                    var sel = document.createElement('select');
+                    sel.name      = name;
+                    sel.className = 'avail-time-select';
+                    for (var h = 6; h <= 22; h++) {
+                        var val  = (h < 10 ? '0' : '') + h + ':00';
+                        var ampm = h >= 12 ? 'PM' : 'AM';
+                        var dh   = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                        var opt  = document.createElement('option');
+                        opt.value       = val;
+                        opt.textContent = dh + ':00 ' + ampm;
+                        if (val === selected) opt.selected = true;
+                        sel.appendChild(opt);
+                    }
+                    return sel;
+                }
+
+                function addAvailSlot(day) {
+                    var container = document.getElementById(day + '_slots');
+                    var index     = container.querySelectorAll('.avail-slot-row').length;
+
+                    var row = document.createElement('div');
+                    row.className = 'avail-slot-row';
+
+                    row.appendChild(makeTimeSelect(day + '_slots[' + index + '][start]', '09:00'));
+
+                    var toSpan = document.createElement('span');
+                    toSpan.className   = 'avail-to';
+                    toSpan.textContent = 'to';
+                    row.appendChild(toSpan);
+
+                    row.appendChild(makeTimeSelect(day + '_slots[' + index + '][end]', '17:00'));
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type      = 'button';
+                    removeBtn.className = 'avail-remove-slot';
+                    removeBtn.textContent = '×';
+                    removeBtn.addEventListener('click', function() { removeAvailSlot(this); });
+                    row.appendChild(removeBtn);
+
+                    container.appendChild(row);
+                }
+
+                function removeAvailSlot(btn) {
+                    var row       = btn.closest('.avail-slot-row');
+                    var container = row.closest('.avail-slots-container');
+                    row.remove();
+                    // Re-index remaining rows so PHP parses them as a proper array
+                    container.querySelectorAll('.avail-slot-row').forEach(function(r, i) {
+                        r.querySelectorAll('select').forEach(function(sel) {
+                            sel.name = sel.name.replace(/\[\d+\]/, '[' + i + ']');
+                        });
+                    });
+                }
+                </script>
 
                 <div class="profile-modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancelCounselorProfile">Cancel</button>
@@ -126,41 +237,3 @@ if (!is_array($savedAvailability)) {
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const overlay = document.getElementById('counselorProfileModalOverlay');
-    const closeBtn = document.getElementById('counselorProfileModalClose');
-    const cancelBtn = document.getElementById('cancelCounselorProfile');
-    const fileInput = document.getElementById('counselorProfilePicture');
-    const previewImg = document.getElementById('counselorCurrentProfilePic');
-
-    const closeModal = () => {
-        if (!overlay) return;
-        overlay.classList.remove('show');
-        overlay.style.display = 'none';
-    };
-
-    closeBtn?.addEventListener('click', closeModal);
-    cancelBtn?.addEventListener('click', closeModal);
-    overlay?.addEventListener('click', (event) => {
-        if (event.target === overlay) closeModal();
-    });
-
-    fileInput?.addEventListener('change', function () {
-        if (!this.files || !this.files[0] || !previewImg) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            previewImg.src = event.target?.result || previewImg.src;
-        };
-        reader.readAsDataURL(this.files[0]);
-    });
-});
-
-function openCounselorProfileModal() {
-    const overlay = document.getElementById('counselorProfileModalOverlay');
-    if (!overlay) return;
-    overlay.style.display = 'flex';
-    overlay.classList.add('show');
-}
-</script>

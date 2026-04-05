@@ -13,6 +13,19 @@
  */
 $user = Auth::requireRole('user');
 
+// Enrich $user with live profile picture (not stored in JWT)
+$_profileRs = Database::search(
+    "SELECT profile_picture FROM users WHERE user_id = " . (int)$user['id'] . " LIMIT 1"
+);
+if ($_profileRs && ($_profileRow = $_profileRs->fetch_assoc())) {
+    $user['profilePictureUrl'] = !empty($_profileRow['profile_picture'])
+        ? $_profileRow['profile_picture']
+        : '/assets/img/avatar.png';
+} else {
+    $user['profilePictureUrl'] = '/assets/img/avatar.png';
+}
+unset($_profileRs, $_profileRow);
+
 // Normalise $pageStyle to an array
 $_pageStyles = [];
 if (!empty($pageStyle)) {

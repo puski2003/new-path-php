@@ -128,6 +128,46 @@ if ($ajaxAction = Request::get('ajax')) {
                 'daysLeft' => $daysLeft,
             ]);
             exit;
+
+        case 'submit_review':
+            $sessionId  = (int) Request::post('session_id');
+            $rating     = (int) Request::post('rating');
+            $reviewText = trim((string) (Request::post('review') ?? ''));
+
+            if ($sessionId <= 0 || $rating < 1 || $rating > 5) {
+                echo json_encode(['success' => false, 'error' => 'Invalid data']);
+                exit;
+            }
+
+            $ok = SessionsModel::submitReview($userId, $sessionId, $rating, $reviewText);
+            echo json_encode(['success' => $ok, 'error' => $ok ? null : 'Could not submit review. It may have already been submitted.']);
+            exit;
+
+        case 'request_reschedule':
+            $sessionId = (int) Request::post('session_id');
+            $reason    = trim((string) (Request::post('reason') ?? ''));
+
+            if ($sessionId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'Invalid session']);
+                exit;
+            }
+
+            $ok = SessionsModel::requestReschedule($userId, $sessionId, $reason);
+            echo json_encode(['success' => $ok, 'error' => $ok ? null : 'Could not send request. There may already be a pending request for this session.']);
+            exit;
+
+        case 'report_no_show':
+            $sessionId   = (int) Request::post('session_id');
+            $description = trim((string) (Request::post('description') ?? ''));
+
+            if ($sessionId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'Invalid session']);
+                exit;
+            }
+
+            $ok = SessionsModel::reportNoShow($userId, $sessionId, $description);
+            echo json_encode(['success' => $ok, 'error' => $ok ? null : 'Could not submit report. You may have already reported this session.']);
+            exit;
     }
 
     echo json_encode(['success' => false, 'error' => 'Unknown action']);

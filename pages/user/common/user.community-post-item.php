@@ -12,7 +12,7 @@ $isAnonymous = !empty($currentPost['anonymous']);
     <div class="post-header">
         <div class="post-author">
             <?php if (!$isAnonymous): ?>
-                <a href="/user/profile/<?= $postUserId ?>">
+                <a href="/user/profile?id=<?= $postUserId ?>">
                     <img src="<?= htmlspecialchars($avatar) ?>" alt="<?= htmlspecialchars($displayName) ?>" class="author-avatar" />
                 </a>
             <?php else: ?>
@@ -21,7 +21,7 @@ $isAnonymous = !empty($currentPost['anonymous']);
 
             <div class="author-info">
                 <?php if (!$isAnonymous): ?>
-                    <a href="/user/profile/<?= $postUserId ?>" class="author-name-link">
+                    <a href="/user/profile?id=<?= $postUserId ?>" class="author-name-link">
                         <h4 class="author-name"><?= htmlspecialchars($displayName) ?></h4>
                     </a>
                 <?php else: ?>
@@ -61,9 +61,9 @@ $isAnonymous = !empty($currentPost['anonymous']);
                     <i data-lucide="flag"></i>
                     <span>Report Post</span>
                 </button>
-                <button class="menu-option save-post" data-post-id="<?= $postId ?>">
-                    <i data-lucide="bookmark"></i>
-                    <span>Save Post</span>
+                <button class="menu-option save-post" data-post-id="<?= $postId ?>" data-saved="<?= !empty($currentPost['isSaved']) ? 'true' : 'false' ?>">
+                    <i data-lucide="<?= !empty($currentPost['isSaved']) ? 'bookmark-check' : 'bookmark' ?>"></i>
+                    <span><?= !empty($currentPost['isSaved']) ? 'Saved' : 'Save Post' ?></span>
                 </button>
                 <button class="menu-option share-post" data-post-id="<?= $postId ?>">
                     <i data-lucide="share"></i>
@@ -87,6 +87,16 @@ $isAnonymous = !empty($currentPost['anonymous']);
 
     <div class="post-actions">
         <?php require __DIR__ . '/user.community-post-actions.php'; ?>
+    </div>
+
+    <div class="post-comments-section" id="comments-<?= $postId ?>" style="display:none;">
+        <div class="comments-list" id="comments-list-<?= $postId ?>"></div>
+        <form class="comment-form" data-post-id="<?= $postId ?>">
+            <input type="text" class="comment-input" placeholder="Write a comment…" maxlength="1000" autocomplete="off" />
+            <button type="submit" class="comment-submit-btn" title="Post comment">
+                <i data-lucide="send" style="width:16px;height:16px;"></i>
+            </button>
+        </form>
     </div>
 
     <?php if ($isOwner): ?>

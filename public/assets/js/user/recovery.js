@@ -129,43 +129,9 @@ function animateProgressBars() {
 }
 
 function showNotification(message, type) {
-  const existing = document.querySelector('.notification');
-  if (existing) existing.remove();
-
-  const notification = document.createElement('div');
-  notification.className = 'notification notification-' + (type || 'info');
-  notification.innerHTML = '<span class="notification-message">' + escapeHtml(message) + '</span><button class="notification-close">&times;</button>';
-
-  notification.style.cssText = [
-    'position: fixed',
-    'top: 20px',
-    'right: 20px',
-    'padding: 16px 20px',
-    'border-radius: 8px',
-    'color: white',
-    'font-weight: 500',
-    'z-index: 1000',
-    'display: flex',
-    'align-items: center',
-    'gap: 12px',
-    'min-width: 300px',
-    'animation: slideIn 0.3s ease'
-  ].join(';');
-
-  if (type === 'success') notification.style.backgroundColor = '#10b981';
-  else if (type === 'error') notification.style.backgroundColor = '#ef4444';
-  else notification.style.backgroundColor = '#3b82f6';
-
-  const closeBtn = notification.querySelector('.notification-close');
-  if (closeBtn) {
-    closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:18px;cursor:pointer;padding:0;margin-left:auto;';
-    closeBtn.addEventListener('click', function () { notification.remove(); });
+  if (window.NewPathToast) {
+    window.NewPathToast.show(message, type || "info");
   }
-
-  document.body.appendChild(notification);
-  setTimeout(function () {
-    if (notification.parentNode) notification.remove();
-  }, 5000);
 }
 
 function showProgressModal(defaultType) {
@@ -244,10 +210,3 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-(function ensureAnimationStyle() {
-  if (document.getElementById('recovery-notification-anim')) return;
-  const style = document.createElement('style');
-  style.id = 'recovery-notification-anim';
-  style.textContent = '@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }';
-  document.head.appendChild(style);
-})();

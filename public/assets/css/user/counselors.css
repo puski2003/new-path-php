@@ -768,3 +768,56 @@
     width: 16px;
     height: 16px;
 }
+/* ── Review stars (dynamic) ──────────────────────────────────── */
+.review-stars {
+    display: flex;
+    gap: 2px;
+    margin: 4px 0 8px;
+}
+
+.review-stars .star { width: 14px; height: 14px; }
+.review-stars .star-empty { opacity: 0.3; }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.reviews-empty {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* ── No written review ───────────────────────────────────────── */
+.review-no-text { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+
+/* ── Pagination ──────────────────────────────────────────────── */
+.reviews-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.reviews-page-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.reviews-page-btn:hover {
+    background: var(--color-bg-light-green);
+}
+
+.reviews-page-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}

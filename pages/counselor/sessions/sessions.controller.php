@@ -147,18 +147,42 @@ if ($ajaxAction = Request::get('ajax')) {
 
             $timeStr  = date('M j, g:i A');
             $myAvatar = $user['profilePictureUrl'] ?? '/assets/img/avatar.png';
-            echo json_encode([
-                'success' => true,
-                'message' => [
-                    'isMe'    => true,
-                    'name'    => 'You',
-                    'avatar'  => $myAvatar,
-                    'message' => $msg,
-                    'time'    => $timeStr,
-                ],
-                'msgCount' => $msgCount + 1,
-                'daysLeft' => max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400)),
-            ]);
+        echo json_encode([
+            'success' => true,
+            'message' => [
+                'isMe'    => true,
+                'name'    => 'You',
+                'avatar'  => $myAvatar,
+                'message' => $msg,
+                'time'    => $timeStr,
+            ],
+            'msgCount' => $msgCount + 1,
+            'daysLeft' => max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400)),
+        ]);
+        exit;
+
+    case 'get_reschedule_requests':
+            $items = CounselorSessionsModel::getPendingRescheduleRequests($counselorId);
+            echo json_encode(['success' => true, 'requests' => $items]);
+            exit;
+
+        case 'review_reschedule':
+            $requestId = (int) Request::post('request_id');
+            $action    = trim((string) (Request::post('action') ?? ''));
+            $note      = trim((string) (Request::post('note') ?? ''));
+
+            if ($requestId <= 0 || !in_array($action, ['approve', 'reject'], true)) {
+                echo json_encode(['success' => false, 'error' => 'Invalid data']);
+                exit;
+            }
+
+            if ($action === 'approve') {
+                $ok = CounselorSessionsModel::approveReschedule($counselorId, $requestId, $counselorUserId, $note);
+            } else {
+                $ok = CounselorSessionsModel::rejectReschedule($counselorId, $requestId, $note);
+            }
+
+            echo json_encode(['success' => $ok, 'error' => $ok ? null : 'Request not found or already reviewed.']);
             exit;
     }
 

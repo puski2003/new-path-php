@@ -133,47 +133,8 @@
   }
 
   function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: ${
-        type === 'success'
-          ? 'var(--color-primary)'
-          : type === 'error'
-          ? '#e74c3c'
-          : 'var(--color-secondary)'
-      };
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      z-index: 1000;
-      animation: slideIn 0.3s ease;
-    `;
-
-    document.body.appendChild(notification);
-    setTimeout(() => {
-      notification.style.animation = 'slideOut 0.3s ease';
-      setTimeout(() => notification.remove(), 300);
-    }, 3000);
-  }
-
-  if (!document.querySelector('#post-recovery-animations')) {
-    const style = document.createElement('style');
-    style.id = 'post-recovery-animations';
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-      @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
+    if (window.NewPathToast) {
+      window.NewPathToast.show(message, type);
+    }
   }
 })();

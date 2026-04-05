@@ -5,6 +5,9 @@
  * Variables available: $user, $data (from controller)
  */
 $activePage = 'dashboard';
+$pageScripts = [
+    '/assets/js/user/dashboard.js',
+];
 
 
 
@@ -284,13 +287,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
         </section>
     </main>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        lucide.createIcons();
-    </script>
-    <script src="/assets/js/user/dashboard.js"></script>
-    <script src="/assets/js/components/sidebar.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
+    <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 
 </html>

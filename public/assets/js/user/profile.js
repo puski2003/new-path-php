@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const communityActionUrl = '/user/community';
     const followBtn = document.getElementById('followBtn');
     const messageBtn = document.getElementById('messageBtn');
     const moreBtn = document.getElementById('moreBtn');
@@ -13,9 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const isFollowing = this.classList.contains('following');
             
             const formData = new FormData();
+            formData.append('user_id', userId);
             const action = isFollowing ? 'unfollow' : 'follow';
             
-            fetch(`/user/profile/${userId}?ajax=${action}`, {
+            fetch(`${communityActionUrl}?ajax=${action}`, {
                 method: 'POST',
                 body: formData
             })
@@ -41,7 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const userId = this.dataset.userId;
             
             const formData = new FormData();
-            fetch(`/user/profile/${userId}?ajax=start_chat`, {
+            formData.append('user_id', userId);
+
+            fetch(`${communityActionUrl}?ajax=start_conversation`, {
                 method: 'POST',
                 body: formData
             })
@@ -83,14 +87,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.stopPropagation();
                 if (confirm('Are you sure you want to block this user?')) {
                     const formData = new FormData();
-                    fetch(`/user/profile/${userId}?ajax=block`, {
+                    formData.append('user_id', userId);
+
+                    fetch(`${communityActionUrl}?ajax=block`, {
                         method: 'POST',
                         body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            window.location.href = '/user/find-people';
+                            window.location.href = '/user/community/find-people';
                         }
                     });
                 }

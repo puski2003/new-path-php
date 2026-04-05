@@ -1,24 +1,8 @@
 <?php
 
-/**
- * Front Controller — public/index.php
- *
- * How it works:
- *   - Every HTTP request is rewritten here by .htaccess
- *   - The URL path maps directly to pages/<path>/index.php
- *   - If the file doesn't exist → 404
- *
- * URL examples:
- *   /auth/login              → pages/auth/login/index.php
- *   /admin/dashboard         → pages/admin/dashboard/index.php
- *   /user/sessions           → pages/user/sessions/index.php
- */
+
 
 define('ROOT', dirname(__DIR__));
-
-// Detect base path: when running under a subfolder (e.g. htdocs/new-path),
-// SCRIPT_NAME will be '/new-path/index.php' → base = '/new-path'
-// When using PHP built-in server, base will be '' (root).
 define('APP_BASE', rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'));
 
 // Bootstrap — load env + core helpers
@@ -28,29 +12,19 @@ require_once ROOT . '/core/Auth.php';
 require_once ROOT . '/core/Response.php';
 require_once ROOT . '/core/Request.php';
 
-// Resolve URL path → page file
+
 $path     = Request::path();                    // e.g. "/admin/dashboard"
 $path     = '/' . trim($path, '/');            // normalise leading slash
 $pagePath = ROOT . '/pages' . $path . '/index.php';
 
-// Strip query string from path (already done in Request::path)
-// Clean up: remove any path traversal attempts
+
 if (str_contains($path, '..')) {
     Response::abort(400, 'Bad Request');
 }
 
-// Default route: / → redirect to login
+
 if ($path === '/') {
     Response::redirect('/auth/login');
-}
-
-// Handle dynamic routes
-$routeParams = [];
-
-// /user/profile/{id}
-if (preg_match('#^/user/profile/(\d+)$#', $path, $matches)) {
-    $routeParams = ['id' => (int)$matches[1]];
-    $pagePath = ROOT . '/pages/user/profile/index.php';
 }
 
 // Serve the page if it exists

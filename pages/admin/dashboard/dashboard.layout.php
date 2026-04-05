@@ -1,19 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard — New Path</title>
-    <link rel="stylesheet" href="/assets/css/global.css">
-    <link rel="stylesheet" href="/assets/css/components/sidebar.css">
-    <link rel="stylesheet" href="/assets/css/components/table.css">
-    <link rel="stylesheet" href="/assets/css/components/button.css">
-    <link rel="stylesheet" href="/assets/css/components/summary-card.css">
-    <link rel="stylesheet" href="/assets/css/admin/dashboard.css">
-</head>
-
-<body>
+<?php
+$pageTitle = 'Dashboard Overview';
+$pageStyle = ['admin/dashboard'];
+require_once __DIR__ . '/../common/admin.html.head.php';
+?>
     <!-- Mobile hamburger toggle (hidden on desktop via CSS) -->
     <button class="sidebar-toggle" aria-label="Open navigation">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -32,7 +21,6 @@
                 <span class="welcome-text">Welcome, <?= htmlspecialchars($user['name']) ?></span>
             </div>
 
-            <!-- Summary Cards -->
             <div class="summary-cards">
                 <div class="summary-card summary-card--growth">
                     <div class="summary-card__icon">
@@ -77,7 +65,6 @@
                 </div>
             </div>
 
-            <!-- Charts Row (placeholder for future charting library) -->
             <div class="data-row">
                 <div class="data-card data-card--wide">
                     <h2>User Growth Over Time</h2>
@@ -89,9 +76,7 @@
                 </div>
             </div>
 
-            <!-- Bottom Row -->
             <div class="data-row">
-                <!-- Alerts -->
                 <div class="data-card data-card--grow">
                     <h2>Notifications &amp; Alerts</h2>
                     <div class="alert alert--urgent">
@@ -112,7 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
                 <div class="data-card">
                     <h2>Quick Actions</h2>
                     <a href="/admin/user-management" class="btn btn--ghost btn--full">
@@ -133,7 +117,7 @@
         </section>
     </main>
 
-    <script src="/assets/js/components/sidebar.js" defer></script>
+    <?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 
 </html>

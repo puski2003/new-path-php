@@ -52,12 +52,21 @@
                                 <?php if (!empty($sessionData['meetingLink'])): ?>
                                     <a class="btn btn-primary session-join-btn" href="<?= htmlspecialchars($sessionData['meetingLink']) ?>" target="_blank" rel="noopener">Join session</a>
                                 <?php else: ?>
-                                    <button class="btn btn-primary session-join-btn" type="button">Join session</button>
+                                    <button class="btn btn-primary session-join-btn" type="button" disabled>Join session</button>
                                 <?php endif; ?>
-                                <a class="btn btn-secondary session-reschedule-btn" href="/user/counselors?id=<?= (int)$sessionData['counselorId'] ?>">Reschedule</a>
+                                <button class="btn btn-secondary" type="button" id="openRescheduleModal">Request Reschedule</button>
                             <?php else: ?>
-                                <a class="btn btn-primary session-join-btn" href="/user/counselors?id=<?= (int)$sessionData['counselorId'] ?>">Rebook</a>
-                                <button class="btn btn-secondary session-reschedule-btn" type="button">Review</button>
+                                <a class="btn btn-primary" href="/user/counselors?id=<?= (int)$sessionData['counselorId'] ?>">Rebook</a>
+                                <?php if ($sessionData['hasReview']): ?>
+                                    <button class="btn btn-secondary" type="button" disabled title="You've already reviewed this session">Reviewed ✓</button>
+                                <?php elseif ($sessionData['status'] === 'completed'): ?>
+                                    <button class="btn btn-secondary" type="button" id="openReviewModal">Leave Review</button>
+                                <?php endif; ?>
+                                <?php if ($sessionData['hasDispute']): ?>
+                                    <button class="btn btn-secondary" type="button" disabled>No-Show Reported</button>
+                                <?php elseif (in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
+                                    <button class="btn btn-secondary" type="button" id="openNoShowModal">Report No-Show</button>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -128,23 +137,331 @@
         </section>
     </main>
 
+    <!-- Reschedule request modal -->
+    <?php if ($isUpcomingSession): ?>
+    <div class="session-modal-overlay" id="rescheduleModalOverlay" style="display:none;">
+        <div class="session-modal">
+            <div class="session-modal-header">
+                <h3>Request Reschedule</h3>
+                <button type="button" class="session-modal-close" id="closeRescheduleModal">&times;</button>
+            </div>
+            <div class="session-modal-body">
+                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Your counselor will review your request and either approve or decline it. If approved, you will need to rebook.</p>
+                <div class="form-group">
+                    <label for="rescheduleReason">Reason <span class="optional">(optional)</span></label>
+                    <textarea class="form-input" id="rescheduleReason" rows="3" maxlength="500"
+                        placeholder="Let your counselor know why you need to reschedule…"></textarea>
+                </div>
+                <p id="rescheduleError" style="color:#dc2626;font-size:var(--font-size-sm);display:none;"></p>
+                <div class="session-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="closeRescheduleModal2">Keep Session</button>
+                    <button type="button" class="btn btn-primary" id="submitRescheduleBtn">Send Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Review modal -->
+    <?php if (!$isUpcomingSession && !$sessionData['hasReview'] && $sessionData['status'] === 'completed'): ?>
+    <div class="session-modal-overlay" id="reviewModalOverlay" style="display:none;">
+        <div class="session-modal">
+            <div class="session-modal-header">
+                <h3>Leave a Review</h3>
+                <button type="button" class="session-modal-close" id="closeReviewModal">&times;</button>
+            </div>
+            <div class="session-modal-body">
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="star-rating" id="starRating">
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                            <button type="button" class="star-btn" data-value="<?= $i ?>" aria-label="<?= $i ?> star<?= $i > 1 ? 's' : '' ?>">★</button>
+                        <?php endfor; ?>
+                    </div>
+                    <input type="hidden" id="selectedRating" value="0" />
+                </div>
+                <div class="form-group">
+                    <label for="reviewText">Review <span class="optional">(optional)</span></label>
+                    <textarea class="form-input" id="reviewText" rows="4" maxlength="1000"
+                        placeholder="Share your experience with this counselor…"></textarea>
+                </div>
+                <p id="reviewError" style="color:#dc2626;font-size:var(--font-size-sm);display:none;"></p>
+                <div class="session-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="closeReviewModal2">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitReviewBtn">Submit Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- No-show report modal -->
+    <?php if (!$isUpcomingSession && !$sessionData['hasDispute'] && in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
+    <div class="session-modal-overlay" id="noShowModalOverlay" style="display:none;">
+        <div class="session-modal">
+            <div class="session-modal-header">
+                <h3>Report No-Show</h3>
+                <button type="button" class="session-modal-close" id="closeNoShowModal">&times;</button>
+            </div>
+            <div class="session-modal-body">
+                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Let us know if your counselor did not attend this session. Our team will review your report and may issue a refund.</p>
+                <div class="form-group">
+                    <label for="noShowDescription">Details <span class="optional">(optional)</span></label>
+                    <textarea class="form-input" id="noShowDescription" rows="3" maxlength="1000"
+                        placeholder="Briefly describe what happened…"></textarea>
+                </div>
+                <p id="noShowError" style="color:#dc2626;font-size:var(--font-size-sm);display:none;"></p>
+                <div class="session-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="closeNoShowModal2">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="submitNoShowBtn">Submit Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script src="/assets/js/user/sessions-view-more.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Booking ID copy
             var bookingId = document.getElementById('booking-id');
-            if (!bookingId) return;
-            bookingId.addEventListener('click', function() {
-                var text = bookingId.textContent.replace(' (Copy)', '').trim();
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text);
+            if (bookingId) {
+                bookingId.addEventListener('click', function () {
+                    var text = bookingId.textContent.replace(' (Copy)', '').trim();
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text);
+                    }
+                });
+            }
+
+            // ── Reschedule modal ────────────────────────────────────────
+            var rescheduleOverlay = document.getElementById('rescheduleModalOverlay');
+            var openRescheduleBtn = document.getElementById('openRescheduleModal');
+            var closeRescheduleBtns = [
+                document.getElementById('closeRescheduleModal'),
+                document.getElementById('closeRescheduleModal2'),
+            ];
+
+            if (openRescheduleBtn && rescheduleOverlay) {
+                openRescheduleBtn.addEventListener('click', function () {
+                    rescheduleOverlay.style.display = 'flex';
+                    rescheduleOverlay.offsetHeight;
+                    rescheduleOverlay.classList.add('show');
+                });
+                closeRescheduleBtns.forEach(function (btn) {
+                    if (btn) btn.addEventListener('click', closeReschedule);
+                });
+                rescheduleOverlay.addEventListener('click', function (e) {
+                    if (e.target === rescheduleOverlay) closeReschedule();
+                });
+            }
+            function closeReschedule() {
+                if (!rescheduleOverlay) return;
+                rescheduleOverlay.classList.remove('show');
+                setTimeout(function () { rescheduleOverlay.style.display = 'none'; }, 300);
+            }
+
+            var submitRescheduleBtn = document.getElementById('submitRescheduleBtn');
+            var rescheduleError = document.getElementById('rescheduleError');
+
+            if (submitRescheduleBtn) {
+                submitRescheduleBtn.addEventListener('click', function () {
+                    if (rescheduleError) rescheduleError.style.display = 'none';
+                    submitRescheduleBtn.disabled = true;
+
+                    var fd = new FormData();
+                    fd.append('session_id', '<?= (int)$sessionData['sessionId'] ?>');
+                    fd.append('reason', document.getElementById('rescheduleReason').value.trim());
+
+                    fetch('/user/sessions?ajax=request_reschedule', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.success) {
+                                closeReschedule();
+                                submitRescheduleBtn.textContent = 'Request Sent';
+                                openRescheduleBtn.disabled = true;
+                                openRescheduleBtn.textContent = 'Reschedule Requested';
+                            } else {
+                                if (rescheduleError) {
+                                    rescheduleError.textContent = data.error || 'Could not send request.';
+                                    rescheduleError.style.display = 'block';
+                                }
+                                submitRescheduleBtn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            if (rescheduleError) {
+                                rescheduleError.textContent = 'Network error. Please try again.';
+                                rescheduleError.style.display = 'block';
+                            }
+                            submitRescheduleBtn.disabled = false;
+                        });
+                });
+            }
+
+            // ── Review modal ────────────────────────────────────────
+            var reviewOverlay  = document.getElementById('reviewModalOverlay');
+            var openReviewBtn  = document.getElementById('openReviewModal');
+            var closeReviewBtns = [
+                document.getElementById('closeReviewModal'),
+                document.getElementById('closeReviewModal2'),
+            ];
+            var selectedRating = 0;
+            var autoOpen = <?= $autoOpenReview ? 'true' : 'false' ?>;
+
+            if (reviewOverlay) {
+                if (openReviewBtn) {
+                    openReviewBtn.addEventListener('click', openReview);
                 }
+                closeReviewBtns.forEach(function (btn) {
+                    if (btn) btn.addEventListener('click', closeReview);
+                });
+                reviewOverlay.addEventListener('click', function (e) {
+                    if (e.target === reviewOverlay) closeReview();
+                });
+                if (autoOpen) openReview();
+            }
+
+            function openReview() {
+                reviewOverlay.style.display = 'flex';
+                reviewOverlay.offsetHeight;
+                reviewOverlay.classList.add('show');
+            }
+            function closeReview() {
+                reviewOverlay.classList.remove('show');
+                setTimeout(function () { reviewOverlay.style.display = 'none'; }, 300);
+            }
+
+            // Star rating interaction
+            var starBtns = document.querySelectorAll('.star-btn');
+            var ratingInput = document.getElementById('selectedRating');
+
+            starBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    selectedRating = parseInt(this.getAttribute('data-value'), 10);
+                    if (ratingInput) ratingInput.value = selectedRating;
+                    starBtns.forEach(function (s) {
+                        s.classList.toggle('active', parseInt(s.getAttribute('data-value'), 10) <= selectedRating);
+                    });
+                });
+                btn.addEventListener('mouseenter', function () {
+                    var hov = parseInt(this.getAttribute('data-value'), 10);
+                    starBtns.forEach(function (s) {
+                        s.classList.toggle('hovered', parseInt(s.getAttribute('data-value'), 10) <= hov);
+                    });
+                });
+                btn.addEventListener('mouseleave', function () {
+                    starBtns.forEach(function (s) { s.classList.remove('hovered'); });
+                });
             });
+
+            // ── No-show modal ────────────────────────────────────────
+            var noShowOverlay   = document.getElementById('noShowModalOverlay');
+            var openNoShowBtn   = document.getElementById('openNoShowModal');
+            var closeNoShowBtns = [
+                document.getElementById('closeNoShowModal'),
+                document.getElementById('closeNoShowModal2'),
+            ];
+            var noShowError = document.getElementById('noShowError');
+            var submitNoShowBtn = document.getElementById('submitNoShowBtn');
+
+            if (openNoShowBtn && noShowOverlay) {
+                openNoShowBtn.addEventListener('click', function () {
+                    noShowOverlay.style.display = 'flex';
+                    noShowOverlay.offsetHeight;
+                    noShowOverlay.classList.add('show');
+                });
+                closeNoShowBtns.forEach(function (btn) {
+                    if (btn) btn.addEventListener('click', closeNoShow);
+                });
+                noShowOverlay.addEventListener('click', function (e) {
+                    if (e.target === noShowOverlay) closeNoShow();
+                });
+            }
+            function closeNoShow() {
+                if (!noShowOverlay) return;
+                noShowOverlay.classList.remove('show');
+                setTimeout(function () { noShowOverlay.style.display = 'none'; }, 300);
+            }
+            if (submitNoShowBtn) {
+                submitNoShowBtn.addEventListener('click', function () {
+                    if (noShowError) noShowError.style.display = 'none';
+                    submitNoShowBtn.disabled = true;
+
+                    var fd = new FormData();
+                    fd.append('session_id', '<?= (int)$sessionData['sessionId'] ?>');
+                    fd.append('description', document.getElementById('noShowDescription').value.trim());
+
+                    fetch('/user/sessions?ajax=report_no_show', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.success) {
+                                closeNoShow();
+                                if (openNoShowBtn) {
+                                    openNoShowBtn.textContent = 'No-Show Reported';
+                                    openNoShowBtn.disabled = true;
+                                }
+                            } else {
+                                if (noShowError) {
+                                    noShowError.textContent = data.error || 'Could not submit report.';
+                                    noShowError.style.display = 'block';
+                                }
+                                submitNoShowBtn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            if (noShowError) {
+                                noShowError.textContent = 'Network error. Please try again.';
+                                noShowError.style.display = 'block';
+                            }
+                            submitNoShowBtn.disabled = false;
+                        });
+                });
+            }
+
+            // Submit review via AJAX
+            var submitBtn = document.getElementById('submitReviewBtn');
+            var reviewError = document.getElementById('reviewError');
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function () {
+                    if (selectedRating < 1) {
+                        if (reviewError) { reviewError.textContent = 'Please select a star rating.'; reviewError.style.display = 'block'; }
+                        return;
+                    }
+                    if (reviewError) reviewError.style.display = 'none';
+                    submitBtn.disabled = true;
+
+                    var fd = new FormData();
+                    fd.append('session_id', '<?= (int)$sessionData['sessionId'] ?>');
+                    fd.append('rating', selectedRating);
+                    fd.append('review', document.getElementById('reviewText').value.trim());
+
+                    fetch('/user/sessions?ajax=submit_review', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.success) {
+                                closeReview();
+                                if (openReviewBtn) {
+                                    openReviewBtn.textContent = 'Reviewed ✓';
+                                    openReviewBtn.disabled = true;
+                                }
+                            } else {
+                                if (reviewError) { reviewError.textContent = data.error || 'Submission failed.'; reviewError.style.display = 'block'; }
+                                submitBtn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            if (reviewError) { reviewError.textContent = 'Network error. Please try again.'; reviewError.style.display = 'block'; }
+                            submitBtn.disabled = false;
+                        });
+                });
+            }
+
         });
     </script>
 </body>
 
 </html>
-

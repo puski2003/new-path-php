@@ -155,7 +155,6 @@
         <?php endforeach; ?>
     </div>
     <script src="/assets/js/user/helpCenter.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
     <script src="/assets/js/user/log-urge-popup.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();

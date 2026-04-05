@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$pageScripts = [
+    '/assets/js/components/toast.js',
+    '/assets/js/user/post-recovery.js',
+    '/assets/js/user/log-urge-popup.js',
+];
+?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>
 
 <body>
@@ -102,13 +109,7 @@
             myJobsUrl: '/user/post-recovery?my=1'
         };
     </script>
-    <script src="/assets/js/user/post-recovery.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
-    <script src="/assets/js/user/log-urge-popup.js"></script>
-    <script>
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    </script>
+    <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 
 </html>
-

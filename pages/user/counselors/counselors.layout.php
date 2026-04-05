@@ -279,6 +279,5 @@ require_once __DIR__ . '/../common/user.html.head.php';
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
     <script src="/assets/js/user/counselors.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
 </body>
 </html>

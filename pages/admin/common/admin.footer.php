@@ -1,0 +1,18 @@
+<?php
+$_pageScripts = [];
+if (!empty($pageScripts)) {
+    $_pageScripts = is_array($pageScripts) ? $pageScripts : [$pageScripts];
+}
+if (!empty($extraJs)) {
+    $_extraScripts = is_array($extraJs) ? $extraJs : [$extraJs];
+    $_pageScripts = array_merge($_pageScripts, $_extraScripts);
+}
+$_defaultScripts = ['/assets/js/components/sidebar.js'];
+$_renderScripts = array_values(array_unique(array_merge($_defaultScripts, $_pageScripts)));
+foreach ($_renderScripts as $_script):
+    $_src = preg_match('#^(?:https?:)?//#', $_script) || str_starts_with($_script, '/')
+        ? $_script
+        : '/assets/js/' . ltrim($_script, '/') . '.js';
+?>
+<script src="<?= htmlspecialchars($_src) ?>"></script>
+<?php endforeach; ?>

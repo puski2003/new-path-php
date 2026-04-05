@@ -434,6 +434,5 @@ new Chart(document.getElementById('sessionBars'), {
     }
 });
 </script>
-<script src="/assets/js/auth/user-profile.js"></script>
 </body>
 </html>

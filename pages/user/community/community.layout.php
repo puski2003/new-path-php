@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$pageScripts = [
+    '/assets/js/user/community/community.js',
+    '/assets/js/user/community/chat.js',
+];
+if ($tab === 'people') {
+    $pageScripts[] = '/assets/js/user/find-people.js';
+}
+?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>
 <body>
     <main class="main-container">
@@ -52,6 +61,12 @@
                                 <i data-lucide="chevron-down" class="filter-icon" stroke-width="2"></i>
                             </a>
                         </div>
+                        <div class="filter-dropdown">
+                            <a href="/user/community?scope=saved<?= $searchQuery !== '' ? '&q=' . urlencode($searchQuery) : '' ?>" class="filter-btn <?= $scope === 'saved' ? 'active' : '' ?>">
+                                <span>Saved</span>
+                                <i data-lucide="bookmark" class="filter-icon" stroke-width="2"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -87,7 +102,7 @@
                                     </div>
                                     <div class="user-card-info">
                                         <h4 class="user-card-name">
-                                            <a href="/user/profile/<?= $u['userId'] ?>"><?= htmlspecialchars($u['displayName']) ?></a>
+                                            <a href="/user/profile?id=<?= $u['userId'] ?>"><?= htmlspecialchars($u['displayName']) ?></a>
                                         </h4>
                                         <?php if (!empty($u['username'])): ?>
                                             <span class="user-card-username">@<?= htmlspecialchars($u['username']) ?></span>
@@ -122,19 +137,9 @@
 
     <?php require __DIR__ . '/../common/user.community-post-modal.php'; ?>
     <?php require __DIR__ . '/../common/user.community-delete-confirmation-modal.php'; ?>
+    <?php require __DIR__ . '/../common/user.community-report-modal.php'; ?>
     <?php require __DIR__ . '/../common/user.community-chat.php'; ?>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="/assets/js/user/community.js"></script>
-    <?php if ($tab === 'people'): ?>
-    <script src="/assets/js/user/find-people.js"></script>
-    <?php endif; ?>
-    <script src="/assets/js/user/community/chat.js"></script>
-    <script src="/assets/js/auth/user-profile.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
-    </script>
+    <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 </html>
