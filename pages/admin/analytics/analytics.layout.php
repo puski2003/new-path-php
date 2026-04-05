@@ -23,5 +23,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <div class="admin-sub-container-2"><div class="admin-data-card" style="height: 240px;"><h3>Post Recovery Engagement</h3><p>Active job posts: <?= $summary['activeJobs'] ?></p></div></div>
     </section>
 </main>
+
+<?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 </html>

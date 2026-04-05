@@ -28,5 +28,7 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
         </div>
     </section>
 </main>
+
+<?php require_once __DIR__ . '/../../common/admin.footer.php'; ?>
 </body>
 </html>

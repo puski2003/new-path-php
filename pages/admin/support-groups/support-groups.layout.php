@@ -14,5 +14,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <div class="admin-sub-container-2"><div class="admin-data-card"><h3>Upcoming Sessions Calendar</h3><?php foreach ($appointments as $item): ?><p><strong><?= htmlspecialchars($item['day']) ?></strong> <?= htmlspecialchars($item['time']) ?> - <?= htmlspecialchars($item['title']) ?></p><?php endforeach; ?></div></div>
     </section>
 </main>
+
+<?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 </html>

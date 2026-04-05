@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
   CONSTRAINT `fk_admin_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.admin: ~2 rows (approximately)
+-- Dumping data for table new_path_2.admin: ~0 rows (approximately)
 INSERT INTO `admin` (`admin_id`, `user_id`, `full_name`, `permissions`, `is_super_admin`, `created_at`, `updated_at`) VALUES
 	(1, 1, 'System Administrator', NULL, 1, '2026-01-02 18:00:38', '2026-01-02 18:00:38'),
 	(2, 2, 'System Administrator', NULL, 1, '2026-01-04 17:50:30', '2026-01-04 17:50:39');
@@ -95,9 +95,9 @@ CREATE TABLE IF NOT EXISTS `booking_holds` (
   KEY `fk_hold_user` (`user_id`),
   CONSTRAINT `fk_hold_counselor` FOREIGN KEY (`counselor_id`) REFERENCES `counselors` (`counselor_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_hold_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.booking_holds: ~51 rows (approximately)
+-- Dumping data for table new_path_2.booking_holds: ~49 rows (approximately)
 INSERT INTO `booking_holds` (`hold_id`, `counselor_id`, `user_id`, `slot_datetime`, `duration_minutes`, `status`, `held_at`, `expires_at`) VALUES
 	(1, 1, 2, '2026-03-30 15:00:00', 60, 'released', '2026-03-25 08:02:09', '2026-03-25 08:17:09'),
 	(2, 1, 2, '2026-03-30 13:00:00', 60, 'released', '2026-03-25 08:23:33', '2026-03-25 08:38:33'),
@@ -149,7 +149,10 @@ INSERT INTO `booking_holds` (`hold_id`, `counselor_id`, `user_id`, `slot_datetim
 	(48, 1, 2, '2026-04-06 14:00:00', 60, 'confirmed', '2026-03-30 13:36:42', '2026-03-30 13:51:42'),
 	(49, 1, 2, '2026-04-06 13:00:00', 60, 'confirmed', '2026-03-30 17:55:39', '2026-03-30 18:10:39'),
 	(50, 1, 2, '2026-04-13 16:00:00', 60, 'confirmed', '2026-03-30 17:58:10', '2026-03-30 18:13:10'),
-	(51, 1, 2, '2026-04-06 09:00:00', 60, 'confirmed', '2026-04-02 08:17:46', '2026-04-02 08:32:46');
+	(51, 1, 2, '2026-04-06 09:00:00', 60, 'confirmed', '2026-04-02 08:17:46', '2026-04-02 08:32:46'),
+	(52, 1, 2, '2026-04-13 09:00:00', 60, 'released', '2026-04-03 19:47:15', '2026-04-03 20:02:15'),
+	(53, 1, 2, '2026-04-06 12:00:00', 60, 'confirmed', '2026-04-04 17:43:57', '2026-04-04 17:58:57'),
+	(54, 1, 2, '2026-04-06 15:00:00', 60, 'confirmed', '2026-04-04 19:10:44', '2026-04-04 19:25:44');
 
 -- Dumping structure for table new_path_2.community_posts
 CREATE TABLE IF NOT EXISTS `community_posts` (
@@ -181,7 +184,7 @@ INSERT INTO `community_posts` (`post_id`, `user_id`, `title`, `content`, `image_
 	(1, 2, 'Pkyd', ';lksdj\';fljsdlf', '/NewPath_war/uploads/posts/d39b9b74-1663-4f7a-8146-5fb5bdde0541.jpg', 'general', 0, 0, 0, 0, 0, 0, 0, '2026-01-05 08:15:06', '2026-01-11 10:03:25'),
 	(2, 2, 'liuhwfdlh', 'sdfsdf', '/NewPath_war_exploded/uploads/posts/49b9e1f9-d977-4e0e-9f6f-1939a5f1a324.jpg', 'general', 0, 0, 0, 0, 0, 0, 0, '2026-01-12 07:55:33', '2026-03-30 13:19:24'),
 	(3, 2, 'dfgg', 'dfg', '/NewPath_war_exploded/uploads/posts/ba55d07c-b343-4b5e-a0ef-0b8a41cd6438.webp', 'general', 0, 0, 0, 0, 0, 0, 0, '2026-01-19 09:04:20', '2026-03-30 13:19:30'),
-	(4, 2, 'jhgjhgkjhg', 'jhgkjhg', '/uploads/posts/1b890dddda4d360e69f5a3f768cdc726.png', 'general', 0, 0, 1, 4, 0, 0, 0, '2026-02-28 11:25:25', '2026-03-25 07:38:48');
+	(4, 2, 'jhgjhgkjhg', 'jhgkjhg', '/uploads/posts/1b890dddda4d360e69f5a3f768cdc726.png', 'general', 0, 0, 1, 4, 1, 19, 0, '2026-02-28 11:25:25', '2026-04-04 19:32:55');
 
 -- Dumping structure for table new_path_2.counselors
 CREATE TABLE IF NOT EXISTS `counselors` (
@@ -214,7 +217,7 @@ CREATE TABLE IF NOT EXISTS `counselors` (
 
 -- Dumping data for table new_path_2.counselors: ~1 rows (approximately)
 INSERT INTO `counselors` (`counselor_id`, `user_id`, `title`, `specialty`, `specialty_short`, `bio`, `experience_years`, `education`, `certifications`, `languages_spoken`, `consultation_fee`, `availability_schedule`, `is_verified`, `rating`, `total_reviews`, `total_clients`, `total_sessions`, `created_at`, `updated_at`, `google_refresh_token`) VALUES
-	(1, 5, 'Doctor', 'Trauma & PTSD', NULL, 'As a dedicated counselor, I provide a compassionate and non-judgmental space where you can explore lifes challenges. I believe in a collaborative approach, working together to develop practical tools and resilience. Whether you are navigating stress, transitions, or personal growth, I am here to support you in finding your path forward', 33, 'dfgzfg', 'dfgdfg', 'dfgdfg', 3500.00, '{"monday": {"end": "17:00", "start": "09:00"}}', 1, 0.00, 0, 0, 0, '2026-01-04 18:10:13', '2026-01-18 16:53:02', NULL);
+	(1, 5, 'Doctor', 'Trauma & PTSD', NULL, 'As a dedicated counselor, I provide a compassionate and non-judgmental space where you can explore lifes challenges. I believe in a collaborative approach, working together to develop practical tools and resilience. Whether you are navigating stress, transitions, or personal growth, I am here to support you in finding your path forward', 33, 'dfgzfg', 'dfgdfg', 'dfgdfg', 3500.00, '{"monday": [{"end": "17:00", "start": "09:00"}, {"end": "21:00", "start": "19:00"}]}', 1, 3.00, 1, 0, 0, '2026-01-04 18:10:13', '2026-04-05 09:21:32', NULL);
 
 -- Dumping structure for table new_path_2.counselor_applications
 CREATE TABLE IF NOT EXISTS `counselor_applications` (
@@ -245,7 +248,7 @@ CREATE TABLE IF NOT EXISTS `counselor_applications` (
   CONSTRAINT `fk_app_admin` FOREIGN KEY (`reviewed_by`) REFERENCES `admin` (`admin_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.counselor_applications: ~3 rows (approximately)
+-- Dumping data for table new_path_2.counselor_applications: ~2 rows (approximately)
 INSERT INTO `counselor_applications` (`application_id`, `full_name`, `email`, `phone_number`, `title`, `specialty`, `bio`, `experience_years`, `education`, `certifications`, `languages_spoken`, `consultation_fee`, `availability_schedule`, `documents_url`, `status`, `admin_notes`, `reviewed_by`, `review_date`, `created_at`, `updated_at`) VALUES
 	(1, 'Pasidu Rajapaksha', 'Pasidurajapaksha202@gmail.com', '0773623777', 'sdfdsf', 'Addiction Counseling', 'dfgdfg', 33, 'dfgzfg', 'dfgdfg', 'dfgdfg', 34543.00, 'dfgdfg', 'https://www.youtube.com/watch?v=FBbH2d5A5Tg', 'rejected', 'bullshit', 2, '2026-01-04 18:07:19', '2026-01-04 18:01:27', '2026-01-04 18:07:19'),
 	(2, 'Pasidu Rajapaksha', 'Puski200322@gmail.com', '0773623777', 'sdfdsf', 'Addiction Counseling', 'dfgdfg', 33, 'dfgzfg', 'dfgdfg', 'dfgdfg', 34543.00, 'dfgdfg', 'https://www.youtube.com/watch?v=FBbH2d5A5Tg', 'approved', 'Application approved and counselor account created', 2, '2026-01-04 18:10:13', '2026-01-04 18:07:36', '2026-01-04 18:10:13'),
@@ -293,7 +296,7 @@ CREATE TABLE IF NOT EXISTS `daily_checkins` (
   CONSTRAINT `fk_checkin_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.daily_checkins: ~4 rows (approximately)
+-- Dumping data for table new_path_2.daily_checkins: ~7 rows (approximately)
 INSERT INTO `daily_checkins` (`checkin_id`, `user_id`, `checkin_date`, `is_sober`, `mood_rating`, `mood_label`, `energy_level`, `sleep_quality`, `stress_level`, `notes`, `created_at`) VALUES
 	(1, 2, '2026-01-09', 1, 4, 'Good', 4, NULL, 2, NULL, '2026-01-11 15:01:17'),
 	(2, 2, '2026-01-10', 1, 3, 'Okay', 3, NULL, 3, NULL, '2026-01-11 15:01:17'),
@@ -314,9 +317,13 @@ CREATE TABLE IF NOT EXISTS `direct_messages` (
   KEY `idx_created` (`created_at`),
   CONSTRAINT `fk_dm_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `dm_conversations` (`conversation_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_dm_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.direct_messages: ~0 rows (approximately)
+-- Dumping data for table new_path_2.direct_messages: ~3 rows (approximately)
+INSERT INTO `direct_messages` (`message_id`, `conversation_id`, `sender_id`, `content`, `is_read`, `created_at`) VALUES
+	(1, 10, 2, 'hi', 1, '2026-04-02 19:58:13'),
+	(2, 10, 12, 'how are yu', 1, '2026-04-02 19:58:31'),
+	(3, 10, 2, 'i am fine thank yu', 1, '2026-04-02 19:58:43');
 
 -- Dumping structure for table new_path_2.dm_conversations
 CREATE TABLE IF NOT EXISTS `dm_conversations` (
@@ -333,9 +340,12 @@ CREATE TABLE IF NOT EXISTS `dm_conversations` (
   KEY `idx_last_message` (`last_message_at`),
   CONSTRAINT `fk_conv_user1` FOREIGN KEY (`user1_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_conv_user2` FOREIGN KEY (`user2_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.dm_conversations: ~0 rows (approximately)
+-- Dumping data for table new_path_2.dm_conversations: ~2 rows (approximately)
+INSERT INTO `dm_conversations` (`conversation_id`, `user1_id`, `user2_id`, `last_message_at`, `last_message_preview`, `created_at`) VALUES
+	(10, 2, 12, '2026-04-02 19:58:43', 'i am fine thank yu', '2026-04-02 19:58:00'),
+	(14, 2, 7, NULL, NULL, '2026-04-04 15:49:22');
 
 -- Dumping structure for table new_path_2.help_centers
 CREATE TABLE IF NOT EXISTS `help_centers` (
@@ -467,9 +477,25 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   KEY `idx_read` (`is_read`),
   KEY `idx_created` (`created_at`),
   CONSTRAINT `fk_notif_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.notifications: ~0 rows (approximately)
+INSERT INTO `notifications` (`notification_id`, `user_id`, `type`, `title`, `message`, `link`, `is_read`, `created_at`) VALUES
+	(1, 5, 'followup_message', 'New follow-up message', 'Your client sent a follow-up message from your session.', '/counselor/sessions/follow-up?session_id=1', 0, '2026-04-04 17:47:01'),
+	(2, 2, 'followup_reply', 'New follow-up reply', 'Your counselor replied to your follow-up thread.', '/user/sessions/follow-up?session_id=1', 1, '2026-04-04 17:49:17'),
+	(3, 2, 'followup_reply', 'New follow-up reply', 'Your counselor replied to your follow-up thread.', '/user/sessions/follow-up?session_id=1', 1, '2026-04-04 18:13:22'),
+	(4, 5, 'followup_message', 'New follow-up message', 'Your client sent a follow-up message.', '/counselor/sessions/follow-up?session_id=1', 0, '2026-04-04 18:13:50'),
+	(5, 2, 'booking_confirmed', 'Session Confirmed', 'Your session with Pasidu Rajapaksha on April 6, 2026 at 3:00 PM is confirmed.', '/user/sessions', 0, '2026-04-04 19:11:22'),
+	(6, 5, 'new_booking', 'New Session Booked', 'Anonymous User has booked a session on April 6, 2026 at 3:00 PM.', '/counselor/sessions', 0, '2026-04-04 19:11:22'),
+	(7, 5, 'session_cancelled', 'Session Cancelled', 'A client has cancelled their upcoming session.', '/counselor/sessions', 0, '2026-04-04 19:44:19'),
+	(8, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-04 20:09:00'),
+	(9, 2, 'reschedule_approved', 'Reschedule Approved', 'Your reschedule request was approved. Your session has been cancelled — please rebook at a new time.', '/user/counselors', 1, '2026-04-04 20:15:47'),
+	(10, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-04 20:16:14'),
+	(11, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-04 20:23:09'),
+	(12, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-05 07:31:14'),
+	(13, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-05 07:31:33'),
+	(14, 5, 'reschedule_request', 'Reschedule Request', 'A client has requested to reschedule their upcoming session.', '/counselor/sessions', 0, '2026-04-05 07:32:49'),
+	(15, 2, 'reschedule_approved', 'Reschedule Approved', 'Your reschedule request was approved. Your session has been cancelled — please rebook at a new time.', '/user/counselors', 0, '2026-04-05 07:35:33');
 
 -- Dumping structure for table new_path_2.payment_methods
 CREATE TABLE IF NOT EXISTS `payment_methods` (
@@ -512,9 +538,11 @@ CREATE TABLE IF NOT EXISTS `post_comments` (
   CONSTRAINT `fk_comment_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `post_comments` (`comment_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_comment_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`post_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.post_comments: ~0 rows (approximately)
+INSERT INTO `post_comments` (`comment_id`, `post_id`, `user_id`, `parent_comment_id`, `content`, `is_anonymous`, `is_active`, `likes_count`, `created_at`, `updated_at`) VALUES
+	(1, 4, 2, NULL, 'hi', 0, 1, 0, '2026-04-04 19:25:24', '2026-04-04 19:25:24');
 
 -- Dumping structure for table new_path_2.post_likes
 CREATE TABLE IF NOT EXISTS `post_likes` (
@@ -527,11 +555,11 @@ CREATE TABLE IF NOT EXISTS `post_likes` (
   KEY `fk_like_user` (`user_id`),
   CONSTRAINT `fk_like_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`post_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_like_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.post_likes: ~1 rows (approximately)
 INSERT INTO `post_likes` (`like_id`, `post_id`, `user_id`, `created_at`) VALUES
-	(4, 4, 2, '2026-03-25 07:38:48');
+	(13, 4, 2, '2026-04-04 19:32:53');
 
 -- Dumping structure for table new_path_2.post_reports
 CREATE TABLE IF NOT EXISTS `post_reports` (
@@ -556,9 +584,11 @@ CREATE TABLE IF NOT EXISTS `post_reports` (
   CONSTRAINT `fk_report_comment` FOREIGN KEY (`comment_id`) REFERENCES `post_comments` (`comment_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_report_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`post_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_report_reporter` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.post_reports: ~0 rows (approximately)
+INSERT INTO `post_reports` (`report_id`, `post_id`, `comment_id`, `reporter_id`, `reason`, `description`, `status`, `reviewed_by`, `reviewed_at`, `action_taken`, `created_at`) VALUES
+	(1, 4, NULL, 2, 'spam', 'gjk', 'pending', NULL, NULL, NULL, '2026-04-04 19:29:27');
 
 -- Dumping structure for table new_path_2.post_tags
 CREATE TABLE IF NOT EXISTS `post_tags` (
@@ -644,15 +674,17 @@ CREATE TABLE IF NOT EXISTS `recovery_plans` (
   KEY `idx_status` (`status`),
   CONSTRAINT `fk_plan_counselor` FOREIGN KEY (`counselor_id`) REFERENCES `counselors` (`counselor_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_plan_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.recovery_plans: ~5 rows (approximately)
+-- Dumping data for table new_path_2.recovery_plans: ~7 rows (approximately)
 INSERT INTO `recovery_plans` (`plan_id`, `user_id`, `counselor_id`, `title`, `description`, `category`, `plan_type`, `status`, `start_date`, `target_completion_date`, `actual_completion_date`, `progress_percentage`, `custom_notes`, `created_at`, `updated_at`, `is_template`, `template_source_id`, `assigned_status`) VALUES
 	(11, 2, 1, 'General Addiction Recovery Plan', 'A flexible recovery plan adaptable to various types of addiction, focusing on individual needs and long-term wellness.', NULL, 'counselor', 'completed', '2026-01-11', '2026-04-11', '2026-03-30', 100, 'Generated plan for substance addiction recovery. Duration: 3 months. Please customize based on client\'s specific needs.', '2026-01-11 12:10:29', '2026-03-30 13:18:21', 0, NULL, 'accepted'),
 	(12, 2, 1, 'General Addiction Recovery Plan', 'A flexible recovery plan adaptable to various types of addiction, focusing on individual needs and long-term wellness.', NULL, 'counselor', 'paused', '2026-01-19', '2026-04-19', NULL, 22, 'Generated plan for substance addiction recovery. Duration: 3 months. Please customize based on client\'s specific needs.', '2026-01-19 06:01:32', '2026-01-19 08:46:48', 0, NULL, 'accepted'),
-	(13, 2, 1, 'General Addiction Recovery Plan', 'A flexible recovery plan adaptable to various types of addiction, focusing on individual needs and long-term wellness.', NULL, 'counselor', 'paused', '2026-01-19', '2026-04-19', NULL, 0, 'Generated plan for substance addiction recovery. Duration: 3 months. Please customize based on client\'s specific needs.', '2026-01-19 08:46:35', '2026-02-23 07:48:06', 0, NULL, 'accepted'),
+	(13, 2, 1, 'General Addiction Recovery Plan', 'A flexible recovery plan adaptable to various types of addiction, focusing on individual needs and long-term wellness.', NULL, 'counselor', 'active', '2026-01-19', '2026-04-19', NULL, 89, 'Generated plan for substance addiction recovery. Duration: 3 months. Please customize based on client\'s specific needs.', '2026-01-19 08:46:35', '2026-04-04 17:31:17', 0, NULL, 'accepted'),
 	(14, 10, NULL, 'Professional Counseling Path', 'Work with verified experts to build a tailored plan and schedule sessions.', NULL, 'counselor', 'active', '2026-02-26', NULL, NULL, 0, NULL, '2026-02-25 19:53:11', '2026-02-25 19:53:11', 0, NULL, NULL),
-	(15, 11, NULL, 'Self-Guided Journey', 'Take control at your own pace with system-guided goals and daily tracking.', NULL, 'self', 'active', '2026-04-02', NULL, NULL, 0, NULL, '2026-04-01 20:15:01', '2026-04-01 20:15:01', 0, NULL, NULL);
+	(15, 11, NULL, 'Self-Guided Journey', 'Take control at your own pace with system-guided goals and daily tracking.', NULL, 'self', 'active', '2026-04-02', NULL, NULL, 0, NULL, '2026-04-01 20:15:01', '2026-04-01 20:15:01', 0, NULL, NULL),
+	(16, 12, NULL, 'Self-Guided Journey', 'Take control at your own pace with system-guided goals and daily tracking.', NULL, 'self', 'active', '2026-04-03', NULL, NULL, 0, NULL, '2026-04-02 19:47:21', '2026-04-02 19:47:21', 0, NULL, NULL),
+	(17, 2, 1, 'General Addiction Recovery Plan', 'A flexible recovery plan adaptable to various types of addiction, focusing on individual needs and long-term wellness.', '', 'counselor', 'active', '2026-04-04', '2026-07-04', NULL, 22, 'Generated plan for substance addiction recovery. Duration: 3 months. Please customize based on client\'s specific needs.', '2026-04-04 16:09:37', '2026-04-04 17:30:35', 0, NULL, 'accepted');
 
 -- Dumping structure for table new_path_2.recovery_tasks
 CREATE TABLE IF NOT EXISTS `recovery_tasks` (
@@ -676,9 +708,9 @@ CREATE TABLE IF NOT EXISTS `recovery_tasks` (
   KEY `idx_status` (`status`),
   KEY `idx_due_date` (`due_date`),
   CONSTRAINT `fk_task_plan` FOREIGN KEY (`plan_id`) REFERENCES `recovery_plans` (`plan_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.recovery_tasks: ~27 rows (approximately)
+-- Dumping data for table new_path_2.recovery_tasks: ~36 rows (approximately)
 INSERT INTO `recovery_tasks` (`task_id`, `plan_id`, `title`, `description`, `task_type`, `status`, `priority`, `due_date`, `completed_at`, `is_recurring`, `recurrence_pattern`, `sort_order`, `created_at`, `updated_at`, `phase`) VALUES
 	(64, 11, 'Initial assessment', '', 'custom', 'completed', 'medium', NULL, '2026-01-11 15:33:50', 0, '', 0, '2026-01-11 12:10:29', '2026-01-11 15:33:50', 1),
 	(65, 11, 'Goal setting', '', 'custom', 'completed', 'medium', NULL, '2026-01-11 15:33:48', 0, '', 0, '2026-01-11 12:10:29', '2026-01-11 15:33:48', 1),
@@ -698,15 +730,24 @@ INSERT INTO `recovery_tasks` (`task_id`, `plan_id`, `title`, `description`, `tas
 	(79, 12, 'Relapse prevention', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 06:01:32', '2026-01-19 06:01:32', 3),
 	(80, 12, 'Life skills training', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 06:01:32', '2026-01-19 06:01:32', 3),
 	(81, 12, 'Future planning', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 06:01:32', '2026-01-19 06:01:32', 3),
-	(82, 13, 'Initial assessment', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 1),
-	(83, 13, 'Goal setting', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 1),
-	(84, 13, 'Build support system', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 1),
-	(85, 13, 'Regular therapy', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 2),
-	(86, 13, 'Develop coping skills', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 2),
-	(87, 13, 'Healthy routines', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 2),
-	(88, 13, 'Relapse prevention', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 3),
-	(89, 13, 'Life skills training', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 3),
-	(90, 13, 'Future planning', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 3);
+	(82, 13, 'Initial assessment', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:10', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:10', 1),
+	(83, 13, 'Goal setting', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:15', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:15', 1),
+	(84, 13, 'Build support system', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:27', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:27', 1),
+	(85, 13, 'Regular therapy', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:18', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:18', 2),
+	(86, 13, 'Develop coping skills', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:20', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:20', 2),
+	(87, 13, 'Healthy routines', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:48', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:30:48', 2),
+	(88, 13, 'Relapse prevention', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:31:11', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:31:11', 3),
+	(89, 13, 'Life skills training', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:31:17', 0, '', 0, '2026-01-19 08:46:35', '2026-04-04 17:31:17', 3),
+	(90, 13, 'Future planning', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 0, '2026-01-19 08:46:35', '2026-01-19 08:46:35', 3),
+	(91, 17, 'Initial assessment', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:28:37', 0, '', 0, '2026-04-04 16:09:37', '2026-04-04 17:28:37', 1),
+	(92, 17, 'Goal setting', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 1, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 1),
+	(93, 17, 'Build support system', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 2, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 1),
+	(94, 17, 'Regular therapy', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 3, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 2),
+	(95, 17, 'Develop coping skills', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 4, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 2),
+	(96, 17, 'Healthy routines', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 5, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 2),
+	(97, 17, 'Relapse prevention', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 6, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 3),
+	(98, 17, 'Life skills training', '', 'custom', 'pending', 'medium', NULL, NULL, 0, '', 7, '2026-04-04 16:09:37', '2026-04-04 16:09:37', 3),
+	(99, 17, 'Future planning', '', 'custom', 'completed', 'medium', NULL, '2026-04-04 17:30:35', 0, '', 8, '2026-04-04 16:09:37', '2026-04-04 17:30:35', 3);
 
 -- Dumping structure for table new_path_2.refund_disputes
 CREATE TABLE IF NOT EXISTS `refund_disputes` (
@@ -752,6 +793,29 @@ CREATE TABLE IF NOT EXISTS `relapse_history` (
 
 -- Dumping data for table new_path_2.relapse_history: ~0 rows (approximately)
 
+-- Dumping structure for table new_path_2.reschedule_requests
+CREATE TABLE IF NOT EXISTS `reschedule_requests` (
+  `request_id` int NOT NULL AUTO_INCREMENT,
+  `session_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `counselor_id` int NOT NULL,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `counselor_note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `requested_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`request_id`),
+  KEY `idx_rr_session` (`session_id`),
+  KEY `idx_rr_user` (`user_id`),
+  KEY `idx_rr_counselor` (`counselor_id`),
+  CONSTRAINT `fk_rr_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_rr_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table new_path_2.reschedule_requests: ~2 rows (approximately)
+INSERT INTO `reschedule_requests` (`request_id`, `session_id`, `user_id`, `counselor_id`, `reason`, `status`, `counselor_note`, `requested_at`, `reviewed_at`) VALUES
+	(6, 11, 2, 1, 'cbc', 'approved', '', '2026-04-05 07:32:49', '2026-04-05 07:35:33');
+
 -- Dumping structure for table new_path_2.saved_jobs
 CREATE TABLE IF NOT EXISTS `saved_jobs` (
   `saved_id` int NOT NULL AUTO_INCREMENT,
@@ -778,9 +842,11 @@ CREATE TABLE IF NOT EXISTS `saved_posts` (
   KEY `fk_saved_post` (`post_id`),
   CONSTRAINT `fk_saved_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`post_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_saved_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.saved_posts: ~0 rows (approximately)
+INSERT INTO `saved_posts` (`saved_id`, `user_id`, `post_id`, `created_at`) VALUES
+	(1, 2, 4, '2026-04-04 19:29:15');
 
 -- Dumping structure for table new_path_2.sessions
 CREATE TABLE IF NOT EXISTS `sessions` (
@@ -810,11 +876,11 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   KEY `idx_status` (`status`),
   CONSTRAINT `fk_session_counselor` FOREIGN KEY (`counselor_id`) REFERENCES `counselors` (`counselor_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_session_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.sessions: ~15 rows (approximately)
+-- Dumping data for table new_path_2.sessions: ~16 rows (approximately)
 INSERT INTO `sessions` (`session_id`, `user_id`, `counselor_id`, `session_datetime`, `duration_minutes`, `extended_minutes`, `extension_fee`, `session_type`, `status`, `location`, `meeting_link`, `session_notes`, `counselor_private_notes`, `rating`, `review`, `cancelled_by`, `cancellation_reason`, `created_at`, `updated_at`) VALUES
-	(1, 2, 1, '2026-03-27 02:08:55', 60, 0, 0.00, 'video', 'completed', NULL, 'dfsgfdgdfg', NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-09 16:38:56', '2026-04-02 08:22:03'),
+	(1, 2, 1, '2026-04-04 02:08:55', 60, 0, 0.00, 'video', 'completed', NULL, 'dfsgfdgdfg', NULL, NULL, 3, 'sf', NULL, NULL, '2026-01-09 16:38:56', '2026-04-04 19:43:54'),
 	(2, 2, 1, '2026-03-30 11:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 12:44:38', '2026-03-28 12:44:38'),
 	(3, 2, 1, '2026-03-30 09:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 12:51:09', '2026-03-28 12:51:09'),
 	(4, 2, 1, '2026-03-30 10:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 16:23:03', '2026-03-28 16:23:03'),
@@ -823,12 +889,35 @@ INSERT INTO `sessions` (`session_id`, `user_id`, `counselor_id`, `session_dateti
 	(7, 2, 1, '2026-03-30 16:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/fui-tqzk-pze', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 16:59:58', '2026-03-28 16:59:58'),
 	(8, 2, 1, '2026-03-30 14:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/hiu-ovsv-fxc', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 17:30:50', '2026-03-28 17:30:50'),
 	(9, 2, 1, '2026-03-30 15:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/cff-uesv-ekp', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-28 17:58:53', '2026-03-28 17:58:53'),
-	(10, 2, 1, '2026-04-06 10:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/zir-nnqp-nws', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 13:27:07', '2026-03-30 13:27:07'),
-	(11, 2, 1, '2026-04-06 11:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/yvu-amax-mfc', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 13:31:01', '2026-03-30 13:31:01'),
+	(10, 2, 1, '2026-04-06 10:00:00', 60, 0, 0.00, 'video', 'cancelled', NULL, 'https://meet.google.com/zir-nnqp-nws', NULL, NULL, NULL, NULL, 5, 'Reschedule approved by counselor', '2026-03-30 13:27:07', '2026-04-04 20:15:47'),
+	(11, 2, 1, '2026-04-06 11:00:00', 60, 0, 0.00, 'video', 'cancelled', NULL, 'https://meet.google.com/yvu-amax-mfc', NULL, NULL, NULL, NULL, 5, 'Reschedule approved by counselor', '2026-03-30 13:31:01', '2026-04-05 07:35:33'),
 	(12, 2, 1, '2026-04-06 14:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, 'https://meet.google.com/jzm-xbyr-djb', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 13:37:10', '2026-03-30 13:37:10'),
 	(13, 2, 1, '2026-04-06 13:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 17:56:07', '2026-03-30 17:56:07'),
 	(14, 2, 1, '2026-04-13 16:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 17:58:40', '2026-03-30 17:58:40'),
-	(15, 2, 1, '2026-04-06 09:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-02 08:18:29', '2026-04-02 08:18:29');
+	(15, 2, 1, '2026-04-06 09:00:00', 60, 0, 0.00, 'video', 'cancelled', NULL, NULL, NULL, NULL, NULL, NULL, 2, 'vxcv', '2026-04-02 08:18:29', '2026-04-04 19:44:19'),
+	(16, 2, 1, '2026-04-06 12:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-04 17:44:45', '2026-04-04 17:44:45'),
+	(17, 2, 1, '2026-04-06 15:00:00', 60, 0, 0.00, 'video', 'scheduled', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-04 19:11:12', '2026-04-04 19:11:12');
+
+-- Dumping structure for table new_path_2.session_disputes
+CREATE TABLE IF NOT EXISTS `session_disputes` (
+  `dispute_id` int NOT NULL AUTO_INCREMENT,
+  `session_id` int NOT NULL,
+  `reported_by` int NOT NULL,
+  `reason` enum('no_show','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'no_show',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','reviewed','resolved','dismissed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `admin_note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`dispute_id`),
+  KEY `idx_sd_session` (`session_id`),
+  KEY `idx_sd_reporter` (`reported_by`),
+  CONSTRAINT `fk_sd_reporter` FOREIGN KEY (`reported_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sd_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table new_path_2.session_disputes: ~0 rows (approximately)
 
 -- Dumping structure for table new_path_2.session_messages
 CREATE TABLE IF NOT EXISTS `session_messages` (
@@ -842,11 +931,15 @@ CREATE TABLE IF NOT EXISTS `session_messages` (
   KEY `idx_sender` (`sender_id`),
   CONSTRAINT `fk_sm_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_sm_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.session_messages: ~1 rows (approximately)
+-- Dumping data for table new_path_2.session_messages: ~0 rows (approximately)
 INSERT INTO `session_messages` (`message_id`, `session_id`, `sender_id`, `message`, `created_at`) VALUES
-	(1, 1, 2, 'hello', '2026-04-02 08:23:03');
+	(1, 1, 2, 'hello', '2026-04-02 08:23:03'),
+	(2, 1, 2, 'hello', '2026-04-04 17:47:01'),
+	(3, 1, 5, 'hi', '2026-04-04 17:49:17'),
+	(4, 1, 5, 'hi', '2026-04-04 18:13:22'),
+	(5, 1, 2, 'fgf', '2026-04-04 18:13:50');
 
 -- Dumping structure for table new_path_2.support_groups
 CREATE TABLE IF NOT EXISTS `support_groups` (
@@ -865,9 +958,14 @@ CREATE TABLE IF NOT EXISTS `support_groups` (
   KEY `idx_active` (`is_active`),
   KEY `fk_sg_admin` (`created_by`),
   CONSTRAINT `fk_sg_admin` FOREIGN KEY (`created_by`) REFERENCES `admin` (`admin_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.support_groups: ~0 rows (approximately)
+-- Dumping data for table new_path_2.support_groups: ~4 rows (approximately)
+INSERT INTO `support_groups` (`group_id`, `name`, `description`, `category`, `meeting_schedule`, `meeting_link`, `max_members`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
+	(1, 'AA Meeting Support', 'Alcoholics Anonymous peer support group', 'alcohol', NULL, NULL, NULL, 1, 1, '2026-04-02 19:55:16', '2026-04-02 19:55:16'),
+	(2, 'Substance Recovery', 'Support for recovering from substance addiction', 'substance', NULL, NULL, NULL, 1, 1, '2026-04-02 19:55:16', '2026-04-02 19:55:16'),
+	(3, 'Gambling Recovery', 'Support for gambling addiction recovery', 'gambling', NULL, NULL, NULL, 1, 1, '2026-04-02 19:55:16', '2026-04-02 19:55:16'),
+	(4, 'General Recovery', 'General recovery support for all types of addiction', 'general', NULL, NULL, NULL, 1, 1, '2026-04-02 19:55:16', '2026-04-02 19:55:16');
 
 -- Dumping structure for table new_path_2.support_group_members
 CREATE TABLE IF NOT EXISTS `support_group_members` (
@@ -948,7 +1046,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   CONSTRAINT `fk_txn_pm` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`payment_method_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_txn_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_txn_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.transactions: ~14 rows (approximately)
 INSERT INTO `transactions` (`transaction_id`, `transaction_uuid`, `session_id`, `user_id`, `counselor_id`, `payment_method_id`, `amount`, `currency`, `payment_type`, `status`, `payhere_order_id`, `payhere_payment_id`, `payhere_status_code`, `stripe_payment_intent_id`, `failure_reason`, `processed_at`, `created_at`, `updated_at`) VALUES
@@ -965,7 +1063,9 @@ INSERT INTO `transactions` (`transaction_id`, `transaction_uuid`, `session_id`, 
 	(11, 'ece74af422bc83a272be53dd4d51a090', 12, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-48', '', '2', NULL, NULL, '2026-03-30 13:37:10', '2026-03-30 13:37:10', '2026-03-30 13:37:10'),
 	(12, '436357dc2a41918ef74144d706da6d58', 13, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-49', '', '2', NULL, NULL, '2026-03-30 17:56:07', '2026-03-30 17:56:07', '2026-03-30 17:56:07'),
 	(13, '7972cbe391505e49010ad6cce572c5f4', 14, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-50', '', '2', NULL, NULL, '2026-03-30 17:58:40', '2026-03-30 17:58:40', '2026-03-30 17:58:40'),
-	(14, '318c6c5eaaf5a2b4a53dc463aaf5d878', 15, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-51', '', '2', NULL, NULL, '2026-04-02 08:18:29', '2026-04-02 08:18:29', '2026-04-02 08:18:29');
+	(14, '318c6c5eaaf5a2b4a53dc463aaf5d878', 15, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-51', '', '2', NULL, NULL, '2026-04-02 08:18:29', '2026-04-02 08:18:29', '2026-04-02 08:18:29'),
+	(15, '1913ac3b87e6c8c2fa20b4a4ba81851a', 16, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-53', '', '2', NULL, NULL, '2026-04-04 17:44:45', '2026-04-04 17:44:45', '2026-04-04 17:44:45'),
+	(16, 'd84239bc0abeab9e97d4804ed2f23141', 17, 2, 1, NULL, 3850.00, 'LKR', 'session', 'completed', 'HOLD-54', '', '2', NULL, NULL, '2026-04-04 19:11:12', '2026-04-04 19:11:12', '2026-04-04 19:11:12');
 
 -- Dumping structure for table new_path_2.trigger_categories
 CREATE TABLE IF NOT EXISTS `trigger_categories` (
@@ -1032,7 +1132,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `display_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `profile_picture` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bio` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `age` int DEFAULT NULL,
   `gender` enum('male','female','other','prefer_not_to_say') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1046,23 +1145,25 @@ CREATE TABLE IF NOT EXISTS `users` (
   `current_onboarding_step` int DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `bio` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `idx_email` (`email`),
   UNIQUE KEY `idx_username` (`username`),
   KEY `idx_role` (`role`),
   KEY `idx_active` (`is_active`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.users: ~8 rows (approximately)
-INSERT INTO `users` (`user_id`, `email`, `username`, `password_hash`, `salt`, `role`, `first_name`, `last_name`, `display_name`, `profile_picture`, `phone_number`, `age`, `gender`, `is_email_verified`, `email_verification_token`, `password_reset_token`, `password_reset_expires`, `is_active`, `last_login`, `onboarding_completed`, `current_onboarding_step`, `created_at`, `updated_at`) VALUES
-	(1, 'admin@newpath.com', 'admin', '$2a$10$m3uVRJ8S7NVswiFpooQowuqLGMjeNlPGssXScEPVyqQ8LrM7oQXMe', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye', 'admin', 'System', 'Administrator', 'System Admin', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-01-02 18:00:38', '2026-01-19 08:49:41'),
-	(2, 'pasidurajapaksha202@gmail.com', 'pasidu', '$2y$10$.5UJeA9Q/fgAP/.U1ln.B.Meq48YLNDW8lFmBhlENp19Lz2mOCGQ.', '$2a$10$m3uVRJ8S7NVswiFpooQowu', 'user', 'Pasidu', 'Rajapaksha', 'Pasidu Rajapaksha', '/uploads/profiles/profile_2_1775073818.jpg', '0773623777', 17, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-01-04 17:49:51', '2026-04-01 20:03:38'),
-	(5, 'Puski200322@gmail.com', 'pasidu_rajapaksha', '$2a$10$m3uVRJ8S7NVswiFpooQowuqLGMjeNlPGssXScEPVyqQ8LrM7oQXMe', '$2a$10$gTLAJVOOJZlDqV9gOYIXve', 'counselor', NULL, NULL, 'Pasidu Rajapaksha', '/uploads/profiles/profile_5_1775154819.png', '0773623777', NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-01-04 18:10:13', '2026-04-02 18:33:39'),
-	(7, 'heloo2@gmail.com', NULL, '$2a$10$XPUcmf1g3EPDOaRoSUrxnO0y/W8nVEe0NAP/17tjo2VJM1joIVhe.', '$2a$10$XPUcmf1g3EPDOaRoSUrxnO', 'user', NULL, NULL, 'hello', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-23 07:44:55', '2026-02-23 07:44:55'),
-	(8, 'Pasidurajapak66sha202@gmail.com', NULL, '$2y$10$elf8coZ0yGvOVNwSxOA17u0C6mf4OPGdVotJ31hCSSJF/AKLtVmH6', '$2y$10$0cRWY8gsxNuTleg8U9dsd.tUIcjO6Om.FAwI1Nz73s87RjXqjOqti', 'user', NULL, NULL, 'pasidu', NULL, NULL, 54, 'female', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-25 19:43:23', '2026-02-25 19:43:23'),
-	(9, 'Pasidurffajapaksha202@gmail.com', NULL, '$2y$10$6wgsDcVkfscaNPSk8DElPe5G274TLcgIV1oC48D9QlbNDhMsLOhby', '$2y$10$c9G7uRxpDy3ooHSMkgkNz.vgGmj3UuoZC/z.IBi0G7.XVQTtG/vyC', 'user', NULL, NULL, 'pasidu', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-25 19:44:54', '2026-02-25 19:44:54'),
-	(10, 'pasidurajapaffksha202@gmail.com', NULL, '$2y$10$g7HD6nA/GuAfeXj7BTlNx.xZYPNFp89Amg5zkguzkPf0AUAdNZx32', '$2y$10$KxcNpQdI7YXc.69hjcS2tOnFMKhzWJIJboCpuNjLMyqAziHu/JEAC', 'user', NULL, NULL, 'hello', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-02-25 19:50:38', '2026-02-25 19:53:11'),
-	(11, 'puka@gmail.com', NULL, '$2y$10$/Rkg.0DKIEjfVGzqRvZeKeSvOKeXXIrwQxHEdXqkaDbMBnh26WkQO', '$2y$10$vecMz4.bs/ia/zNX0ANTG.mQ2DP0APjvI89ZB3.vpQHqihFxhPm5C', 'user', NULL, NULL, 'Pasidu Rajapaksha', NULL, NULL, 45, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-04-01 20:14:41', '2026-04-01 20:15:01');
+INSERT INTO `users` (`user_id`, `email`, `username`, `password_hash`, `salt`, `role`, `first_name`, `last_name`, `display_name`, `profile_picture`, `phone_number`, `age`, `gender`, `is_email_verified`, `email_verification_token`, `password_reset_token`, `password_reset_expires`, `is_active`, `last_login`, `onboarding_completed`, `current_onboarding_step`, `created_at`, `updated_at`, `bio`) VALUES
+	(1, 'admin@newpath.com', 'admin', '$2a$10$m3uVRJ8S7NVswiFpooQowuqLGMjeNlPGssXScEPVyqQ8LrM7oQXMe', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye', 'admin', 'System', 'Administrator', 'System Admin', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-01-02 18:00:38', '2026-01-19 08:49:41', NULL),
+	(2, 'pasidurajapaksha202@gmail.com', 'pasidu', '$2y$10$.5UJeA9Q/fgAP/.U1ln.B.Meq48YLNDW8lFmBhlENp19Lz2mOCGQ.', '$2a$10$m3uVRJ8S7NVswiFpooQowu', 'user', 'Pasidu', 'Rajapaksha', 'Anonymous User', '/uploads/profiles/profile_2_1775073818.jpg', '0773623777', 17, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-01-04 17:49:51', '2026-04-02 19:37:34', NULL),
+	(5, 'Puski200322@gmail.com', 'pasidu_rajapaksha', '$2a$10$m3uVRJ8S7NVswiFpooQowuqLGMjeNlPGssXScEPVyqQ8LrM7oQXMe', '$2a$10$gTLAJVOOJZlDqV9gOYIXve', 'counselor', NULL, NULL, 'Pasidu Rajapaksha', '/uploads/profiles/profile_5_1775154819.png', '0773623777', NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-01-04 18:10:13', '2026-04-02 18:33:39', NULL),
+	(7, 'heloo2@gmail.com', NULL, '$2a$10$XPUcmf1g3EPDOaRoSUrxnO0y/W8nVEe0NAP/17tjo2VJM1joIVhe.', '$2a$10$XPUcmf1g3EPDOaRoSUrxnO', 'user', NULL, NULL, 'hello', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-23 07:44:55', '2026-02-23 07:44:55', NULL),
+	(8, 'Pasidurajapak66sha202@gmail.com', NULL, '$2y$10$elf8coZ0yGvOVNwSxOA17u0C6mf4OPGdVotJ31hCSSJF/AKLtVmH6', '$2y$10$0cRWY8gsxNuTleg8U9dsd.tUIcjO6Om.FAwI1Nz73s87RjXqjOqti', 'user', NULL, NULL, 'pasidu', NULL, NULL, 54, 'female', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-25 19:43:23', '2026-02-25 19:43:23', NULL),
+	(9, 'Pasidurffajapaksha202@gmail.com', NULL, '$2y$10$6wgsDcVkfscaNPSk8DElPe5G274TLcgIV1oC48D9QlbNDhMsLOhby', '$2y$10$c9G7uRxpDy3ooHSMkgkNz.vgGmj3UuoZC/z.IBi0G7.XVQTtG/vyC', 'user', NULL, NULL, 'pasidu', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-02-25 19:44:54', '2026-02-25 19:44:54', NULL),
+	(10, 'pasidurajapaffksha202@gmail.com', NULL, '$2y$10$g7HD6nA/GuAfeXj7BTlNx.xZYPNFp89Amg5zkguzkPf0AUAdNZx32', '$2y$10$KxcNpQdI7YXc.69hjcS2tOnFMKhzWJIJboCpuNjLMyqAziHu/JEAC', 'user', NULL, NULL, 'hello', NULL, NULL, 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-02-25 19:50:38', '2026-02-25 19:53:11', NULL),
+	(11, 'puka@gmail.com', NULL, '$2y$10$/Rkg.0DKIEjfVGzqRvZeKeSvOKeXXIrwQxHEdXqkaDbMBnh26WkQO', '$2y$10$vecMz4.bs/ia/zNX0ANTG.mQ2DP0APjvI89ZB3.vpQHqihFxhPm5C', 'user', NULL, NULL, 'Pasidu Rajapaksha', NULL, NULL, 45, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-04-01 20:14:41', '2026-04-01 20:15:01', NULL),
+	(12, 'machan@gmail.com', NULL, '$2y$10$tPfU40YficVmZ/AJ7Esudeu.uQVfq/gqjjHQ4Px0ZGoUrAmc0PNm.', '$2y$10$z8xDvIW0sdHYTsuqDcLJfO9r6qmh5baw/iOztH4Lj5mznelVsa6MK', 'user', 'Pasidu', 'Rajapaksha', 'machan', NULL, '0714710856', 23, 'male', 0, NULL, NULL, NULL, 1, NULL, 1, 5, '2026-04-02 19:47:10', '2026-04-02 19:55:52', NULL);
 
 -- Dumping structure for table new_path_2.user_connections
 CREATE TABLE IF NOT EXISTS `user_connections` (
@@ -1079,9 +1180,12 @@ CREATE TABLE IF NOT EXISTS `user_connections` (
   KEY `idx_status` (`status`),
   CONSTRAINT `fk_conn_connected_user` FOREIGN KEY (`connected_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_conn_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.user_connections: ~0 rows (approximately)
+-- Dumping data for table new_path_2.user_connections: ~2 rows (approximately)
+INSERT INTO `user_connections` (`connection_id`, `user_id`, `connected_user_id`, `status`, `created_at`, `updated_at`) VALUES
+	(10, 2, 12, 'accepted', '2026-04-02 19:58:00', '2026-04-02 19:58:00'),
+	(14, 2, 7, 'accepted', '2026-04-04 15:49:22', '2026-04-04 15:49:22');
 
 -- Dumping structure for table new_path_2.user_profiles
 CREATE TABLE IF NOT EXISTS `user_profiles` (
@@ -1101,17 +1205,20 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   `quit_attempts` int DEFAULT NULL,
   `motivation_level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `risk_score` int DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `is_anonymous` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`profile_id`),
   UNIQUE KEY `idx_user` (`user_id`),
   CONSTRAINT `fk_profile_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table new_path_2.user_profiles: ~4 rows (approximately)
-INSERT INTO `user_profiles` (`profile_id`, `user_id`, `emergency_contact_name`, `emergency_contact_phone`, `sobriety_start_date`, `last_relapse_date`, `recovery_type`, `notification_preferences`, `privacy_settings`, `created_at`, `updated_at`, `substance_frequency`, `last_used_timeframe`, `quit_attempts`, `motivation_level`, `risk_score`) VALUES
-	(1, 2, '', '', '2026-02-28', NULL, 'substance', NULL, NULL, '2026-01-11 15:01:17', '2026-02-28 11:40:03', NULL, NULL, NULL, NULL, NULL),
-	(11, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-23 07:44:55', '2026-02-23 07:44:55', NULL, NULL, NULL, NULL, NULL),
-	(12, 10, NULL, NULL, NULL, NULL, 'None', NULL, NULL, '2026-02-25 19:52:21', '2026-02-25 19:52:21', NULL, NULL, NULL, NULL, NULL),
-	(16, 11, NULL, NULL, NULL, NULL, 'None', NULL, NULL, '2026-04-01 20:14:47', '2026-04-01 20:14:47', 'None', 'Never', 0, 'exploring', 5);
+INSERT INTO `user_profiles` (`profile_id`, `user_id`, `emergency_contact_name`, `emergency_contact_phone`, `sobriety_start_date`, `last_relapse_date`, `recovery_type`, `notification_preferences`, `privacy_settings`, `created_at`, `updated_at`, `substance_frequency`, `last_used_timeframe`, `quit_attempts`, `motivation_level`, `risk_score`, `bio`, `is_anonymous`) VALUES
+	(1, 2, '', '', '2026-02-28', NULL, 'substance', NULL, NULL, '2026-01-11 15:01:17', '2026-04-03 08:54:13', NULL, NULL, NULL, NULL, NULL, '', 0),
+	(11, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-02-23 07:44:55', '2026-04-03 08:54:38', NULL, NULL, NULL, NULL, NULL, NULL, 0),
+	(12, 10, NULL, NULL, NULL, NULL, 'None', NULL, NULL, '2026-02-25 19:52:21', '2026-02-25 19:52:21', NULL, NULL, NULL, NULL, NULL, NULL, 1),
+	(16, 11, NULL, NULL, NULL, NULL, 'None', NULL, NULL, '2026-04-01 20:14:47', '2026-04-01 20:14:47', 'None', 'Never', 0, 'exploring', 5, NULL, 1),
+	(17, 12, '', '', NULL, NULL, '', NULL, NULL, '2026-04-02 19:47:12', '2026-04-02 19:55:52', 'None', 'Never', 0, 'motivated', 6, NULL, 1);
 
 -- Dumping structure for table new_path_2.user_progress
 CREATE TABLE IF NOT EXISTS `user_progress` (
@@ -1127,12 +1234,13 @@ CREATE TABLE IF NOT EXISTS `user_progress` (
   PRIMARY KEY (`progress_id`),
   UNIQUE KEY `idx_user_date` (`user_id`,`date`),
   CONSTRAINT `fk_progress_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table new_path_2.user_progress: ~2 rows (approximately)
+-- Dumping data for table new_path_2.user_progress: ~0 rows (approximately)
 INSERT INTO `user_progress` (`progress_id`, `user_id`, `date`, `days_sober`, `is_sober_today`, `milestone_progress`, `notes`, `created_at`, `updated_at`) VALUES
 	(1, 2, '2026-02-28', 0, 1, 0, 'Started sobriety tracking', '2026-02-28 10:55:04', '2026-02-28 10:55:18'),
-	(5, 2, '2026-03-31', 0, 1, 0, 'Started sobriety tracking', '2026-03-30 19:42:44', '2026-03-30 19:43:29');
+	(5, 2, '2026-03-31', 0, 1, 0, 'Started sobriety tracking', '2026-03-30 19:42:44', '2026-03-30 19:43:29'),
+	(7, 2, '2026-04-05', 0, 1, 0, 'Started sobriety tracking', '2026-04-04 20:25:01', '2026-04-04 20:25:09');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

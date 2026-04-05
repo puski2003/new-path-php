@@ -152,5 +152,7 @@ function deleteHelpCenter(helpCenterId, title) {
     }).then(() => window.location.reload());
 }
 </script>
+
+<?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 </html>

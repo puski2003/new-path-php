@@ -22,5 +22,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <div class="admin-sub-container-1" style="align-items: stretch;"><div class="admin-data-card" style="flex:1;"><h3>Trending Posts</h3><p>Recovery milestone celebration</p><p>Weekly support group meeting</p><p>Healthy lifestyle tips</p></div><div class="admin-data-card" style="flex:1;"><h3>Moderation Summary</h3><p>Locked Threads: 5</p><p>Pinned Posts: 3</p><p>Active Warnings: 12</p></div></div>
     </section>
 </main>
+
+<?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 </html>

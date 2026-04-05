@@ -15,5 +15,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <div class="admin-sub-container-2"><h2>Suspicious Activity Dashboard</h2><div class="admin-sub-container-1" style="align-items: stretch;"><div class="admin-data-card" style="height: 320px;"><h3>Suspicious Login Attempts by Date</h3><p class="data-card__placeholder">Chart placeholder</p></div><div class="admin-data-card"><h3>Security Alerts</h3><p>Critical: Multiple failed login attempts from a single IP.</p><p>Warning: Unusual device activity detected.</p><p>Info: Payment anomaly detected.</p></div></div></div>
     </section>
 </main>
+
+<?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
 </html>
