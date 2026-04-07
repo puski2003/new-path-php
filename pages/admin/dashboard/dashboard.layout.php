@@ -16,7 +16,8 @@ require_once __DIR__ . '/../common/admin.html.head.php';
             <div class="summary-cards">
                 <div class="summary-card summary-card--growth">
                     <div class="summary-card__icon">
-                        <img src="/assets/icons/user-plus.svg" alt="">
+                        <!-- <img src="/assets/icons/user-plus.svg" alt=""> -->
+                         <i data-lucide="user-plus"></i>
                     </div>
                     <div class="summary-card__body">
                         <p class="summary-card__label">Total Active Users</p>
@@ -26,7 +27,8 @@ require_once __DIR__ . '/../common/admin.html.head.php';
 
                 <div class="summary-card summary-card--pending">
                     <div class="summary-card__icon">
-                        <img src="/assets/icons/clock.svg" alt="">
+                        <!-- <img src="/assets/icons/clock.svg" alt=""> -->
+                        <i data-lucide="clock"></i>
                     </div>
                     <div class="summary-card__body">
                         <p class="summary-card__label">Pending Applications</p>
@@ -37,7 +39,8 @@ require_once __DIR__ . '/../common/admin.html.head.php';
 
                 <div class="summary-card summary-card--upcoming">
                     <div class="summary-card__icon">
-                        <img src="/assets/icons/calendar.svg" alt="">
+                        <!-- <img src="/assets/icons/calendar.svg" alt=""> -->
+                        <i data-lucide="calendar"></i>
                     </div>
                     <div class="summary-card__body">
                         <p class="summary-card__label">Upcoming Sessions</p>
@@ -48,7 +51,8 @@ require_once __DIR__ . '/../common/admin.html.head.php';
 
                 <div class="summary-card">
                     <div class="summary-card__icon">
-                        <img src="/assets/icons/dollar-icon.svg" alt="">
+                        <!-- <img src="/assets/icons/dollar-icon.svg" alt=""> -->
+                        <i data-lucide="dollar-sign"></i>
                     </div>
                     <div class="summary-card__body">
                         <p class="summary-card__label">Revenue Today</p>
