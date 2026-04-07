@@ -79,7 +79,38 @@ document.addEventListener('DOMContentLoaded', function () {
   wireRecoveryPlaceholders();
 
   animateProgressBars();
+  initTasksPagination();
 });
+
+function initTasksPagination() {
+  var TASKS_PER_PAGE = 4;
+  var cards = Array.from(document.querySelectorAll('.tasks-list .task-card'));
+  var pagination = document.getElementById('tasksPagination');
+  var prevBtn = document.getElementById('tasksPrev');
+  var nextBtn = document.getElementById('tasksNext');
+  var pageInfo = document.getElementById('tasksPageInfo');
+
+  if (!pagination || cards.length <= TASKS_PER_PAGE) return;
+
+  var currentPage = 1;
+  var totalPages = Math.ceil(cards.length / TASKS_PER_PAGE);
+
+  function render() {
+    var start = (currentPage - 1) * TASKS_PER_PAGE;
+    var end = start + TASKS_PER_PAGE;
+    cards.forEach(function (card, i) {
+      card.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+    pageInfo.textContent = currentPage + ' / ' + totalPages;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+  }
+
+  pagination.style.display = 'flex';
+  prevBtn.addEventListener('click', function () { if (currentPage > 1) { currentPage--; render(); } });
+  nextBtn.addEventListener('click', function () { if (currentPage < totalPages) { currentPage++; render(); } });
+  render();
+}
 
 function bindClick(selector, handler) {
   const el = document.querySelector(selector);

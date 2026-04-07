@@ -22,6 +22,9 @@ class DashboardManager {
     // Task checkbox interactions
     this.setupTaskCheckboxes();
 
+    // Daily tasks pagination
+    this.setupTasksPagination();
+
     // Quick log form submission
     this.setupQuickLogForm();
 
@@ -33,6 +36,36 @@ class DashboardManager {
 
     // Sidebar navigation
     this.setupSidebarNavigation();
+  }
+
+  setupTasksPagination() {
+    const TASKS_PER_PAGE = 4;
+    const items = Array.from(document.querySelectorAll('.daily-tasks .task-item'));
+    const pagination = document.getElementById('dashTasksPagination');
+    const prevBtn = document.getElementById('dashTasksPrev');
+    const nextBtn = document.getElementById('dashTasksNext');
+    const pageInfo = document.getElementById('dashTasksPageInfo');
+
+    if (!pagination || items.length <= TASKS_PER_PAGE) return;
+
+    let currentPage = 1;
+    const totalPages = Math.ceil(items.length / TASKS_PER_PAGE);
+
+    const render = () => {
+      const start = (currentPage - 1) * TASKS_PER_PAGE;
+      const end = start + TASKS_PER_PAGE;
+      items.forEach((item, i) => {
+        item.style.display = (i >= start && i < end) ? '' : 'none';
+      });
+      pageInfo.textContent = currentPage + ' / ' + totalPages;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === totalPages;
+    };
+
+    pagination.style.display = 'flex';
+    prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; render(); } });
+    nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; render(); } });
+    render();
   }
 
   setupTaskCheckboxes() {
@@ -54,9 +87,6 @@ class DashboardManager {
       checkbox.classList.add("completed");
       this.showTaskCompletionFeedback(checkbox);
     }
-
-    // Update progress
-    this.updateTaskProgress();
 
     // Save to server
     this.saveTaskStatus(index, !isCompleted);

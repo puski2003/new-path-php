@@ -26,6 +26,9 @@ $pageStyle = ['user/dashboard', 'user/recovery', 'user/browse-plans'];
         <div class="main-content-body">
             <div class="recovery-container">
                 <div class="recovery-section">
+                    <?php if (isset($_GET['error']) && $_GET['error'] === 'already_active'): ?>
+                        <div class="error-message" style="margin-bottom:16px;">You already have an active recovery plan. Complete or cancel it before adopting a new one.</div>
+                    <?php endif; ?>
                     <?php if (empty($plans)): ?>
                         <p>No template plans available right now.</p>
                     <?php else: ?>
