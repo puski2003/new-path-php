@@ -96,16 +96,16 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 <div class="data-card">
                     <h2>Quick Actions</h2>
                     <a href="/admin/user-management" class="btn btn--ghost btn--full">
-                        <img src="/assets/icons/user-management-icon.svg" alt=""> User Management
+                        <i data-lucide="circle-user"></i> User Management
                     </a>
                     <a href="/admin/content-management" class="btn btn--ghost btn--full">
-                        <img src="/assets/icons/content-management-icon.svg" alt=""> Content Management
+                         <i data-lucide="file-text"></i> Content Management
                     </a>
                     <a href="/admin/finances" class="btn btn--ghost btn--full">
-                        <img src="/assets/icons/dollar-icon.svg" alt=""> Financials
+                        <i data-lucide="dollar-sign"></i> Financials
                     </a>
                     <a href="/admin/analytics" class="btn btn--ghost btn--full">
-                        <img src="/assets/icons/analytics-icon.svg" alt=""> Analytics
+                        <i data-lucide="bar-chart-2"></i> Analytics
                     </a>
                 </div>
             </div>

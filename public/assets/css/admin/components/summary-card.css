@@ -1,65 +1,4 @@
 /**
- * Admin Summary Card Component
- * Used by: summary-card.jsp
- * Classes: admin-summary-card, admin-summary-card-content, admin-summary-card-title,
- *          admin-summary-card-info, admin-summary-card-subinfo, admin-summary-card-icon
- */
-
-/* .admin-summary-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--color-bg-white);
-    padding: var(--spacing-sm) var(--spacing-md);  
-    border-radius: var(--radius-sm);
-    flex: 1 1 0;           
-    min-width: 180px;       
-    max-width: 250px;       
-}
-
-.admin-summary-card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.admin-summary-card-title {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-muted);
-    margin: 0;
-}
-
-.admin-summary-card-info {
-    font-size: 26px;
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin: 0;
-    line-height: 1.2;
-}
-
-.admin-summary-card-subinfo {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    margin: 0;
-}
-
-.admin-summary-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    border-radius: var(--radius-sm);
-    background-color: rgba(61, 228, 185, 0.1);
-}
-
-.admin-summary-card-icon img {
-    width: 28px;
-    height: 28px;
-} */
-
-/**
  * Admin Summary Card Component (PHP version)
  * Markup: .summary-card, .summary-card__body, .summary-card__label,
  *         .summary-card__value, .summary-card__sub, .summary-card__icon
@@ -86,6 +25,7 @@
     max-width: 250px;
     border-left: 5px solid transparent; /* space reserved for variant accent */
     box-sizing: border-box;
+    box-shadow: var(--shadow-sm);
 }
 
 /* Text container */
