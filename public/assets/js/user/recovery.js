@@ -51,12 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
     showNotification('Opening comprehensive progress tracker...', 'info');
   });
 
-  document.querySelectorAll('.tool-item').forEach(function (tool) {
-    tool.addEventListener('click', function () {
-      const toolName = (tool.querySelector('.tool-name') || {}).textContent || 'tool';
-      showNotification('Opening ' + toolName + '...', 'info');
-    });
-  });
 
   bindClickAll('.review-btn', function () {
     showNotification('Recovery plan review opened', 'info');
@@ -80,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   animateProgressBars();
   initTasksPagination();
+  initCopingTools();
 });
 
 function initTasksPagination() {
@@ -230,6 +225,151 @@ function createProgressModal() {
   });
 
   return modal;
+}
+
+function initCopingTools() {
+  // Open modals
+  document.querySelectorAll('.tool-item[data-tool]').forEach(function (item) {
+    item.addEventListener('click', function () {
+      var modal = document.getElementById('modal-' + item.dataset.tool);
+      if (modal) { modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); }
+    });
+  });
+
+  // Close modals
+  document.querySelectorAll('.coping-modal-close').forEach(function (btn) {
+    btn.addEventListener('click', function () { closeModal(btn.closest('.coping-modal')); });
+  });
+  document.querySelectorAll('.coping-modal').forEach(function (modal) {
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(modal); });
+  });
+
+  function closeModal(modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  // ── Urge Surfing Timer ────────────────────────────────────────────
+  var urgeTotal = 15 * 60;
+  var urgeLeft  = urgeTotal;
+  var urgeTimer = null;
+  var urgeInstructions = [
+    'Focus on the sensation. Observe it without acting on it.',
+    'Notice where you feel it in your body. Just watch it.',
+    'Urges are like waves — they rise and fall. You are surfing it.',
+    'You are halfway there. The wave is starting to recede.',
+    'Almost done. You did not act on the urge. That is strength.',
+  ];
+
+  var urgeLabel = document.getElementById('urgeTimerLabel');
+  var urgeInstEl = document.getElementById('urgeInstruction');
+  var urgeStartBtn = document.getElementById('urgeStartBtn');
+  var urgeResetBtn = document.getElementById('urgeResetBtn');
+
+  function urgeFormat(s) {
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function urgeUpdateInstruction() {
+    var idx = Math.floor((1 - urgeLeft / urgeTotal) * urgeInstructions.length);
+    idx = Math.min(idx, urgeInstructions.length - 1);
+    if (urgeInstEl) urgeInstEl.textContent = urgeInstructions[idx];
+  }
+
+  if (urgeStartBtn) {
+    urgeStartBtn.addEventListener('click', function () {
+      if (urgeTimer) return;
+      urgeStartBtn.style.display = 'none';
+      if (urgeResetBtn) urgeResetBtn.style.display = '';
+      urgeTimer = setInterval(function () {
+        urgeLeft--;
+        if (urgeLabel) urgeLabel.textContent = urgeFormat(urgeLeft);
+        urgeUpdateInstruction();
+        if (urgeLeft <= 0) {
+          clearInterval(urgeTimer);
+          urgeTimer = null;
+          if (urgeLabel) urgeLabel.textContent = 'Done!';
+          if (urgeInstEl) urgeInstEl.textContent = 'You rode out the urge. Great work.';
+        }
+      }, 1000);
+    });
+  }
+
+  if (urgeResetBtn) {
+    urgeResetBtn.addEventListener('click', function () {
+      clearInterval(urgeTimer);
+      urgeTimer = null;
+      urgeLeft = urgeTotal;
+      if (urgeLabel) urgeLabel.textContent = urgeFormat(urgeLeft);
+      if (urgeInstEl) urgeInstEl.textContent = urgeInstructions[0];
+      urgeStartBtn.style.display = '';
+      urgeResetBtn.style.display = 'none';
+    });
+  }
+
+  // Reset timer when modal closes
+  var urgeModal = document.getElementById('modal-urge-surfing');
+  if (urgeModal) {
+    urgeModal.addEventListener('click', function (e) {
+      if (e.target === urgeModal || e.target.classList.contains('coping-modal-close')) {
+        if (urgeResetBtn) urgeResetBtn.click();
+      }
+    });
+  }
+
+  // ── Grounding Exercise ────────────────────────────────────────────
+  var groundingSteps = [
+    { num: '5', prompt: 'Name <strong>5 things</strong> you can <strong>see</strong> right now.' },
+    { num: '4', prompt: 'Name <strong>4 things</strong> you can <strong>touch</strong> or feel.' },
+    { num: '3', prompt: 'Name <strong>3 things</strong> you can <strong>hear</strong>.' },
+    { num: '2', prompt: 'Name <strong>2 things</strong> you can <strong>smell</strong>.' },
+    { num: '1', prompt: 'Name <strong>1 thing</strong> you can <strong>taste</strong>.' },
+  ];
+  var groundingIdx = 0;
+
+  var groundingNum    = document.getElementById('groundingNum');
+  var groundingPrompt = document.getElementById('groundingPrompt');
+  var groundingNext   = document.getElementById('groundingNextBtn');
+  var groundingDots   = document.querySelectorAll('.grounding-dot');
+
+  function groundingRender() {
+    var step = groundingSteps[groundingIdx];
+    if (groundingNum) groundingNum.textContent = step.num;
+    if (groundingPrompt) groundingPrompt.innerHTML = step.prompt;
+    groundingDots.forEach(function (d, i) {
+      d.classList.toggle('active', i <= groundingIdx);
+    });
+    if (groundingNext) {
+      groundingNext.textContent = groundingIdx < groundingSteps.length - 1 ? 'Next' : 'Finish';
+    }
+  }
+
+  if (groundingNext) {
+    groundingNext.addEventListener('click', function () {
+      if (groundingIdx < groundingSteps.length - 1) {
+        groundingIdx++;
+        groundingRender();
+      } else {
+        groundingIdx = 0;
+        groundingRender();
+        var modal = document.getElementById('modal-grounding');
+        if (modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
+        showNotification('Grounding complete. You are present.', 'success');
+      }
+    });
+  }
+
+  var groundingModal = document.getElementById('modal-grounding');
+  if (groundingModal) {
+    groundingModal.addEventListener('click', function (e) {
+      if (e.target === groundingModal || e.target.classList.contains('coping-modal-close')) {
+        groundingIdx = 0;
+        groundingRender();
+      }
+    });
+  }
 }
 
 function escapeHtml(value) {
