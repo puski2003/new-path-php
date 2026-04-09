@@ -8,6 +8,11 @@ class UserManagementModel
         return AdminData::getUsers($filters);
     }
 
+    public static function getUsersPaginated(array $filters, int $page = 1, int $perPage = 15): array
+    {
+        return AdminData::getUsersPaginated($filters, $page, $perPage);
+    }
+
     public static function getUserById(int $userId): ?array
     {
         return AdminData::getUserById($userId);
@@ -18,8 +23,8 @@ class UserManagementModel
         return AdminData::updateUser($userId, $input);
     }
 
-    // public static function deleteUser(int $userId, int $actorUserId): array
-    // {
-    //     return AdminData::deleteUser($userId, $actorUserId);
-    // }
+    public static function deleteUser(int $userId, int $actorUserId): array
+    {
+        return AdminData::deleteUser($userId, $actorUserId);
+    }
 }

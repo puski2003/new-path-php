@@ -107,6 +107,12 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $basePath = '/admin/user-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
     </section>
 </main>
