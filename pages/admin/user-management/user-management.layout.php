@@ -74,13 +74,32 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <td class="admin-table-td"><?= htmlspecialchars($item['registration']) ?></td>
                         <td class="admin-table-td admin-table-td--action">
                             <div class="admin-table-actions">
-                                <a href="/admin/user-management/edit?id=<?= $item['userId'] ?>" class="admin-button admin-button--ghost">Edit</a>
+                                <a
+                                    href="/admin/user-management/view?id=<?= $item['userId'] ?>"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="admin-button admin-button--ghost admin-button--icon-only"
+                                    title="View full user details"
+                                    aria-label="View full user details"
+                                >
+                                    <i data-lucide="expand" class="button-icon" stroke-width="1.75"></i>
+                                </a>
+                                <a
+                                    href="/admin/user-management/edit?id=<?= $item['userId'] ?>"
+                                    class="admin-button admin-button--ghost admin-button--icon-only"
+                                    title="Edit user"
+                                    aria-label="Edit user"
+                                >
+                                    <i data-lucide="pencil" class="button-icon" stroke-width="1.75"></i>
+                                </a>
                                 <button
                                     type="button"
-                                    class="admin-button admin-button--danger"
+                                    class="admin-button admin-button--danger admin-button--icon-only"
+                                    title="Delete user"
+                                    aria-label="Delete user"
                                     onclick="deleteUser(<?= $item['userId'] ?>, <?= json_encode($item['fullName']) ?>)"
                                 >
-                                    Delete
+                                    <i data-lucide="trash-2" class="button-icon" stroke-width="1.75"></i>
                                 </button>
                             </div>
                         </td>
@@ -122,6 +141,12 @@ function deleteUser(userId, fullName) {
     document.body.appendChild(form);
     form.submit();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
