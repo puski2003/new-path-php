@@ -45,6 +45,7 @@ $counselorNotes = "Great progress this week! Let's focus on mindfulness techniqu
 // Flash messages from sub-pages
 $flashCheckin = isset($_GET['checkinDone']) ? 'Daily check-in saved!' : null;
 $flashUrge    = isset($_GET['urgeDone'])    ? 'Urge logged successfully.' : null;
+$flashEcSaved = isset($_GET['ecSaved'])     ? 'Emergency contact saved.' : null;
 
 // Check if already checked in today
 $todayCheckRs = Database::search(

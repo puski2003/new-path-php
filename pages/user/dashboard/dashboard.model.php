@@ -13,13 +13,23 @@ class UserDashboardModel
     public static function getDaysSober(int $userId): int
     {
         $rs = Database::search(
-            "SELECT DATEDIFF(CURDATE(), up.sobriety_start_date) AS days
-             FROM user_profiles up
-             WHERE up.user_id = $userId
-               AND up.sobriety_start_date IS NOT NULL"
+            "SELECT days_sober FROM user_progress
+             WHERE user_id = $userId
+             ORDER BY date DESC, progress_id DESC
+             LIMIT 1"
+        );
+        if ($row = $rs->fetch_assoc()) {
+            return max(0, (int)$row['days_sober']);
+        }
+
+        $rs = Database::search(
+            "SELECT DATEDIFF(CURDATE(), sobriety_start_date) AS days
+             FROM user_profiles
+             WHERE user_id = $userId
+               AND sobriety_start_date IS NOT NULL"
         );
         $row = $rs->fetch_assoc();
-        return $row ? max(0, (int) $row['days']) : 0;
+        return $row ? max(0, (int)$row['days']) : 0;
     }
 
     /**

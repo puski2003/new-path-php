@@ -8,7 +8,11 @@ if (!Request::isPost()) {
 
 $planId = (int)(Request::post('planId') ?? 0);
 if ($planId > 0) {
-    RecoveryModel::adoptGeneralPlan($planId, (int)$user['id']);
+    $adopted = RecoveryModel::adoptGeneralPlan($planId, (int)$user['id']);
+    if (!$adopted) {
+        Response::redirect('/user/recovery/browse?error=already_active');
+        exit;
+    }
 }
 
 Response::redirect('/user/recovery');

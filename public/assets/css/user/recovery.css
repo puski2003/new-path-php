@@ -38,7 +38,7 @@
 /* ── Plan Status Banner ─────────────────────────────────────────── */
 
 .recovery-plan-banner {
-    padding: 0 var(--spacing-xl) var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-xl) var(--spacing-xs);
 }
 
 .recovery-header {
@@ -70,6 +70,15 @@
     text-overflow: ellipsis;
 }
 
+/* ── Daily Tasks Card (recovery page fixed size) ─────────────────── */
+
+.col-2-row-1.dashboard-card {
+    width: 360px;
+    height: 400px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
 /* ── Task List ───────────────────────────────────────────────────── */
 
 .tasks-progress {
@@ -86,6 +95,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    min-height: 220px;
 }
 
 .task-card {
@@ -103,6 +113,45 @@
 .task-card:hover {
     border-color: var(--color-primary);
     box-shadow: 0 2px 8px rgba(61, 228, 185, 0.15);
+}
+
+.tasks-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border-primary);
+    margin-top: var(--spacing-sm);
+}
+
+.tasks-page-btn {
+    background: none;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-sm);
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.tasks-page-btn:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.tasks-page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.tasks-page-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    min-width: 60px;
+    text-align: center;
 }
 
 .task-info {
@@ -548,6 +597,172 @@
     font-size: var(--font-size-xs);
     color: var(--color-text-primary);
     font-weight: var(--font-weight-medium);
+}
+
+/* ── Coping Tool Modals ──────────────────────────────────────────── */
+
+.coping-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+}
+
+.coping-modal.open {
+    display: flex;
+}
+
+.coping-modal-box {
+    background: var(--color-bg-white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.coping-modal-box h3 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.coping-modal-sub {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.coping-modal-close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    line-height: 1;
+}
+
+.coping-modal-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+/* Urge Surfing */
+.urge-timer-display {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    letter-spacing: 2px;
+    padding: var(--spacing-md) 0;
+}
+
+.urge-instruction {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* Grounding Exercise */
+.grounding-step {
+    text-align: center;
+    padding: var(--spacing-md) 0;
+}
+
+.grounding-number {
+    font-size: 3.5rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.grounding-prompt {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.grounding-progress {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.grounding-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-border-primary);
+    transition: background 0.2s;
+}
+
+.grounding-dot.active {
+    background: var(--color-primary);
+}
+
+/* Emergency Contact */
+.ec-saved-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-light-green);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-primary);
+}
+
+.ec-saved-card strong {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+}
+
+.ec-call-link {
+    font-size: var(--font-size-sm);
+    color: var(--color-primary);
+    text-decoration: none;
+    display: block;
+}
+
+.ec-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.ec-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+.ec-input {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.ec-input:focus {
+    border-color: var(--color-primary);
 }
 
 /* ── Responsive ──────────────────────────────────────────────────── */

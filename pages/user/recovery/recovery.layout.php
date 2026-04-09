@@ -61,6 +61,9 @@ $pageScripts = [
                 <?php if ($flashUrge): ?>
                 <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashUrge) ?></div>
                 <?php endif; ?>
+                <?php if ($flashEcSaved): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashEcSaved) ?></div>
+                <?php endif; ?>
 
                 <!-- Quick actions -->
                 <div class="recovery-quick-actions">

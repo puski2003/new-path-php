@@ -470,6 +470,15 @@ class RecoveryModel
     {
         if ($templatePlanId <= 0 || $userId <= 0) return false;
 
+        $activeRs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE user_id = $userId AND status = 'active' AND is_template = 0
+             LIMIT 1"
+        );
+        if ($activeRs && $activeRs->num_rows > 0) {
+            return false;
+        }
+
         $templateRs = Database::search(
             "SELECT title, description, category, plan_type
              FROM recovery_plans

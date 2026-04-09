@@ -64,7 +64,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                 
             </div>
 
-            <div class="main-content-body dashboard-overflow">
+            <div class="main-content-body">
                 <div class="inner-body-content">
                     <div class="body-column">
                         <!-- Due Now Section -->
@@ -150,7 +150,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                         <div class="col-2-row-1 dashboard-card">
                             <div class="card-header">
                                 <h3>Daily Tasks</h3>
-                                <a href="/user/daily-tasks" class="view-all-link">
+                                <a href="/user/recovery" class="view-all-link">
                                     View All
                                     <i data-lucide="arrow-right" stroke-width="2"></i>
                                 </a>
@@ -170,6 +170,12 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                         <span class="task-text" style="color: var(--color-text-muted)">No tasks for today</span>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+
+                            <div class="tasks-pagination" id="dashTasksPagination" style="display:none;">
+                                <button type="button" class="tasks-page-btn" id="dashTasksPrev" aria-label="Previous page">&#8592;</button>
+                                <span class="tasks-page-info" id="dashTasksPageInfo"></span>
+                                <button type="button" class="tasks-page-btn" id="dashTasksNext" aria-label="Next page">&#8594;</button>
                             </div>
                         </div>
 

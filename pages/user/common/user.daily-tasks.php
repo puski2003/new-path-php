@@ -44,4 +44,10 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <div class="tasks-pagination" id="tasksPagination" style="display:none;">
+        <button type="button" class="tasks-page-btn" id="tasksPrev" aria-label="Previous page">&#8592;</button>
+        <span class="tasks-page-info" id="tasksPageInfo"></span>
+        <button type="button" class="tasks-page-btn" id="tasksNext" aria-label="Next page">&#8594;</button>
+    </div>
 </div>
