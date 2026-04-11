@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../job-posts/model.php';
-require_once __DIR__ . '/../help-center/model.php';
+require_once __DIR__ . '/../job-posts/job-posts.model.php';
+require_once __DIR__ . '/../help-center/help-center.model.php';
 
 class ResourcesModel
 {
