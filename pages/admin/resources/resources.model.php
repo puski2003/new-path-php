@@ -1,13 +1,14 @@
 <?php
-require_once __DIR__ . '/../common/admin.data.php';
+require_once __DIR__ . '/../job-posts/model.php';
+require_once __DIR__ . '/../help-center/model.php';
 
 class ResourcesModel
 {
     public static function getData(string $tab, array $filters): array
     {
         return [
-            'jobPosts' => $tab === 'job-ads' ? AdminData::getJobPosts($filters) : [],
-            'helpCenters' => $tab === 'help-centers' ? AdminData::getHelpCenters($filters) : [],
+            'jobPosts' => $tab === 'job-ads' ? JobPostsModel::getJobPosts($filters) : [],
+            'helpCenters' => $tab === 'help-centers' ? HelpCenterModel::getHelpCenters($filters) : [],
             'programs' => [
                 ['programName' => 'Digital Skills Bootcamp', 'provider' => 'SkillUp', 'category' => 'Technology', 'duration' => '12 weeks', 'format' => 'Online', 'cost' => 'Free', 'status' => 'approved'],
                 ['programName' => 'Hospitality Readiness', 'provider' => 'BrightStart', 'category' => 'Hospitality', 'duration' => '6 weeks', 'format' => 'Hybrid', 'cost' => '$120', 'status' => 'pending'],

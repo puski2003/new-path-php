@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../../common/admin.data.php';
+require_once __DIR__ . '/../model.php';
 
 class AddHelpCenterModel
 {
     public static function create(array $input, int $adminUserId): bool
     {
-        return AdminData::createHelpCenter($input, $adminUserId);
+        return HelpCenterModel::createHelpCenter($input, $adminUserId);
     }
 }

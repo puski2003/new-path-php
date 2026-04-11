@@ -1,15 +1,15 @@
 <?php
-require_once __DIR__ . '/../../common/admin.data.php';
+require_once __DIR__ . '/../model.php';
 
 class EditJobPostModel
 {
     public static function getJobPost(int $jobId): ?array
     {
-        return AdminData::getJobPostById($jobId);
+        return JobPostsModel::getJobPostById($jobId);
     }
 
     public static function update(int $jobId, array $input): bool
     {
-        return AdminData::updateJobPost($jobId, $input);
+        return JobPostsModel::updateJobPost($jobId, $input);
     }
 }

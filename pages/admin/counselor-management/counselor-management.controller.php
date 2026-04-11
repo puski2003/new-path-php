@@ -12,9 +12,9 @@ if (Request::isPost()) {
     }
 
     if ($action === 'approve') {
-        $result = AdminData::approveCounselorApplication($applicationId, (int) $user['id']);
+        $result = CounselorManagementModel::approveCounselorApplication($applicationId, (int) $user['id']);
     } elseif ($action === 'reject') {
-        $result = AdminData::rejectCounselorApplication($applicationId, (int) $user['id'], Request::post('notes') ?? '');
+        $result = CounselorManagementModel::rejectCounselorApplication($applicationId, (int) $user['id'], Request::post('notes') ?? '');
     } else {
         $result = ['ok' => false, 'message' => 'Invalid action.'];
     }
