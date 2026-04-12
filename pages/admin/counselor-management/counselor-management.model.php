@@ -30,12 +30,20 @@ class CounselorManagementModel
         $pendingApplications = Database::search("SELECT COUNT(*) AS total FROM counselor_applications WHERE status = 'pending'");
         $rating = Database::search("SELECT COALESCE(AVG(rating), 0) AS avg_rating FROM counselors");
         $sessions = Database::search("SELECT COUNT(*) AS total FROM sessions");
+        $avgSessions = Database::search("
+            SELECT COALESCE(
+                (SELECT COUNT(*) FROM sessions WHERE status = 'completed') / 
+                NULLIF((SELECT COUNT(*) FROM users WHERE role = 'counselor' AND is_active = 1), 0),
+                0
+            ) AS avg_sessions
+        ");
 
         return [
             'activeCounselorsCount' => (int) (($activeCounselors ? $activeCounselors->fetch_assoc()['total'] : 0) ?? 0),
             'pendingApplicationsCount' => (int) (($pendingApplications ? $pendingApplications->fetch_assoc()['total'] : 0) ?? 0),
             'averageRating' => round((float) (($rating ? $rating->fetch_assoc()['avg_rating'] : 0) ?? 0), 1),
             'totalSessions' => (int) (($sessions ? $sessions->fetch_assoc()['total'] : 0) ?? 0),
+            'avgSessionsPerCounselor' => round((float) (($avgSessions ? $avgSessions->fetch_assoc()['avg_sessions'] : 0) ?? 0), 1),
         ];
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-class ViewApplicationModel
+class ApplicationViewModel
 {
     public static function getApplication(int $applicationId): ?array
     {

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
     <section class="admin-main-content">
         <div class="admin-sub-container-1" style="justify-content: space-between; align-items: center;">
             <h1>Approve Application</h1>
-            <a href="/admin/counselor-management/view?id=<?= (int) $applicationId ?>" class="admin-button admin-button--secondary">
+            <a href="/admin/counselor-management/application-view?id=<?= (int) $applicationId ?>" class="admin-button admin-button--secondary">
                 <span class="button-text">Back to Application</span>
             </a>
         </div>
@@ -49,7 +49,7 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
                         <button type="submit" class="admin-button admin-button--success">
                             <span class="button-text">Send Approval Email & Complete</span>
                         </button>
-                        <a href="/admin/counselor-management/view?id=<?= (int) $applicationId ?>" class="admin-button admin-button--secondary">
+                        <a href="/admin/counselor-management/application-view?id=<?= (int) $applicationId ?>" class="admin-button admin-button--secondary">
                             <span class="button-text">Cancel</span>
                         </a>
                     </div>
