@@ -266,7 +266,8 @@
 .daily-tasks {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: var(--spacing-md);
     flex: 1;
     overflow: hidden;
 }
@@ -315,6 +316,11 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
 }
 
 .task-checkbox {

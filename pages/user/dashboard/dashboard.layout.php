@@ -158,7 +158,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                             <div class="daily-tasks">
                                 <?php if (!empty($dailyTasks)): ?>
                                     <?php foreach ($dailyTasks as $task): ?>
-                                        <div class="task-item" data-task-id="<?= $task['id'] ?>">
+                                        <div class="task-item" data-task-id="<?= (int) $task['id'] ?>">
                                             <div class="task-checkbox <?= $task['completed'] ? 'completed' : '' ?> <?= $task['urgent'] ? 'urgent' : '' ?>">
                                               <?= $task['completed'] ? '<i data-lucide="check" stroke-width="2" color="white"></i>' : '' ?>
                                             </div>

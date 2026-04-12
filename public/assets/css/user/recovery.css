@@ -8,6 +8,12 @@
     padding: var(--spacing-md) var(--spacing-2xl) 0;
     flex-wrap: wrap;
 }
+.session-image{
+        width: 150px;
+    position: absolute;
+    right: 0;
+    bottom: -10px;
+}
 
 .recovery-quick-btn {
     display: inline-flex;
