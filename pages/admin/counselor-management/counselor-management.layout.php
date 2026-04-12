@@ -38,11 +38,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <td class="admin-table-td"><?= htmlspecialchars(ucfirst($app['status'])) ?></td>
                         <td class="admin-table-td admin-table-td--action">
                             <div class="admin-table-actions">
-                                <?php if ($app['status'] === 'pending'): ?>
-                                    <button type="button" class="admin-button admin-button--success" onclick="reviewApplication('approve', <?= $app['applicationId'] ?>)">Approve</button>
-                                    <button type="button" class="admin-button admin-button--danger" onclick="reviewApplication('reject', <?= $app['applicationId'] ?>)">Reject</button>
-                                <?php endif; ?>
-                                <button type="button" class="admin-button admin-button--ghost" onclick='showApplication(<?= json_encode($app, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>View</button>
+                                <a href="/admin/counselor-management/view?id=<?= (int) $app['applicationId'] ?>" class="admin-button admin-button--ghost">View</a>
                             </div>
                         </td>
                     </tr>
@@ -90,29 +86,6 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         </div>
     </section>
 </main>
-<script>
-function reviewApplication(action, applicationId) {
-    const notes = action === 'reject' ? prompt('Enter rejection reason (optional):', '') : '';
-    if (action === 'reject' && notes === null) return;
-    fetch('/admin/counselor-management', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({action, applicationId, notes: notes || ''})
-    }).then(r => r.json()).then(data => {
-        alert(data.message || (data.success ? 'Done' : 'Failed'));
-        if (data.success) window.location.reload();
-    });
-}
-function showApplication(app) {
-    alert(
-        'Name: ' + app.fullName + '\n' +
-        'Email: ' + app.email + '\n' +
-        'Specialty: ' + app.specialty + '\n' +
-        'Experience: ' + (app.experienceYears === null ? '-' : app.experienceYears + ' years') + '\n\n' +
-        'Bio:\n' + app.bio
-    );
-}
-</script>
 
 <?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
