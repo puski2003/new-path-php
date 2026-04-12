@@ -43,9 +43,16 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                             </div>
                         </td>
                     </tr>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $pagination = $applicationsPagination;
+            $basePath = '/admin/counselor-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
 
         <div class="admin-sub-container-2">
@@ -87,6 +94,13 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $pagination = $counselorsPagination;
+            $basePath = '/admin/counselor-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
     </section>
 </main>

@@ -15,12 +15,12 @@ class CounselorManagementModel
         return (int) ($rs && $row = $rs->fetch_assoc() ? ($row['admin_id'] ?? 0) : 0);
     }
 
-    public static function getPageData(array $filters): array
+    public static function getPageData(array $filters, int $page = 1, int $perPage = 15): array
     {
         return [
             'stats' => self::getCounselorStats(),
-            'applications' => self::getCounselorApplications($filters['appStatus']),
-            'counselors' => self::getCounselors($filters),
+            'applications' => self::getCounselorApplicationsPaginated($filters['appStatus'], $page, $perPage),
+            'counselors' => self::getCounselorsPaginated($filters, $page, $perPage),
         ];
     }
 
@@ -44,6 +44,23 @@ class CounselorManagementModel
             'averageRating' => round((float) (($rating ? $rating->fetch_assoc()['avg_rating'] : 0) ?? 0), 1),
             'totalSessions' => (int) (($sessions ? $sessions->fetch_assoc()['total'] : 0) ?? 0),
             'avgSessionsPerCounselor' => round((float) (($avgSessions ? $avgSessions->fetch_assoc()['avg_sessions'] : 0) ?? 0), 1),
+        ];
+    }
+
+    public static function getCounselorApplicationsPaginated(string $status = 'pending', int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allApplications = self::getCounselorApplications($status);
+        $totalRows = count($allApplications);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allApplications, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
         ];
     }
 
@@ -223,5 +240,22 @@ class CounselorManagementModel
         }
 
         return $counselors;
+    }
+
+    public static function getCounselorsPaginated(array $filters = [], int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allCounselors = self::getCounselors($filters);
+        $totalRows = count($allCounselors);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allCounselors, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
     }
 }
