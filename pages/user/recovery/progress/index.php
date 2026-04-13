@@ -10,6 +10,7 @@ $daysSober         = (int)$stats['daysSober'];
 $daysTracked       = (int)$stats['totalDaysTracked'];
 $urgesLogged       = (int)$stats['urgesLogged'];
 $sessionsCompleted = (int)$stats['sessionsCompleted'];
+$trackingStarted   = (bool)$stats['trackingStarted'];
 
 // Next milestone
 $milestones    = [1, 7, 14, 30, 60, 90, 180, 365];
@@ -24,16 +25,7 @@ $milestoneProgress = ($nextMilestone > $prevMilestone)
     : 100;
 
 // Achievements
-$achievements = [
-    ['badge' => '1D',  'title' => '1 Day Sober',       'icon' => 'sun',          'required' => 1,   'milestone' => false],
-    ['badge' => '7D',  'title' => '7 Days Sober',       'icon' => 'calendar',     'required' => 7,   'milestone' => false],
-    ['badge' => '2W',  'title' => '2 Weeks Sober',      'icon' => 'calendar-check','required' => 14, 'milestone' => false],
-    ['badge' => '1M',  'title' => 'First Month',        'icon' => 'medal',        'required' => 30,  'milestone' => true],
-    ['badge' => '2M',  'title' => 'Two Months',         'icon' => 'award',        'required' => 60,  'milestone' => false],
-    ['badge' => '3M',  'title' => '3 Months Sober',     'icon' => 'trophy',       'required' => 90,  'milestone' => true],
-    ['badge' => '6M',  'title' => 'Half a Year',        'icon' => 'star',         'required' => 180, 'milestone' => true],
-    ['badge' => '1Y',  'title' => 'One Full Year',      'icon' => 'crown',        'required' => 365, 'milestone' => true],
-];
+$achievements = RecoveryModel::getUserAchievements($userId);
 
 // Sobriety chart — last 8 log entries
 $chartLabels = []; $chartValues = [];
@@ -152,7 +144,7 @@ $pageStyle = ['user/progress-tracker'];
 
                 <div class="card days-sober-card">
                     <span class="days-label">MILESTONE PROGRESS</span>
-                    <?php if ($daysSober === 0): ?>
+                    <?php if (!$trackingStarted): ?>
                         <span class="days-number" style="font-size:var(--font-size-base);color:var(--color-text-muted);">Not started</span>
                         <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-top:2px;">Start sobriety tracking to begin</span>
                     <?php else: ?>
@@ -197,7 +189,7 @@ $pageStyle = ['user/progress-tracker'];
 
                         <div class="achievements-grid">
                             <?php foreach ($achievements as $ach):
-                                $earned = ($daysSober >= $ach['required']);
+                                $earned = $ach['earned'];
                             ?>
                             <div class="achievement-item <?= $earned ? 'earned' : 'locked' ?> flex flex-col items-center"
                                  style="text-align:center;">
@@ -213,9 +205,9 @@ $pageStyle = ['user/progress-tracker'];
                                 <span class="font-semibold text-sm" style="margin-top:var(--spacing-xs);">
                                     <?= htmlspecialchars($ach['title']) ?>
                                 </span>
-                                <?php if (!$earned): ?>
+                                <?php if (!$earned && isset($ach['days'])): ?>
                                 <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);">
-                                    <?= $ach['required'] - $daysSober ?>d left
+                                    <?= max(0, $ach['days'] - $daysSober) ?>d left
                                 </span>
                                 <?php endif; ?>
                             </div>

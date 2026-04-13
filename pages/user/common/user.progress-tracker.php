@@ -40,7 +40,7 @@
     </div>
 
     <div class="progress-actions">
-        <?php if ($daysSober === 0): ?>
+        <?php if (!$trackingStarted): ?>
             <form action="/user/recovery/start-sobriety" method="post" style="width: 100%">
                 <button type="submit" class="btn btn-primary start-tracking-btn">Start Tracking</button>
             </form>

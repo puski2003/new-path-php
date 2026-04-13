@@ -26,10 +26,11 @@ if (!empty($activePlans)) {
 }
 
 $progressStats = RecoveryModel::getProgressStats($userId);
-$daysSober = (int)$progressStats['daysSober'];
+$daysSober        = (int)$progressStats['daysSober'];
 $totalDaysTracked = (int)$progressStats['totalDaysTracked'];
-$urgesLogged = (int)$progressStats['urgesLogged'];
+$urgesLogged      = (int)$progressStats['urgesLogged'];
 $sessionsCompleted = (int)$progressStats['sessionsCompleted'];
+$trackingStarted  = (bool)$progressStats['trackingStarted'];
 
 $progressCirclePercentage = min(100, (int)(($daysSober * 100) / 100));
 $strokeOffset = number_format(282.7 - (282.7 * $progressCirclePercentage / 100), 1, '.', '');
