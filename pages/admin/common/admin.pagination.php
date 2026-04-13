@@ -3,6 +3,7 @@ if (!isset($pagination) || !is_array($pagination)) {
     return;
 }
 
+$forceShow = $forceShow ?? false;
 $basePath = $basePath ?? Request::path();
 $query = isset($query) && is_array($query) ? $query : $_GET;
 unset($query['page']);
@@ -13,7 +14,7 @@ $fromRow = (int) ($pagination['fromRow'] ?? 0);
 $toRow = (int) ($pagination['toRow'] ?? 0);
 $totalRows = (int) ($pagination['totalRows'] ?? 0);
 
-if ($totalPages <= 1 && $totalRows === 0) {
+if (!$forceShow && $totalPages <= 1 && $totalRows === 0) {
     return;
 }
 

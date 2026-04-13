@@ -73,6 +73,23 @@ class JobPostsModel
         return $items;
     }
 
+    public static function getJobPostsPaginated(array $filters = [], int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allJobs = self::getJobPosts($filters);
+        $totalRows = count($allJobs);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allJobs, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
+    }
+
     public static function getJobPostById(int $jobId): ?array
     {
         foreach (self::getJobPosts() as $job) {
