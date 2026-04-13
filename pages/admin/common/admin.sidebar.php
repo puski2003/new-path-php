@@ -12,6 +12,7 @@ $navItems = [
     ['Dashboard',            '/admin/dashboard',            'layout-dashboard'],
     ['User Management',      '/admin/user-management',      'users'],
     ['Counselor Management', '/admin/counselor-management', 'user-check'],
+    ['Sessions',             '/admin/sessions',             'video'],
     ['Analytics',            '/admin/analytics',            'bar-chart-2'],
     ['Recovery Plans',       '/admin/recovery-plans',       'heart-pulse'],
     ['Resources',            '/admin/resources',            'book-open'],

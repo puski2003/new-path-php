@@ -202,19 +202,24 @@ class BookingModel
         string $sessionDatetime,
         int    $durationMinutes,
         string $sessionType,
-        string $meetingLink = ''
+        string $meetingLink = '',
+        string $meetSpaceName = ''
     ): int {
-        $safeType    = in_array($sessionType, ['video','audio','chat','in_person']) ? $sessionType : 'video';
-        $safeMeeting = addslashes($meetingLink);
-        $safeDt      = addslashes($sessionDatetime);
+        $safeType      = in_array($sessionType, ['video','audio','chat','in_person']) ? $sessionType : 'video';
+        $safeMeeting   = addslashes($meetingLink);
+        $safeDt        = addslashes($sessionDatetime);
+        $safeSpaceName = addslashes($meetSpaceName);
 
         Database::iud(
             "INSERT INTO sessions
                 (user_id, counselor_id, session_datetime, duration_minutes,
-                 session_type, status, meeting_link, created_at, updated_at)
+                 session_type, status, meeting_link, meet_space_name, created_at, updated_at)
              VALUES
                 ($userId, $counselorId, '$safeDt', $durationMinutes,
-                 '$safeType', 'scheduled', " . ($safeMeeting !== '' ? "'$safeMeeting'" : 'NULL') . ", NOW(), NOW())"
+                 '$safeType', 'scheduled',
+                 " . ($safeMeeting !== '' ? "'$safeMeeting'" : 'NULL') . ",
+                 " . ($safeSpaceName !== '' ? "'$safeSpaceName'" : 'NULL') . ",
+                 NOW(), NOW())"
         );
 
         $rs = Database::search(
