@@ -80,4 +80,21 @@ class SettingsModel
 
         return $roles;
     }
+
+    public static function getRolesPaginated(array $filters = [], int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allRoles = self::getRoles();
+        $totalRows = count($allRoles);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allRoles, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
+    }
 }

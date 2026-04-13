@@ -6,4 +6,9 @@ if (Request::isPost()) {
     $message = 'Settings updated successfully.';
 }
 $settings = SettingsModel::getSettings();
-$roles = SettingsModel::getRoles();
+$page = Pagination::sanitizePage(Request::get('page') ?? 1);
+$perPage = 15;
+
+$rolesResult = SettingsModel::getRolesPaginated([], $page, $perPage);
+$roles = $rolesResult['items'];
+$rolesPagination = $rolesResult['pagination'];

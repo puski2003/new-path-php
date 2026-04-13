@@ -71,6 +71,13 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $pagination = $rolesPagination;
+                $basePath = '/admin/settings';
+                $query = [];
+                require __DIR__ . '/../common/admin.pagination.php';
+                ?>
             </div>
         </div>
 
