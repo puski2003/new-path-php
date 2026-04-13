@@ -655,6 +655,94 @@ class RecoveryModel
         return $plans;
     }
 
+    // ── Achievements ─────────────────────────────────────────────────
+
+    private static array $achievementDefs = [
+        'sober_1d'       => ['type'=>'sober','days'=>1,   'title'=>'1 Day Sober',        'badge'=>'1D',  'icon'=>'sun',            'milestone'=>false],
+        'sober_7d'       => ['type'=>'sober','days'=>7,   'title'=>'7 Days Sober',       'badge'=>'7D',  'icon'=>'calendar',       'milestone'=>false],
+        'sober_14d'      => ['type'=>'sober','days'=>14,  'title'=>'2 Weeks Sober',      'badge'=>'2W',  'icon'=>'calendar-check', 'milestone'=>false],
+        'sober_30d'      => ['type'=>'sober','days'=>30,  'title'=>'First Month',        'badge'=>'1M',  'icon'=>'medal',          'milestone'=>true],
+        'sober_60d'      => ['type'=>'sober','days'=>60,  'title'=>'Two Months',         'badge'=>'2M',  'icon'=>'award',          'milestone'=>false],
+        'sober_90d'      => ['type'=>'sober','days'=>90,  'title'=>'3 Months Sober',     'badge'=>'3M',  'icon'=>'trophy',         'milestone'=>true],
+        'sober_180d'     => ['type'=>'sober','days'=>180, 'title'=>'Half a Year',        'badge'=>'6M',  'icon'=>'star',           'milestone'=>true],
+        'sober_365d'     => ['type'=>'sober','days'=>365, 'title'=>'One Full Year',      'badge'=>'1Y',  'icon'=>'crown',          'milestone'=>true],
+        'first_checkin'  => ['type'=>'activity',          'title'=>'First Check-in',     'badge'=>'CI',  'icon'=>'clipboard-list', 'milestone'=>false],
+        'first_journal'  => ['type'=>'activity',          'title'=>'First Journal Entry','badge'=>'JE',  'icon'=>'book-open',      'milestone'=>false],
+        'plan_completed' => ['type'=>'activity',          'title'=>'Plan Completed',     'badge'=>'PC',  'icon'=>'check-circle',   'milestone'=>true],
+    ];
+
+    public static function checkAndAwardAchievements(int $userId): void
+    {
+        if ($userId <= 0) return;
+
+        $earnedRs = Database::search(
+            "SELECT achievement_key FROM user_achievements WHERE user_id = $userId"
+        );
+        $earned = [];
+        while ($row = $earnedRs->fetch_assoc()) {
+            $earned[$row['achievement_key']] = true;
+        }
+
+        $stats     = self::getProgressStats($userId);
+        $daysSober = (int)$stats['daysSober'];
+
+        foreach (self::$achievementDefs as $key => $def) {
+            if (isset($earned[$key])) continue;
+            if ($def['type'] === 'sober' && $daysSober >= $def['days']) {
+                self::awardAchievement($userId, $key);
+            }
+        }
+
+        if (!isset($earned['first_checkin'])) {
+            $rs = Database::search("SELECT 1 FROM daily_checkins WHERE user_id = $userId LIMIT 1");
+            if ($rs && $rs->num_rows > 0) self::awardAchievement($userId, 'first_checkin');
+        }
+
+        if (!isset($earned['first_journal'])) {
+            $rs = Database::search("SELECT 1 FROM journal_entries WHERE user_id = $userId LIMIT 1");
+            if ($rs && $rs->num_rows > 0) self::awardAchievement($userId, 'first_journal');
+        }
+
+        if (!isset($earned['plan_completed'])) {
+            $rs = Database::search(
+                "SELECT 1 FROM recovery_plans
+                 WHERE user_id = $userId AND status = 'completed' LIMIT 1"
+            );
+            if ($rs && $rs->num_rows > 0) self::awardAchievement($userId, 'plan_completed');
+        }
+    }
+
+    private static function awardAchievement(int $userId, string $key): void
+    {
+        Database::iud(
+            "INSERT IGNORE INTO user_achievements (user_id, achievement_key, awarded_at)
+             VALUES ($userId, '" . addslashes($key) . "', NOW())"
+        );
+    }
+
+    public static function getUserAchievements(int $userId): array
+    {
+        $earnedRs = Database::search(
+            "SELECT achievement_key, awarded_at FROM user_achievements WHERE user_id = $userId"
+        );
+        $earned = [];
+        while ($row = $earnedRs->fetch_assoc()) {
+            $earned[$row['achievement_key']] = $row['awarded_at'];
+        }
+
+        $result = [];
+        foreach (self::$achievementDefs as $key => $def) {
+            $result[] = array_merge($def, [
+                'key'       => $key,
+                'earned'    => isset($earned[$key]),
+                'awardedAt' => $earned[$key] ?? null,
+            ]);
+        }
+        return $result;
+    }
+
+    // ── End Achievements ─────────────────────────────────────────────
+
     public static function adoptGeneralPlan(int $templatePlanId, int $userId): bool
     {
         if ($templatePlanId <= 0 || $userId <= 0) return false;

@@ -5,6 +5,7 @@
  * POST → save and redirect
  */
 require_once __DIR__ . '/../../../common/user.head.php';
+require_once __DIR__ . '/../../recovery.model.php';
 
 $userId  = (int)$user['id'];
 $entryId = (int)($_GET['id'] ?? $_POST['entry_id'] ?? 0);
@@ -58,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Database::iud("INSERT INTO journal_entries (user_id, title, content, category_id, mood, is_highlight)
                 VALUES ($userId, '$safeTitle', '$safeContent', $catVal, '$safeMood', $isHighlight)");
         }
+        RecoveryModel::checkAndAwardAchievements($userId);
         Response::redirect('/user/recovery/journal?saved=1');
     }
 }

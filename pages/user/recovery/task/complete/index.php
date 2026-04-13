@@ -14,6 +14,10 @@ if ($taskId > 0) {
     $result = RecoveryModel::completeTask($taskId, (int)$user['id']);
 }
 
+if ($result) {
+    RecoveryModel::checkAndAwardAchievements((int)$user['id']);
+}
+
 if ($returnTo === 'dashboard') {
     Response::redirect($result ? '/user/dashboard?taskCompleted=1' : '/user/dashboard?taskBlocked=1');
 } else {
