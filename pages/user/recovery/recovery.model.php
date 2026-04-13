@@ -302,10 +302,11 @@ class RecoveryModel
     public static function getProgressStats(int $userId): array
     {
         $stats = [
-            'daysSober' => 0,
+            'daysSober'       => 0,
             'totalDaysTracked' => 0,
-            'urgesLogged' => 0,
+            'urgesLogged'     => 0,
             'sessionsCompleted' => 0,
+            'trackingStarted' => false,
         ];
 
         $rsSober = Database::search(
@@ -344,6 +345,14 @@ class RecoveryModel
         );
         if ($s = $rsSessions->fetch_assoc()) {
             $stats['sessionsCompleted'] = (int)($s['session_count'] ?? 0);
+        }
+
+        $rsStarted = Database::search(
+            "SELECT sobriety_start_date FROM user_profiles
+             WHERE user_id = $userId LIMIT 1"
+        );
+        if ($row = $rsStarted->fetch_assoc()) {
+            $stats['trackingStarted'] = $row['sobriety_start_date'] !== null;
         }
 
         return $stats;

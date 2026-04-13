@@ -10,6 +10,7 @@ $daysSober         = (int)$stats['daysSober'];
 $daysTracked       = (int)$stats['totalDaysTracked'];
 $urgesLogged       = (int)$stats['urgesLogged'];
 $sessionsCompleted = (int)$stats['sessionsCompleted'];
+$trackingStarted   = (bool)$stats['trackingStarted'];
 
 // Next milestone
 $milestones    = [1, 7, 14, 30, 60, 90, 180, 365];
@@ -143,7 +144,7 @@ $pageStyle = ['user/progress-tracker'];
 
                 <div class="card days-sober-card">
                     <span class="days-label">MILESTONE PROGRESS</span>
-                    <?php if ($daysSober === 0): ?>
+                    <?php if (!$trackingStarted): ?>
                         <span class="days-number" style="font-size:var(--font-size-base);color:var(--color-text-muted);">Not started</span>
                         <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-top:2px;">Start sobriety tracking to begin</span>
                     <?php else: ?>
