@@ -5,26 +5,33 @@ class RecoveryModel
     public static function getUserDailyTasks(int $userId): array
     {
         $rs = Database::search(
-            "SELECT rt.task_id, rt.title, rt.status, rt.priority, rt.task_type, rt.due_date
+            "SELECT rt.task_id, rt.title, rt.status, rt.priority, rt.task_type, rt.due_date, rt.phase
              FROM recovery_tasks rt
              INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
              WHERE rp.user_id = $userId
                AND rp.status = 'active'
-             ORDER BY rt.status ASC, rt.priority DESC, rt.sort_order ASC, rt.task_id ASC"
+               AND (rp.assigned_status IS NULL OR rp.assigned_status = 'accepted')
+               AND rt.phase = (
+                   SELECT MIN(rt2.phase)
+                   FROM recovery_tasks rt2
+                   WHERE rt2.plan_id = rp.plan_id
+                     AND rt2.status <> 'completed'
+               )
+             ORDER BY rt.status ASC, rt.priority DESC, rt.sort_order ASC"
         );
 
         $tasks = [];
         while ($row = $rs->fetch_assoc()) {
             $tasks[] = [
-                'taskId' => (int)$row['task_id'],
-                'title' => $row['title'] ?? 'Task',
-                'status' => $row['status'] ?? 'pending',
+                'taskId'   => (int)$row['task_id'],
+                'title'    => $row['title'] ?? 'Task',
+                'status'   => $row['status'] ?? 'pending',
                 'priority' => $row['priority'] ?? 'medium',
                 'taskType' => $row['task_type'] ?? 'custom',
-                'dueDate' => !empty($row['due_date']) ? date('M j', strtotime($row['due_date'])) : null,
+                'phase'    => (int)$row['phase'],
+                'dueDate'  => !empty($row['due_date']) ? date('M j', strtotime($row['due_date'])) : null,
             ];
         }
-
         return $tasks;
     }
 
@@ -120,6 +127,152 @@ class RecoveryModel
         }
         return $plans;
     }
+
+    // ── User Goal Management ─────────────────────────────────────────
+
+    /**
+     * Get all goals for the user's active plan.
+     */
+    public static function getUserGoalsForActivePlan(int $userId): array
+    {
+        $rs = Database::search(
+            "SELECT rg.goal_id, rg.title, rg.description, rg.goal_type,
+                    rg.target_days, rg.current_progress, rg.status, rg.plan_id
+             FROM recovery_goals rg
+             INNER JOIN recovery_plans rp ON rp.plan_id = rg.plan_id
+             WHERE rp.user_id = $userId
+               AND rp.status = 'active'
+               AND (rp.assigned_status IS NULL OR rp.assigned_status = 'accepted')
+             ORDER BY rg.goal_type ASC, rg.goal_id ASC"
+        );
+
+        $goals = [];
+        while ($row = $rs->fetch_assoc()) {
+            $target  = max(1, (int)$row['target_days']);
+            $current = max(0, (int)$row['current_progress']);
+            $goals[] = [
+                'goalId'      => (int)$row['goal_id'],
+                'planId'      => (int)$row['plan_id'],
+                'title'       => $row['title'],
+                'description' => $row['description'] ?? '',
+                'goalType'    => $row['goal_type'],
+                'targetDays'  => $target,
+                'currentProgress' => $current,
+                'progressPercentage' => min(100, (int)round(($current / $target) * 100)),
+                'status'      => $row['status'],
+            ];
+        }
+        return $goals;
+    }
+
+    /**
+     * Create a goal tied to the user's current active plan.
+     * Returns false if the user has no active plan.
+     */
+    public static function createGoal(int $userId, string $title, string $goalType, int $targetDays, string $description): bool
+    {
+        if ($userId <= 0 || trim($title) === '' || $targetDays <= 0) return false;
+
+        $planRs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE user_id = $userId
+               AND status = 'active'
+               AND is_template = 0
+               AND (assigned_status IS NULL OR assigned_status = 'accepted')
+             LIMIT 1"
+        );
+        if (!$planRs || $planRs->num_rows === 0) return false;
+
+        $planId      = (int)$planRs->fetch_assoc()['plan_id'];
+        $safeTitle   = addslashes($title);
+        $safeDesc    = addslashes($description);
+        $safeType    = in_array($goalType, ['short_term', 'long_term']) ? $goalType : 'short_term';
+
+        Database::iud(
+            "INSERT INTO recovery_goals (plan_id, goal_type, title, description, target_days, current_progress, status, created_at, updated_at)
+             VALUES ($planId, '$safeType', '$safeTitle', '$safeDesc', $targetDays, 0, 'in_progress', NOW(), NOW())"
+        );
+        return true;
+    }
+
+    /**
+     * Update a goal — verifies ownership via plan join.
+     */
+    public static function updateGoal(int $goalId, int $userId, string $title, string $goalType, int $targetDays, string $description): bool
+    {
+        if ($goalId <= 0 || $userId <= 0 || trim($title) === '' || $targetDays <= 0) return false;
+
+        $safeTitle = addslashes($title);
+        $safeDesc  = addslashes($description);
+        $safeType  = in_array($goalType, ['short_term', 'long_term']) ? $goalType : 'short_term';
+
+        Database::iud(
+            "UPDATE recovery_goals rg
+             INNER JOIN recovery_plans rp ON rp.plan_id = rg.plan_id
+             SET rg.title = '$safeTitle',
+                 rg.description = '$safeDesc',
+                 rg.goal_type = '$safeType',
+                 rg.target_days = $targetDays,
+                 rg.updated_at = NOW()
+             WHERE rg.goal_id = $goalId
+               AND rp.user_id = $userId"
+        );
+        return true;
+    }
+
+    /**
+     * Delete a goal — verifies ownership via plan join.
+     */
+    public static function deleteGoal(int $goalId, int $userId): bool
+    {
+        if ($goalId <= 0 || $userId <= 0) return false;
+
+        Database::iud(
+            "DELETE rg FROM recovery_goals rg
+             INNER JOIN recovery_plans rp ON rp.plan_id = rg.plan_id
+             WHERE rg.goal_id = $goalId
+               AND rp.user_id = $userId"
+        );
+        return true;
+    }
+
+    /**
+     * Log progress on a goal (+N days).
+     * Auto-marks achieved when current_progress >= target_days.
+     */
+    public static function logGoalProgress(int $goalId, int $userId, int $days = 1): bool
+    {
+        if ($goalId <= 0 || $userId <= 0 || $days <= 0) return false;
+
+        // Verify ownership and get current state
+        $rs = Database::search(
+            "SELECT rg.current_progress, rg.target_days, rg.status
+             FROM recovery_goals rg
+             INNER JOIN recovery_plans rp ON rp.plan_id = rg.plan_id
+             WHERE rg.goal_id = $goalId AND rp.user_id = $userId
+             LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+        $row = $rs->fetch_assoc();
+        if ($row['status'] === 'achieved') return true;
+
+        $newProgress = min((int)$row['current_progress'] + $days, (int)$row['target_days']);
+        $achieved    = $newProgress >= (int)$row['target_days'];
+        $status      = $achieved ? 'achieved' : 'in_progress';
+        $achievedAt  = $achieved ? ', achieved_at = NOW()' : '';
+
+        Database::iud(
+            "UPDATE recovery_goals
+             SET current_progress = $newProgress,
+                 status = '$status'
+                 $achievedAt,
+                 updated_at = NOW()
+             WHERE goal_id = $goalId"
+        );
+        return true;
+    }
+
+    // ── End Goal Management ──────────────────────────────────────────
 
     public static function getGoalsByPlanId(int $planId): array
     {
@@ -257,6 +410,18 @@ class RecoveryModel
     {
         if ($planId <= 0 || $userId <= 0) return false;
 
+        // Block if user already has an active plan — one active plan at a time.
+        $activeRs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE user_id = $userId
+               AND status = 'active'
+               AND is_template = 0
+             LIMIT 1"
+        );
+        if ($activeRs && $activeRs->num_rows > 0) {
+            return false;
+        }
+
         Database::iud(
             "UPDATE recovery_plans
              SET assigned_status = 'accepted',
@@ -295,33 +460,45 @@ class RecoveryModel
     {
         if ($taskId <= 0 || $userId <= 0) return false;
 
-        // Mark the task completed
-        Database::iud(
-            "UPDATE recovery_tasks rt
-             INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
-             SET rt.status = 'completed',
-                 rt.completed_at = NOW(),
-                 rt.updated_at = NOW()
-             WHERE rt.task_id = $taskId
-               AND rp.user_id = $userId
-               AND rp.status = 'active'
-               AND rt.status <> 'completed'"
-        );
-
-        // Recalculate the plan's progress_percentage based on completed tasks
-        $planRs = Database::search(
-            "SELECT rp.plan_id
+        // 1. Verify task belongs to this user and get phase/plan info
+        $taskRs = Database::search(
+            "SELECT rt.phase, rt.plan_id, rt.status
              FROM recovery_tasks rt
              INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
-             WHERE rt.task_id = $taskId
-               AND rp.user_id = $userId
+             WHERE rt.task_id = $taskId AND rp.user_id = $userId
              LIMIT 1"
         );
-        if ($planRs && ($planRow = $planRs->fetch_assoc())) {
-            $planId = (int) $planRow['plan_id'];
-            self::recalculatePlanProgress($planId);
+        if (!$taskRs || $taskRs->num_rows === 0) return false;
+        $taskRow = $taskRs->fetch_assoc();
+
+        if ($taskRow['status'] === 'completed') return true;
+
+        $currentPhase = (int)$taskRow['phase'];
+        $planId       = (int)$taskRow['plan_id'];
+
+        // 2. Phase-lock: block if an earlier phase has incomplete tasks
+        if ($currentPhase > 1) {
+            $blockRs = Database::search(
+                "SELECT COUNT(*) AS blocked
+                 FROM recovery_tasks
+                 WHERE plan_id = $planId
+                   AND phase < $currentPhase
+                   AND status <> 'completed'"
+            );
+            $blockRow = $blockRs->fetch_assoc();
+            if ((int)($blockRow['blocked'] ?? 0) > 0) {
+                return false; // caller shows error
+            }
         }
 
+        // 3. Mark complete (existing logic preserved)
+        Database::iud(
+            "UPDATE recovery_tasks
+             SET status = 'completed', completed_at = NOW(), updated_at = NOW()
+             WHERE task_id = $taskId"
+        );
+
+        self::recalculatePlanProgress($planId);
         return true;
     }
 
@@ -450,6 +627,17 @@ class RecoveryModel
     {
         if ($planId <= 0 || $userId <= 0) return false;
 
+        // If another plan is currently active, pause it first (swap), so
+        // only one plan is ever active at a time.
+        Database::iud(
+            "UPDATE recovery_plans
+             SET status = 'paused', updated_at = NOW()
+             WHERE user_id = $userId
+               AND status = 'active'
+               AND is_template = 0
+               AND plan_id <> $planId"
+        );
+
         Database::iud(
             "UPDATE recovery_plans
              SET status = 'active',
@@ -466,23 +654,24 @@ class RecoveryModel
     public static function getTasksByPlanId(int $planId, int $userId): array
     {
         $rs = Database::search(
-            "SELECT rt.task_id, rt.title, rt.status, rt.priority, rt.task_type, rt.due_date
+            "SELECT rt.task_id, rt.title, rt.status, rt.priority, rt.task_type, rt.due_date, rt.phase
              FROM recovery_tasks rt
              INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
              WHERE rt.plan_id = $planId
                AND rp.user_id = $userId
-             ORDER BY rt.sort_order ASC, rt.task_id ASC"
+             ORDER BY rt.phase ASC, rt.sort_order ASC, rt.task_id ASC"
         );
 
         $tasks = [];
         while ($row = $rs->fetch_assoc()) {
             $tasks[] = [
-                'taskId' => (int)$row['task_id'],
-                'title' => $row['title'] ?? 'Task',
-                'status' => $row['status'] ?? 'pending',
+                'taskId'   => (int)$row['task_id'],
+                'title'    => $row['title'] ?? 'Task',
+                'status'   => $row['status'] ?? 'pending',
                 'priority' => $row['priority'] ?? 'medium',
                 'taskType' => $row['task_type'] ?? 'custom',
-                'dueDate' => $row['due_date'] ?? null,
+                'phase'    => (int)($row['phase'] ?? 1),
+                'dueDate'  => !empty($row['due_date']) ? date('M j', strtotime($row['due_date'])) : null,
             ];
         }
         return $tasks;
