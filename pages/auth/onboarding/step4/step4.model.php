@@ -40,9 +40,21 @@ class Step4Model
 
         // Insert recovery plan
         Database::iud(
-            "INSERT INTO recovery_plans (user_id, title, description, plan_type, status, start_date, progress_percentage) 
+            "INSERT INTO recovery_plans (user_id, title, description, plan_type, status, start_date, progress_percentage)
              VALUES ($safeUserId, '$safeTitle', '$safeDesc', '$safeType', 'active', CURDATE(), 0)"
         );
+
+        if ($planType === 'self') {
+            $newPlanId = (int) Database::$connection->insert_id;
+            if ($newPlanId > 0) {
+                $riskScore = self::getRiskScore($safeUserId);
+                if ($riskScore >= 12)    { $riskBand = 'HIGH'; }
+                elseif ($riskScore >= 8) { $riskBand = 'MODERATE'; }
+                else                     { $riskBand = 'LOW'; }
+
+                self::seedPlanDefaults($newPlanId, $riskBand);
+            }
+        }
 
         // Update user onboarding state
         Database::iud(
@@ -50,5 +62,50 @@ class Step4Model
         );
 
         return true;
+    }
+
+    private static function seedPlanDefaults(int $planId, string $riskBand): void
+    {
+        $shortGoal = 'Build a consistent daily recovery routine';
+        $longGoal  = $riskBand === 'HIGH'
+            ? 'Achieve 90 days of sobriety with counselor support'
+            : 'Achieve 30 days of sobriety independently';
+
+        $safeShort = addslashes($shortGoal);
+        $safeLong  = addslashes($longGoal);
+        $longDays  = $riskBand === 'HIGH' ? 90 : 30;
+
+        Database::iud(
+            "INSERT INTO recovery_goals (plan_id, goal_type, title, target_days, current_progress, status, created_at, updated_at)
+             VALUES
+               ($planId, 'short_term', '$safeShort', 14, 0, 'in_progress', NOW(), NOW()),
+               ($planId, 'long_term',  '$safeLong',  $longDays, 0, 'in_progress', NOW(), NOW())"
+        );
+
+        $tasks = [
+            ['Complete your daily check-in',     'custom',   1],
+            ['Log any urges you experience',      'custom',   1],
+            ['Write one journal entry this week', 'journal',  1],
+        ];
+
+        if ($riskBand === 'MODERATE') {
+            $tasks[] = ['Read one recovery article or resource',  'custom',   1];
+            $tasks[] = ['Book an introductory counselor session', 'session',  2];
+        }
+
+        if ($riskBand === 'HIGH') {
+            $tasks[] = ['Schedule your first counselor session',  'session',  1];
+            $tasks[] = ['Complete counselor intake assessment',   'session',  2];
+            $tasks[] = ['Identify your top 3 personal triggers', 'custom',   2];
+        }
+
+        foreach ($tasks as $i => [$title, $type, $phase]) {
+            $t = addslashes($title);
+            Database::iud(
+                "INSERT INTO recovery_tasks
+                    (plan_id, title, task_type, status, priority, phase, sort_order, created_at, updated_at)
+                 VALUES ($planId, '$t', '$type', 'pending', 'medium', $phase, $i, NOW(), NOW())"
+            );
+        }
     }
 }
