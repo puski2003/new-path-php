@@ -35,6 +35,16 @@ $pageStyle = ['user/dashboard', 'user/manage-plans'];
         </div>
 
         <div class="main-content-body">
+            <?php if (!empty($_GET['error']) && $_GET['error'] === 'already_active'): ?>
+            <div class="error-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                You already have an active recovery plan. Complete or pause it before accepting a new one.
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($_GET['resumed'])): ?>
+            <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                Plan resumed. Your previous active plan has been paused.
+            </div>
+            <?php endif; ?>
             <div class="plans-container">
                 <?php if (!empty($activePlans)): ?>
                     <div class="plans-section">

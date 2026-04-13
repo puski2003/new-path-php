@@ -7,8 +7,13 @@ if (!Request::isPost()) {
 }
 
 $planId = (int)(Request::post('planId') ?? 0);
+$result = false;
 if ($planId > 0) {
-    RecoveryModel::acceptAssignedPlan($planId, (int)$user['id']);
+    $result = RecoveryModel::acceptAssignedPlan($planId, (int)$user['id']);
 }
 
-Response::redirect('/user/recovery?accepted=1');
+if ($result) {
+    Response::redirect('/user/recovery?accepted=1');
+} else {
+    Response::redirect('/user/recovery/manage?error=already_active');
+}

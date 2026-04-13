@@ -152,10 +152,19 @@ $pageStyle = ['user/progress-tracker'];
 
                 <div class="card days-sober-card">
                     <span class="days-label">MILESTONE PROGRESS</span>
-                    <span class="days-number" style="font-size:var(--font-size-xl);"><?= $milestoneProgress ?>%</span>
-                    <div style="width:100%;height:5px;background:var(--color-progress-track);border-radius:var(--radius-full);overflow:hidden;margin-top:2px;">
-                        <div style="width:<?= $milestoneProgress ?>%;height:100%;background:var(--color-primary);border-radius:var(--radius-full);"></div>
-                    </div>
+                    <?php if ($daysSober === 0): ?>
+                        <span class="days-number" style="font-size:var(--font-size-base);color:var(--color-text-muted);">Not started</span>
+                        <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-top:2px;">Start sobriety tracking to begin</span>
+                    <?php else: ?>
+                        <span class="days-number" style="font-size:var(--font-size-xl);"><?= $milestoneProgress ?>%</span>
+                        <div style="width:100%;height:5px;background:var(--color-progress-track);border-radius:var(--radius-full);overflow:hidden;margin-top:4px;">
+                            <div style="width:<?= $milestoneProgress ?>%;height:100%;background:var(--color-primary);border-radius:var(--radius-full);transition:width .4s ease;"></div>
+                        </div>
+                        <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-top:4px;">
+                            Next: <?= $nextMilestone ?> day<?= $nextMilestone > 1 ? 's' : '' ?> sober
+                            &nbsp;(<?= $nextMilestone - $daysSober ?>d away)
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 

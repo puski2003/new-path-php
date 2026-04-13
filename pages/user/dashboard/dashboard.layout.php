@@ -155,19 +155,41 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                     <i data-lucide="arrow-right" stroke-width="2"></i>
                                 </a>
                             </div>
+                            <?php if (isset($_GET['taskBlocked'])): ?>
+                            <div class="error-message" style="margin:var(--spacing-xs) var(--spacing-md);">
+                                Complete all tasks in the current phase first.
+                            </div>
+                            <?php endif; ?>
                             <div class="daily-tasks">
                                 <?php if (!empty($dailyTasks)): ?>
                                     <?php foreach ($dailyTasks as $task): ?>
-                                        <div class="task-item" data-task-id="<?= $task['id'] ?>">
-                                            <div class="task-checkbox <?= $task['completed'] ? 'completed' : '' ?> <?= $task['urgent'] ? 'urgent' : '' ?>">
-                                              <?= $task['completed'] ? '<i data-lucide="check" stroke-width="2" color="white"></i>' : '' ?>
+                                        <div class="task-item <?= $task['completed'] ? 'task-item--done' : '' ?> <?= $task['urgent'] ? 'task-item--urgent' : '' ?>" data-task-id="<?= $task['id'] ?>">
+                                            <div class="task-checkbox <?= $task['completed'] ? 'completed' : ($task['urgent'] ? 'urgent' : '') ?>">
+                                                <?php if ($task['completed']): ?>
+                                                    <i data-lucide="check" style="width:14px;height:14px;" color="white"></i>
+                                                <?php elseif ($task['urgent']): ?>
+                                                    <i data-lucide="alert-circle" style="width:14px;height:14px;color:var(--color-warning);"></i>
+                                                <?php endif; ?>
                                             </div>
-                                            <span class="task-text <?= $task['completed'] ? 'completed' : '' ?>"><?= htmlspecialchars($task['title']) ?></span>
+                                            <div class="task-item-body">
+                                                <span class="task-text <?= $task['completed'] ? 'completed' : '' ?>"><?= htmlspecialchars($task['title']) ?></span>
+                                                <span class="task-type-label"><?= htmlspecialchars($task['taskType']) ?></span>
+                                            </div>
+                                            <?php if (!$task['completed']): ?>
+                                            <form method="post" action="/user/recovery/task/complete">
+                                                <input type="hidden" name="taskId" value="<?= $task['id'] ?>" />
+                                                <input type="hidden" name="returnTo" value="dashboard" />
+                                                <button type="submit" class="task-done-btn">Done</button>
+                                            </form>
+                                            <?php else: ?>
+                                            <span class="task-done-label">Done</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <div class="task-item">
-                                        <span class="task-text" style="color: var(--color-text-muted)">No tasks for today</span>
+                                    <div class="task-item-empty">
+                                        <i data-lucide="clipboard-check" style="width:28px;height:28px;color:var(--color-text-muted);"></i>
+                                        <span>No tasks for today</span>
                                     </div>
                                 <?php endif; ?>
                             </div>

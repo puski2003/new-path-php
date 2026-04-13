@@ -9,9 +9,10 @@ require_once __DIR__ . '/dashboard.model.php';
 
 $userId = (int) $user['id'];
 
-// Flash messages from profile update redirect
-$flashSuccess = isset($_GET['updateSuccess']) ? 'Profile updated successfully.' : null;
-$flashError   = isset($_GET['error']) && $_GET['error'] === 'update_failed' ? 'Profile update failed. Please try again.' : null;
+// Flash messages from profile update redirect and task actions
+$flashSuccess = isset($_GET['updateSuccess'])  ? 'Profile updated successfully.'  :
+               (isset($_GET['taskCompleted']) ? 'Task marked as complete!' : null);
+$flashError   = (isset($_GET['error']) && $_GET['error'] === 'update_failed') ? 'Profile update failed. Please try again.' : null;
 
 // Core metrics
 $daysSober         = UserDashboardModel::getDaysSober($userId);
