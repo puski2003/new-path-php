@@ -86,6 +86,10 @@ $pageScripts = [
                         <i data-lucide="activity" style="width:16px;height:16px;"></i>
                         Log an Urge
                     </a>
+                    <a href="/user/recovery/urge-history" class="recovery-quick-btn">
+                        <i data-lucide="list" style="width:16px;height:16px;"></i>
+                        Urge History
+                    </a>
                     <a href="/user/recovery/journal" class="recovery-quick-btn">
                         <i data-lucide="book-open" style="width:16px;height:16px;"></i>
                         Journal
