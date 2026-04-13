@@ -50,6 +50,23 @@ class SupportGroupsModel
         return $groups;
     }
 
+    public static function getGroupsPaginated(array $filters, int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allGroups = self::getGroups($filters);
+        $totalRows = count($allGroups);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allGroups, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
+    }
+
     public static function getUpcomingSessions(): array
     {
         return [
