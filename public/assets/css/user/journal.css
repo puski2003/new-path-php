@@ -72,6 +72,46 @@
     border-color: var(--color-border-primary);
 }
 
+.journal-mood-tag.success {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+.journal-mood-tag.danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+
+.journal-mood-tag.warning {
+    background: #fef9c3;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+/* ── Urge intensity bar ───────────────────────────────────── */
+.urge-intensity-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.urge-intensity-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--color-border-primary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.urge-intensity-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
 .journal-highlight-tag {
     background: #fefce8;
     color: #854d0e;
