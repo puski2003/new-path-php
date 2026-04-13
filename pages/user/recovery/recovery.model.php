@@ -538,6 +538,16 @@ class RecoveryModel
                  updated_at = NOW()
              WHERE plan_id = $planId"
         );
+
+        // Award plan_completed the moment the plan transitions — look up owner here
+        if ($newStatus === 'completed') {
+            $ownerRs = Database::search(
+                "SELECT user_id FROM recovery_plans WHERE plan_id = $planId LIMIT 1"
+            );
+            if ($ownerRs && ($ownerRow = $ownerRs->fetch_assoc())) {
+                self::awardAchievement((int)$ownerRow['user_id'], 'plan_completed');
+            }
+        }
     }
 
     public static function startSobrietyTracking(int $userId): bool
@@ -712,13 +722,6 @@ class RecoveryModel
             if ($rs && $rs->num_rows > 0) self::awardAchievement($userId, 'first_journal');
         }
 
-        if (!isset($earned['plan_completed'])) {
-            $rs = Database::search(
-                "SELECT 1 FROM recovery_plans
-                 WHERE user_id = $userId AND status = 'completed' LIMIT 1"
-            );
-            if ($rs && $rs->num_rows > 0) self::awardAchievement($userId, 'plan_completed');
-        }
     }
 
     private static function awardAchievement(int $userId, string $key): void
