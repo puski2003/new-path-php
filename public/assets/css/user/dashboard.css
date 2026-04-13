@@ -109,6 +109,76 @@
     cursor: default;
 }
 
+/* Daily Check-in Card */
+.checkin-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    min-width: 120px;
+    gap: var(--spacing-xs);
+}
+
+.checkin-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkin-card-label {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.5px;
+    font-size: var(--font-size-sm);
+}
+
+.checkin-card--pending {
+    text-decoration: none;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.checkin-card--pending:hover {
+    box-shadow: 0 4px 14px rgba(61, 228, 185, 0.25);
+    transform: translateY(-1px);
+}
+
+.checkin-card--pending .checkin-card-icon {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.checkin-card--pending .checkin-card-icon svg {
+    color: var(--color-primary-dark);
+}
+
+.checkin-card-cta {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary-dark);
+    background: var(--color-primary);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+}
+
+.checkin-card--done .checkin-card-icon {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.checkin-card--done .checkin-card-icon svg {
+    color: #15803d;
+}
+
+.checkin-card-status {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: #15803d;
+}
+
 /* Dashboard Card Base Styles */
 .dashboard-card {
     padding: var(--spacing-lg);

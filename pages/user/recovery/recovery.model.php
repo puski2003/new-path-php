@@ -60,7 +60,7 @@ class RecoveryModel
         // Counselor-assigned plans that are still 'pending' acceptance must NOT appear
         // here — they belong in the pending/assigned list until the user accepts them.
         $rs = Database::search(
-            "SELECT plan_id, title, description, progress_percentage, assigned_status, counselor_id
+            "SELECT plan_id, title, description, plan_type, progress_percentage, assigned_status, counselor_id
              FROM recovery_plans
              WHERE user_id = $userId
                AND status = 'active'
@@ -74,6 +74,7 @@ class RecoveryModel
                 'planId' => (int)$row['plan_id'],
                 'title' => $row['title'] ?? 'Recovery Plan',
                 'description' => $row['description'] ?? '',
+                'planType' => $row['plan_type'] ?? 'self',
                 'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
                 'assignedStatus' => $row['assigned_status'] ?? null,
                 'counselorId' => isset($row['counselor_id']) ? (int)$row['counselor_id'] : null,
@@ -413,6 +414,54 @@ class RecoveryModel
             'assignedStatus' => $row['assigned_status'] ?? null,
             'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
         ];
+    }
+
+    public static function updateUserPlan(int $planId, int $userId, array $input): bool
+    {
+        if ($planId <= 0 || $userId <= 0) return false;
+
+        // Security: owner only, and no counselor directly managing this plan
+        $checkRs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE plan_id = $planId AND user_id = $userId AND counselor_id IS NULL
+             LIMIT 1"
+        );
+        if (!$checkRs || $checkRs->num_rows === 0) return false;
+
+        Database::setUpConnection();
+        $conn = Database::$connection;
+
+        $title       = $conn->real_escape_string(trim($input['title'] ?? ''));
+        $description = $conn->real_escape_string(trim($input['description'] ?? ''));
+
+        Database::iud(
+            "UPDATE recovery_plans
+             SET title = '$title', description = '$description', updated_at = NOW()
+             WHERE plan_id = $planId AND user_id = $userId AND plan_type = 'self'"
+        );
+
+        // Re-sync goals: clear and reinsert
+        Database::iud("DELETE FROM recovery_goals WHERE plan_id = $planId");
+
+        $shortGoal = trim($input['short_goal'] ?? '');
+        $longGoal  = trim($input['long_goal'] ?? '');
+
+        if ($shortGoal !== '') {
+            $s = $conn->real_escape_string($shortGoal);
+            Database::iud(
+                "INSERT INTO recovery_goals (plan_id, goal_type, title, target_days, current_progress, status, created_at, updated_at)
+                 VALUES ($planId, 'short_term', '$s', 30, 0, 'in_progress', NOW(), NOW())"
+            );
+        }
+        if ($longGoal !== '') {
+            $l = $conn->real_escape_string($longGoal);
+            Database::iud(
+                "INSERT INTO recovery_goals (plan_id, goal_type, title, target_days, current_progress, status, created_at, updated_at)
+                 VALUES ($planId, 'long_term', '$l', 90, 0, 'in_progress', NOW(), NOW())"
+            );
+        }
+
+        return true;
     }
 
     public static function acceptAssignedPlan(int $planId, int $userId): bool

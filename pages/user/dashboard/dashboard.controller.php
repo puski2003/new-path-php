@@ -32,6 +32,10 @@ $achievements        = UserDashboardModel::getAchievements($daysSober);
 // Goals for active plan
 $userGoals = RecoveryModel::getUserGoalsForActivePlan($userId);
 
+// Check if user has already done their daily check-in today
+$checkinRs   = Database::search("SELECT checkin_id FROM daily_checkins WHERE user_id = $userId AND checkin_date = CURDATE() LIMIT 1");
+$checkinDone = ($checkinRs && $checkinRs->num_rows > 0);
+
 // User display name
 $userName = $user['name'] ?? 'User';
 

@@ -70,6 +70,16 @@ $pageScripts = [
                 <?php if ($flashEcSaved): ?>
                 <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashEcSaved) ?></div>
                 <?php endif; ?>
+                <?php if (!empty($_GET['planCreated'])): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                    Recovery plan created successfully.
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($_GET['planUpdated'])): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                    Plan updated.
+                </div>
+                <?php endif; ?>
                 <?php if (!empty($_GET['taskBlocked'])): ?>
                 <div class="error-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
                     Complete all tasks in the current phase before moving to the next.
@@ -94,6 +104,17 @@ $pageScripts = [
                         <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
                         Progress
                     </a>
+                    <?php if (!empty($activePlans) && ($activePlans[0]['counselorId'] ?? null) === null): ?>
+                    <a href="/user/recovery/edit/?id=<?= (int)$activePlans[0]['planId'] ?>" class="recovery-quick-btn">
+                        <i data-lucide="pencil" style="width:16px;height:16px;"></i>
+                        Edit Plan
+                    </a>
+                    <?php elseif (empty($activePlans)): ?>
+                    <a href="/user/recovery/create" class="recovery-quick-btn">
+                        <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+                        Create Plan
+                    </a>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Plan status alert banner -->

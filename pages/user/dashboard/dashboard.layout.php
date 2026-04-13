@@ -59,6 +59,24 @@ require_once __DIR__ . '/../common/user.html.head.php';
                             <div class="thumb" aria-label="Progress <?= $milestoneProgress ?> percent"></div>
                         </div>
                     </div>
+
+                    <?php if ($checkinDone): ?>
+                    <div class="card checkin-card checkin-card--done">
+                        <div class="checkin-card-icon">
+                            <i data-lucide="check-circle-2" stroke-width="1.5"></i>
+                        </div>
+                        <p class="checkin-card-label">DAILY CHECK-IN</p>
+                        <span class="checkin-card-status">Done today</span>
+                    </div>
+                    <?php else: ?>
+                    <a href="/user/recovery/checkin" class="card checkin-card checkin-card--pending">
+                        <div class="checkin-card-icon">
+                            <i data-lucide="clipboard-list" stroke-width="1.5"></i>
+                        </div>
+                        <p class="checkin-card-label">DAILY CHECK-IN</p>
+                        <span class="checkin-card-cta">Check in now</span>
+                    </a>
+                    <?php endif; ?>
                 </div>
 
                 
