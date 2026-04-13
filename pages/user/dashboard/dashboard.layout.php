@@ -294,20 +294,56 @@ require_once __DIR__ . '/../common/user.html.head.php';
                             </div>
                         </div>
 
-                        <!-- Motivational Quote Section -->
-                        <div class="col-3-row-3 dashboard-card quote-card">
-                            <div class="quote-content">
-                                <i
-                                    data-lucide="quote"
-                                    stroke-width="2"
-                                    class="quote-icon"
-                                    style="color: #335345; transform: scale(-1, -1)"></i>
-                                <p
-                                    class="quote-text"
-                                    style="color: #335345; font-weight: 600">
-                                    "You are stronger than you think."
-                                </p>
+                        <!-- Goals Widget -->
+                        <div class="col-3-row-3 dashboard-card goals-widget-card">
+                            <div class="card-header">
+                                <h3>My Goals</h3>
+                                <a href="/user/recovery/goals" class="view-all-link">
+                                    Manage <i data-lucide="arrow-right" stroke-width="2"></i>
+                                </a>
                             </div>
+
+                            <?php if (empty($userGoals)): ?>
+                            <div class="goals-empty">
+                                <i data-lucide="target" style="width:26px;height:26px;color:var(--color-text-muted);"></i>
+                                <p>No goals set yet.</p>
+                                <a href="/user/recovery/goals" class="goal-add-link">+ Add a goal</a>
+                            </div>
+                            <?php else: ?>
+                            <div class="goals-list">
+                                <?php foreach (array_slice($userGoals, 0, 3) as $g):
+                                    $isAchieved = $g['status'] === 'achieved';
+                                ?>
+                                <div class="goal-widget-item <?= $isAchieved ? 'goal-widget-item--done' : '' ?>">
+                                    <div class="goal-widget-top">
+                                        <span class="goal-widget-title"><?= htmlspecialchars($g['title']) ?></span>
+                                        <span class="goal-widget-days"><?= $g['currentProgress'] ?>/<?= $g['targetDays'] ?>d</span>
+                                    </div>
+                                    <div class="goal-widget-bar">
+                                        <div class="goal-widget-fill" style="width:<?= $g['progressPercentage'] ?>%"></div>
+                                    </div>
+                                    <?php if (!$isAchieved): ?>
+                                    <form method="post" action="/user/recovery/goal/log-progress" style="display:inline;">
+                                        <input type="hidden" name="goal_id" value="<?= $g['goalId'] ?>" />
+                                        <input type="hidden" name="days" value="1" />
+                                        <input type="hidden" name="returnTo" value="dashboard" />
+                                        <button type="submit" class="goal-log-btn">+1 day</button>
+                                    </form>
+                                    <?php else: ?>
+                                    <span class="goal-achieved-badge">
+                                        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:middle;"></i> Achieved
+                                    </span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endforeach; ?>
+                                <?php if (count($userGoals) > 3): ?>
+                                <p style="font-size:var(--font-size-xs);color:var(--color-text-muted);text-align:center;margin-top:4px;">
+                                    +<?= count($userGoals) - 3 ?> more — <a href="/user/recovery/goals" style="color:var(--color-primary);">view all</a>
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                            <a href="/user/recovery/goals" class="goal-add-link" style="margin-top:auto;">+ Add goal</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

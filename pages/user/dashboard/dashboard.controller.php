@@ -6,12 +6,14 @@
  * Loads data from the model and prepares $data for the layout.
  */
 require_once __DIR__ . '/dashboard.model.php';
+require_once __DIR__ . '/../recovery/recovery.model.php';
 
 $userId = (int) $user['id'];
 
-// Flash messages from profile update redirect and task actions
-$flashSuccess = isset($_GET['updateSuccess'])  ? 'Profile updated successfully.'  :
-               (isset($_GET['taskCompleted']) ? 'Task marked as complete!' : null);
+// Flash messages
+$flashSuccess = isset($_GET['updateSuccess'])   ? 'Profile updated successfully.'  :
+               (isset($_GET['taskCompleted'])   ? 'Task marked as complete!'       :
+               (isset($_GET['progressLogged'])  ? 'Goal progress logged!'          : null));
 $flashError   = (isset($_GET['error']) && $_GET['error'] === 'update_failed') ? 'Profile update failed. Please try again.' : null;
 
 // Core metrics
@@ -27,6 +29,9 @@ $dailyTasks          = UserDashboardModel::getDailyTasks($userId, 5);
 $progressPercentage  = UserDashboardModel::getProgressPercentage($userId);
 $achievements        = UserDashboardModel::getAchievements($daysSober);
 
+// Goals for active plan
+$userGoals = RecoveryModel::getUserGoalsForActivePlan($userId);
+
 // User display name
 $userName = $user['name'] ?? 'User';
 
@@ -39,5 +44,6 @@ $data = compact(
     'dailyTasks',
     'progressPercentage',
     'achievements',
-    'userName'
+    'userName',
+    'userGoals'
 );
