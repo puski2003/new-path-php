@@ -155,27 +155,30 @@ class RecoveryModel
             'sessionsCompleted' => 0,
         ];
 
-        $rsSober = Database::search(
-            "SELECT days_sober FROM user_progress
+        // Always compute days_sober live from sobriety_start_date — this is the
+        // source of truth. user_progress rows can be stale (days_sober = 0 from
+        // when tracking first started) and must not override the real count.
+        $rsProfile = Database::search(
+            "SELECT DATEDIFF(CURDATE(), sobriety_start_date) AS days
+             FROM user_profiles
              WHERE user_id = $userId
-             ORDER BY date DESC, progress_id DESC
+               AND sobriety_start_date IS NOT NULL
              LIMIT 1"
         );
-        if ($row = $rsSober->fetch_assoc()) {
-            $stats['daysSober'] = max(0, (int)$row['days_sober']);
-            $stats['totalDaysTracked'] = $stats['daysSober'];
+        if ($p = $rsProfile->fetch_assoc()) {
+            $stats['daysSober'] = max(0, (int)($p['days'] ?? 0));
+        }
+
+        // totalDaysTracked = number of distinct days the user has logged a progress entry
+        $rsTracked = Database::search(
+            "SELECT COUNT(DISTINCT date) AS tracked
+             FROM user_progress
+             WHERE user_id = $userId"
+        );
+        if ($t = $rsTracked->fetch_assoc()) {
+            $stats['totalDaysTracked'] = max($stats['daysSober'], (int)($t['tracked'] ?? 0));
         } else {
-            $rsProfile = Database::search(
-                "SELECT DATEDIFF(CURDATE(), up.sobriety_start_date) AS days
-                 FROM user_profiles up
-                 WHERE up.user_id = $userId
-                   AND up.sobriety_start_date IS NOT NULL
-                 LIMIT 1"
-            );
-            if ($p = $rsProfile->fetch_assoc()) {
-                $stats['daysSober'] = max(0, (int)($p['days'] ?? 0));
-                $stats['totalDaysTracked'] = $stats['daysSober'];
-            }
+            $stats['totalDaysTracked'] = $stats['daysSober'];
         }
 
         $rsUrges = Database::search("SELECT COUNT(*) AS urge_count FROM urge_logs WHERE user_id = $userId");
@@ -380,8 +383,29 @@ class RecoveryModel
     public static function resetSobrietyCounter(int $userId, string $reason = ''): bool
     {
         if ($userId <= 0) return false;
-        $safeReason = addslashes($reason);
 
+        // 1. Read current days_sober BEFORE resetting
+        $currentDays = 0;
+        $rsProfile = Database::search(
+            "SELECT DATEDIFF(CURDATE(), sobriety_start_date) AS days
+             FROM user_profiles
+             WHERE user_id = $userId AND sobriety_start_date IS NOT NULL
+             LIMIT 1"
+        );
+        if ($row = $rsProfile->fetch_assoc()) {
+            $currentDays = max(0, (int)$row['days']);
+        }
+
+        // 2. Insert relapse record BEFORE resetting (so the date is accurate)
+        Database::setUpConnection();
+        $safeNotes = Database::$connection->real_escape_string($reason);
+        Database::iud(
+            "INSERT INTO relapse_history
+                (user_id, relapse_date, days_sober_before, trigger_notes, counselor_notified)
+             VALUES ($userId, CURDATE(), $currentDays, '$safeNotes', 0)"
+        );
+
+        // 3. Reset sobriety (original logic preserved)
         Database::iud(
             "UPDATE user_profiles
              SET sobriety_start_date = CURDATE(), updated_at = NOW()
@@ -390,7 +414,7 @@ class RecoveryModel
 
         Database::iud(
             "INSERT INTO user_progress (user_id, date, days_sober, is_sober_today, notes)
-             VALUES ($userId, CURDATE(), 0, 1, '$safeReason')
+             VALUES ($userId, CURDATE(), 0, 1, '$safeNotes')
              ON DUPLICATE KEY UPDATE
                days_sober = 0,
                is_sober_today = 1,
@@ -399,6 +423,27 @@ class RecoveryModel
         );
 
         return true;
+    }
+
+    public static function getRelapseHistory(int $userId): array
+    {
+        $rs = Database::search(
+            "SELECT relapse_id, relapse_date, days_sober_before, trigger_notes, created_at
+             FROM relapse_history
+             WHERE user_id = $userId
+             ORDER BY relapse_date DESC"
+        );
+
+        $history = [];
+        while ($row = $rs->fetch_assoc()) {
+            $history[] = [
+                'relapseId'       => (int)$row['relapse_id'],
+                'relapseDate'     => date('M j, Y', strtotime($row['relapse_date'])),
+                'daysSoberBefore' => (int)$row['days_sober_before'],
+                'triggerNotes'    => $row['trigger_notes'] ?? '',
+            ];
+        }
+        return $history;
     }
 
     public static function resumePlan(int $planId, int $userId): bool
