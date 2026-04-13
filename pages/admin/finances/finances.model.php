@@ -74,6 +74,23 @@ class FinancesModel
         return $items;
     }
 
+    public static function getDisputesPaginated(array $filters, int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allDisputes = self::getDisputes($filters);
+        $totalRows = count($allDisputes);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allDisputes, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
+    }
+
     public static function getTransactions(string $search = ''): array
     {
         $where = ['1=1'];
@@ -106,5 +123,22 @@ class FinancesModel
             ];
         }
         return $items;
+    }
+
+    public static function getTransactionsPaginated(string $search = '', int $page = 1, int $perPage = 15): array
+    {
+        $safePage = Pagination::sanitizePage($page);
+        $safePerPage = Pagination::sanitizePerPage($perPage, 15, 100);
+
+        $allTransactions = self::getTransactions($search);
+        $totalRows = count($allTransactions);
+        $meta = Pagination::meta($totalRows, $safePage, $safePerPage);
+
+        $items = array_slice($allTransactions, $meta['offset'], $meta['perPage']);
+
+        return [
+            'items' => $items,
+            'pagination' => $meta,
+        ];
     }
 }
