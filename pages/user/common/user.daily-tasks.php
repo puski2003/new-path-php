@@ -41,7 +41,7 @@
                         </div>
                     </div>
                     <?php if (($task['status'] ?? '') !== 'completed'): ?>
-                        <form action="/user/recovery/task/complete" method="post">
+                        <form action="/user/recovery/task/complete" method="post" class="task-complete-form">
                             <input type="hidden" name="taskId" value="<?= (int)$task['taskId'] ?>" />
                             <button type="submit" class="btn btn-primary btn-sm">Complete</button>
                         </form>

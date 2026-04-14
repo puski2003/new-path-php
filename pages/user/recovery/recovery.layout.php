@@ -67,6 +67,12 @@ $pageScripts = [
                 <?php if ($flashUrge): ?>
                 <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashUrge) ?></div>
                 <?php endif; ?>
+                <?php if (!empty($_GET['followupRequested'])): ?>
+                <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;display:flex;align-items:center;gap:8px;">
+                    <i data-lucide="send" style="width:16px;height:16px;flex-shrink:0;"></i>
+                    Follow-up request sent! Your counselor will create a new plan for you soon.
+                </div>
+                <?php endif; ?>
                 <?php if ($flashEcSaved): ?>
                 <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;"><?= htmlspecialchars($flashEcSaved) ?></div>
                 <?php endif; ?>

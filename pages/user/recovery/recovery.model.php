@@ -548,6 +548,34 @@ class RecoveryModel
         return true;
     }
 
+    public static function uncompleteTask(int $taskId, int $userId): bool
+    {
+        if ($taskId <= 0 || $userId <= 0) return false;
+
+        $taskRs = Database::search(
+            "SELECT rt.plan_id, rt.status
+             FROM recovery_tasks rt
+             INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
+             WHERE rt.task_id = $taskId AND rp.user_id = $userId
+             LIMIT 1"
+        );
+        if (!$taskRs || $taskRs->num_rows === 0) return false;
+        $taskRow = $taskRs->fetch_assoc();
+
+        if ($taskRow['status'] !== 'completed') return true;
+
+        $planId = (int)$taskRow['plan_id'];
+
+        Database::iud(
+            "UPDATE recovery_tasks
+             SET status = 'pending', completed_at = NULL, updated_at = NOW()
+             WHERE task_id = $taskId"
+        );
+
+        self::recalculatePlanProgress($planId);
+        return true;
+    }
+
     /**
      * Recalculate and persist progress_percentage for a plan based on completed tasks.
      * Also marks the plan 'completed' when all tasks are done.
@@ -588,6 +616,89 @@ class RecoveryModel
                 self::awardAchievement((int)$ownerRow['user_id'], 'plan_completed');
             }
         }
+    }
+
+    public static function getCompletedPlanDetails(int $planId, int $userId): ?array
+    {
+        $rs = Database::search(
+            "SELECT rp.plan_id, rp.title, rp.category, rp.plan_type, rp.counselor_id,
+                    rp.start_date, rp.actual_completion_date,
+                    GREATEST(1, DATEDIFF(COALESCE(rp.actual_completion_date, CURDATE()), rp.start_date) + 1) AS days_taken,
+                    COALESCE(cu.display_name, CONCAT(cu.first_name, ' ', cu.last_name)) AS counselor_name
+             FROM recovery_plans rp
+             LEFT JOIN counselors c  ON c.counselor_id  = rp.counselor_id
+             LEFT JOIN users cu      ON cu.user_id       = c.user_id
+             WHERE rp.plan_id = $planId
+               AND rp.user_id = $userId
+               AND rp.status  = 'completed'
+             LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return null;
+        $row = $rs->fetch_assoc();
+
+        return [
+            'planId'         => (int)$row['plan_id'],
+            'title'          => $row['title']          ?? 'Recovery Plan',
+            'category'       => $row['category']       ?? 'General',
+            'planType'       => $row['plan_type']       ?? 'self',
+            'counselorId'    => $row['counselor_id']   ? (int)$row['counselor_id'] : null,
+            'counselorName'  => $row['counselor_name'] ?? null,
+            'startDate'      => $row['start_date']     ?? null,
+            'completionDate' => $row['actual_completion_date'] ?? null,
+            'daysTaken'      => (int)$row['days_taken'],
+        ];
+    }
+
+    public static function requestFollowUpPlan(int $userId, int $planId): bool
+    {
+        $rs = Database::search(
+            "SELECT rp.counselor_id, rp.title,
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name)) AS user_name,
+                    cu.user_id AS counselor_user_id
+             FROM recovery_plans rp
+             INNER JOIN users u  ON u.user_id  = $userId
+             LEFT JOIN counselors c  ON c.counselor_id  = rp.counselor_id
+             LEFT JOIN users cu      ON cu.user_id       = c.user_id
+             WHERE rp.plan_id = $planId AND rp.user_id = $userId
+             LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+
+        $row              = $rs->fetch_assoc();
+        $counselorUserId  = $row['counselor_user_id'] ? (int)$row['counselor_user_id'] : null;
+        $conn             = Database::setUpConnection();
+        $safeUserName     = $conn->real_escape_string($row['user_name']  ?? 'A user');
+        $safePlanTitle    = $conn->real_escape_string($row['title']       ?? 'their recovery plan');
+
+        // Notify the counselor
+        if ($counselorUserId) {
+            Database::iud(
+                "INSERT INTO notifications (user_id, type, title, message, link, is_read, created_at)
+                 VALUES (
+                     $counselorUserId,
+                     'plan_followup_request',
+                     'Follow-up Plan Requested',
+                     '$safeUserName completed \"$safePlanTitle\" and is requesting a follow-up recovery plan.',
+                     '/counselor/clients',
+                     0, NOW()
+                 )"
+            );
+        }
+
+        // Confirm to the user
+        Database::iud(
+            "INSERT INTO notifications (user_id, type, title, message, link, is_read, created_at)
+             VALUES (
+                 $userId,
+                 'plan_followup_sent',
+                 'Follow-up Requested',
+                 'Your counselor has been notified and will create a new plan for you soon.',
+                 '/user/recovery',
+                 0, NOW()
+             )"
+        );
+
+        return true;
     }
 
     public static function startSobrietyTracking(int $userId): bool

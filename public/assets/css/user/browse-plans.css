@@ -1,37 +1,4 @@
 /* Browse Plans Page Styles */
-* {
-    font-family: "Montserrat", sans-serif;
-    margin: 0;
-    padding: 0;
-}
-
-.back-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--color-bg-light-green);
-    margin-right: 12px;
-}
-
-.main-content-header-text {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.main-content-header-text h2 {
-    flex: 1;
-}
-
-.main-content-header-text p {
-    width: 100%;
-    margin-left: 48px;
-    color: var(--color-text-secondary);
-}
 
 .plans-grid {
     display: grid;
