@@ -8,7 +8,7 @@ if ($planId <= 0) {
 $errorMessage = null;
 if (Request::isPost()) {
     if (CounselorRecoveryViewModel::update((int) ($user['counselorId'] ?? 0), $planId, $_POST)) {
-        Response::redirect('/counselor/recovery-plans');
+        Response::redirect('/counselor/recovery-plans?updated=1');
     }
     $errorMessage = 'Failed to update recovery plan.';
 }
