@@ -49,7 +49,7 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
         </div>
 
         <div class="main-content-body">
-            <div class="plans-container" style="max-width:820px;">
+            <div class="plans-container" style="max-width:960px;">
 
                 <!-- Flash messages -->
                 <?php if (!empty($_GET['created'])): ?>
@@ -77,7 +77,7 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
 
                 <?php else: ?>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-xl);align-items:start;">
+                <div style="display:grid;grid-template-columns:3fr 2fr;gap:var(--spacing-xl);align-items:start;">
 
                     <!-- Left: goal list -->
                     <div>

@@ -16,6 +16,18 @@ if ($taskId > 0) {
 
 if ($result) {
     RecoveryModel::checkAndAwardAchievements((int)$user['id']);
+
+    // Check if completing this task finished the whole plan
+    $planRs = Database::search(
+        "SELECT rp.plan_id, rp.status
+         FROM recovery_tasks rt
+         INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
+         WHERE rt.task_id = $taskId
+         LIMIT 1"
+    );
+    if ($planRs && ($planRow = $planRs->fetch_assoc()) && $planRow['status'] === 'completed') {
+        Response::redirect('/user/recovery/plan-completed?planId=' . (int)$planRow['plan_id']);
+    }
 }
 
 if ($returnTo === 'dashboard') {
