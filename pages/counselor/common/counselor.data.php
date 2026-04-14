@@ -487,4 +487,98 @@ class CounselorData
         $row = $rs ? $rs->fetch_assoc() : null;
         return $row ? (int) $row['plan_id'] : null;
     }
+
+    // ── Task Change Requests (counselor side) ────────────────────────
+
+    public static function getChangeRequestsForCounselor(int $counselorId): array
+    {
+        $rs = Database::search(
+            "SELECT tcr.request_id, tcr.task_id, tcr.status, tcr.reason,
+                    tcr.requested_change, tcr.created_at,
+                    rt.title AS task_title,
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name)) AS client_name
+             FROM task_change_requests tcr
+             INNER JOIN recovery_tasks rt ON rt.task_id = tcr.task_id
+             INNER JOIN users u ON u.user_id = tcr.user_id
+             WHERE tcr.counselor_id = $counselorId AND tcr.status = 'pending'
+             ORDER BY tcr.created_at ASC"
+        );
+
+        $requests = [];
+        if (!$rs) return $requests;
+        while ($row = $rs->fetch_assoc()) {
+            $requests[] = [
+                'requestId'       => (int)$row['request_id'],
+                'taskId'          => (int)$row['task_id'],
+                'taskTitle'       => $row['task_title'] ?? 'Task',
+                'clientName'      => $row['client_name'] ?? 'Client',
+                'reason'          => $row['reason'] ?? '',
+                'requestedChange' => $row['requested_change'] ?? '',
+                'createdAt'       => date('M j, Y', strtotime($row['created_at'])),
+            ];
+        }
+        return $requests;
+    }
+
+    public static function resolveChangeRequest(int $requestId, int $counselorId, string $decision, string $note = ''): bool
+    {
+        if ($requestId <= 0 || !in_array($decision, ['approved', 'rejected'], true)) return false;
+
+        // Fetch the request first (need user_id for notification)
+        $reqRs = Database::search(
+            "SELECT task_id, user_id, requested_change
+             FROM task_change_requests
+             WHERE request_id = $requestId
+               AND counselor_id = $counselorId
+               AND status = 'pending'
+             LIMIT 1"
+        );
+        if (!$reqRs || $reqRs->num_rows === 0) return false;
+        $reqRow  = $reqRs->fetch_assoc();
+        $taskId  = (int)$reqRow['task_id'];
+        $userId  = (int)$reqRow['user_id'];
+
+        $safeNote = self::esc($note);
+        Database::iud(
+            "UPDATE task_change_requests
+             SET status = '$decision',
+                 counselor_note = '$safeNote',
+                 resolved_at = NOW(),
+                 updated_at = NOW()
+             WHERE request_id = $requestId
+               AND counselor_id = $counselorId
+               AND status = 'pending'"
+        );
+
+        // If approved: apply the requested title to the task
+        if ($decision === 'approved') {
+            $newTitle = self::esc($reqRow['requested_change']);
+            Database::iud(
+                "UPDATE recovery_tasks SET title = '$newTitle', updated_at = NOW()
+                 WHERE task_id = $taskId"
+            );
+        }
+
+        // Notify the user
+        if ($userId > 0) {
+            Database::setUpConnection();
+            $conn = Database::$connection;
+            if ($decision === 'approved') {
+                $t = $conn->real_escape_string('Task Change Approved');
+                $m = $conn->real_escape_string('Your counselor approved your task change request. The task has been updated.');
+            } else {
+                $t = $conn->real_escape_string('Task Change Rejected');
+                $m = $conn->real_escape_string('Your counselor reviewed and rejected your task change request.' . ($note !== '' ? ' Note: ' . $note : ''));
+            }
+            $l = $conn->real_escape_string('/user/recovery/task/change-requests');
+            Database::iud(
+                "INSERT INTO notifications (user_id, type, title, message, link)
+                 VALUES ($userId, 'task_change_resolved', '$t', '$m', '$l')"
+            );
+        }
+
+        return true;
+    }
+
+    // ── End Task Change Requests ─────────────────────────────────────
 }

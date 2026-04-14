@@ -425,7 +425,7 @@ class RecoveryModel
     public static function getPlanByIdForUser(int $planId, int $userId): ?array
     {
         $rs = Database::search(
-            "SELECT plan_id, title, description, plan_type, status, assigned_status, progress_percentage
+            "SELECT plan_id, title, description, plan_type, status, assigned_status, progress_percentage, counselor_id
              FROM recovery_plans
              WHERE plan_id = $planId
                AND user_id = $userId
@@ -445,6 +445,7 @@ class RecoveryModel
             'status' => $row['status'] ?? 'draft',
             'assignedStatus' => $row['assigned_status'] ?? null,
             'progressPercentage' => (int)($row['progress_percentage'] ?? 0),
+            'counselorId' => isset($row['counselor_id']) ? (int)$row['counselor_id'] : null,
         ];
     }
 
@@ -790,6 +791,84 @@ class RecoveryModel
     }
 
     // ── End Achievements ─────────────────────────────────────────────
+
+    // ── Task Change Requests (user side) ────────────────────────────
+
+    public static function createChangeRequest(int $taskId, int $userId, string $reason, string $requestedChange): bool
+    {
+        if ($taskId <= 0 || $userId <= 0 || trim($reason) === '') return false;
+
+        $rs = Database::search(
+            "SELECT rt.plan_id, rp.counselor_id, c.user_id AS counselor_user_id
+             FROM recovery_tasks rt
+             INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
+             INNER JOIN counselors c ON c.counselor_id = rp.counselor_id
+             WHERE rt.task_id = $taskId
+               AND rp.user_id = $userId
+               AND rp.counselor_id IS NOT NULL
+             LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+
+        $row              = $rs->fetch_assoc();
+        $counselorId      = (int)$row['counselor_id'];
+        $planId           = (int)$row['plan_id'];
+        $counselorUserId  = (int)$row['counselor_user_id'];
+
+        Database::setUpConnection();
+        $conn = Database::$connection;
+        $safeReason = $conn->real_escape_string($reason);
+        $safeChange = $conn->real_escape_string($requestedChange);
+
+        Database::iud(
+            "INSERT INTO task_change_requests
+                (task_id, plan_id, user_id, counselor_id, reason, requested_change, status, created_at)
+             VALUES ($taskId, $planId, $userId, $counselorId, '$safeReason', '$safeChange', 'pending', NOW())"
+        );
+
+        // Notify the counselor
+        if ($counselorUserId > 0) {
+            $t = $conn->real_escape_string('Task Change Request');
+            $m = $conn->real_escape_string('A client has requested a change to one of their assigned tasks.');
+            $l = $conn->real_escape_string('/counselor/recovery-plans/task-changes');
+            Database::iud(
+                "INSERT INTO notifications (user_id, type, title, message, link)
+                 VALUES ($counselorUserId, 'task_change_request', '$t', '$m', '$l')"
+            );
+        }
+
+        return true;
+    }
+
+    public static function getChangeRequestsForUser(int $userId): array
+    {
+        $rs = Database::search(
+            "SELECT tcr.request_id, tcr.status, tcr.reason, tcr.requested_change,
+                    tcr.counselor_note, tcr.created_at,
+                    rt.title AS task_title
+             FROM task_change_requests tcr
+             INNER JOIN recovery_tasks rt ON rt.task_id = tcr.task_id
+             WHERE tcr.user_id = $userId
+             ORDER BY tcr.created_at DESC"
+        );
+
+        $requests = [];
+        if (!$rs) return $requests;
+        while ($row = $rs->fetch_assoc()) {
+            $requests[] = [
+                'requestId'       => (int)$row['request_id'],
+                'taskTitle'       => $row['task_title'] ?? 'Task',
+                'status'          => $row['status'] ?? 'pending',
+                'reason'          => $row['reason'] ?? '',
+                'requestedChange' => $row['requested_change'] ?? '',
+                'counselorNote'   => $row['counselor_note'] ?? '',
+                'createdAt'       => date('M j, Y', strtotime($row['created_at'])),
+            ];
+        }
+        return $requests;
+    }
+
+    // ── End Task Change Requests ─────────────────────────────────────
 
     public static function adoptGeneralPlan(int $templatePlanId, int $userId): bool
     {

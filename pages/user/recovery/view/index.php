@@ -230,6 +230,14 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
                                                     <input type="hidden" name="taskId" value="<?= (int)$task['taskId'] ?>" />
                                                     <button class="btn btn-primary" style="padding:6px 14px;font-size:var(--font-size-xs);" type="submit">Complete</button>
                                                 </form>
+                                                <?php if (!empty($plan['counselorId'])): ?>
+                                                <a href="/user/recovery/task/request-change?taskId=<?= (int)$task['taskId'] ?>"
+                                                   class="btn btn-secondary"
+                                                   style="padding:6px 14px;font-size:var(--font-size-xs);">
+                                                    <i data-lucide="file-pen-line" style="width:13px;height:13px;margin-right:4px;" stroke-width="1.5"></i>
+                                                    Request Change
+                                                </a>
+                                                <?php endif; ?>
                                                 <?php elseif ($isLocked && !$done): ?>
                                                 <span style="font-size:var(--font-size-xs);color:#9ca3af;">
                                                     <i data-lucide="lock" style="width:13px;height:13px;vertical-align:middle;"></i>

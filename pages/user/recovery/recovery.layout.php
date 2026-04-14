@@ -98,6 +98,10 @@ $pageScripts = [
                         <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
                         Progress
                     </a>
+                    <a href="/user/recovery/task/change-requests" class="recovery-quick-btn">
+                        <i data-lucide="file-pen-line" style="width:16px;height:16px;"></i>
+                        Change Requests
+                    </a>
                 </div>
 
                 <!-- Plan status alert banner -->
