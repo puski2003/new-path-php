@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../../common/admin.data.php';
+require_once __DIR__ . '/../model.php';
 
 class AddJobPostModel
 {
     public static function create(array $input, int $adminUserId): bool
     {
-        return AdminData::createJobPost($input, $adminUserId);
+        return JobPostsModel::createJobPost($input, $adminUserId);
     }
 }

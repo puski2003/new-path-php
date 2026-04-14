@@ -17,6 +17,14 @@ require_once __DIR__ . '/../common/admin.html.head.php';
             <div class="admin-sub-container-2">
                 <h2>Content Reports</h2>
                 <table class="admin-table"><thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Content Preview</th><th class="admin-table-th">Author</th><th class="admin-table-th">Type</th><th class="admin-table-th">Reason</th><th class="admin-table-th">Reported By</th><th class="admin-table-th">Date</th><th class="admin-table-th">Status</th></tr></thead><tbody class="admin-table-body"><?php foreach ($reportedContent as $index => $item): ?><tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>"><td class="admin-table-td"><?= htmlspecialchars($item['contentPreview']) ?></td><td class="admin-table-td"><?= htmlspecialchars($item['authorName']) ?></td><td class="admin-table-td"><?= htmlspecialchars($item['type']) ?></td><td class="admin-table-td"><?= htmlspecialchars($item['reason']) ?></td><td class="admin-table-td"><?= htmlspecialchars($item['reportedByName']) ?></td><td class="admin-table-td"><?= htmlspecialchars($item['date']) ?></td><td class="admin-table-td"><?= htmlspecialchars(ucfirst($item['status'])) ?></td></tr><?php endforeach; ?></tbody></table>
+
+                <?php
+                $pagination = $reportedContentPagination;
+                $basePath = '/admin/content-management';
+                $query = $filters;
+                $forceShow = true;
+                require __DIR__ . '/../common/admin.pagination.php';
+                ?>
             </div>
         </div>
         <div class="admin-sub-container-1" style="align-items: stretch;"><div class="admin-data-card" style="flex:1;"><h3>Trending Posts</h3><p>Recovery milestone celebration</p><p>Weekly support group meeting</p><p>Healthy lifestyle tips</p></div><div class="admin-data-card" style="flex:1;"><h3>Moderation Summary</h3><p>Locked Threads: 5</p><p>Pinned Posts: 3</p><p>Active Warnings: 12</p></div></div>

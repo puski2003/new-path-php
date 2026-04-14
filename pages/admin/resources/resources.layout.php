@@ -53,6 +53,14 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $pagination = $jobPostsPagination;
+                $basePath = '/admin/resources';
+                $query = array_merge($filters, ['tab' => $activeTab]);
+                $forceShow = true;
+                require __DIR__ . '/../common/admin.pagination.php';
+                ?>
             </div>
         <?php elseif ($activeTab === 'skill-programs'): ?>
             <div class="admin-sub-container-2">
@@ -91,6 +99,14 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $pagination = $programsPagination;
+                $basePath = '/admin/resources';
+                $query = array_merge($filters, ['tab' => $activeTab]);
+                $forceShow = true;
+                require __DIR__ . '/../common/admin.pagination.php';
+                ?>
             </div>
         <?php else: ?>
             <div class="admin-sub-container-2">
@@ -130,6 +146,14 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $pagination = $helpCentersPagination;
+                $basePath = '/admin/resources';
+                $query = array_merge($filters, ['tab' => $activeTab]);
+                $forceShow = true;
+                require __DIR__ . '/../common/admin.pagination.php';
+                ?>
             </div>
         <?php endif; ?>
     </section>

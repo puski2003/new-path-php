@@ -55,12 +55,13 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                     <th class="admin-table-th">Status</th>
                     <th class="admin-table-th">Last Active</th>
                     <th class="admin-table-th">Registration</th>
+                    <th class="admin-table-th">Actions</th>
                 </tr>
                 </thead>
                 <tbody class="admin-table-body">
                 <?php if ($users === []): ?>
                     <tr class="admin-table-row">
-                        <td class="admin-table-td" colspan="6">No users found.</td>
+                        <td class="admin-table-td" colspan="7">No users found.</td>
                     </tr>
                 <?php endif; ?>
                 <?php foreach ($users as $index => $item): ?>
@@ -71,13 +72,88 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <td class="admin-table-td"><?= htmlspecialchars($item['status']) ?></td>
                         <td class="admin-table-td"><?= htmlspecialchars($item['lastActive']) ?></td>
                         <td class="admin-table-td"><?= htmlspecialchars($item['registration']) ?></td>
+                        <td class="admin-table-td admin-table-td--action">
+                            <div class="admin-table-actions">
+                                <a
+                                    href="/admin/user-management/view?id=<?= $item['userId'] ?>"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="admin-button admin-button--ghost admin-button--icon-only"
+                                    title="View full user details"
+                                    aria-label="View full user details"
+                                >
+                                    <i data-lucide="expand" class="button-icon" stroke-width="1.75"></i>
+                                </a>
+                                <a
+                                    href="/admin/user-management/edit?id=<?= $item['userId'] ?>"
+                                    class="admin-button admin-button--ghost admin-button--icon-only"
+                                    title="Edit user"
+                                    aria-label="Edit user"
+                                >
+                                    <i data-lucide="pencil" class="button-icon" stroke-width="1.75"></i>
+                                </a>
+                                <button
+                                    type="button"
+                                    class="admin-button admin-button--danger admin-button--icon-only"
+                                    title="Delete user"
+                                    aria-label="Delete user"
+                                    onclick="deleteUser(<?= $item['userId'] ?>, <?= json_encode($item['fullName']) ?>)"
+                                >
+                                    <i data-lucide="trash-2" class="button-icon" stroke-width="1.75"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $basePath = '/admin/user-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
     </section>
 </main>
+
+<script>
+(function () {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('alertType');
+    const message = params.get('alertMessage');
+
+    if (message && window.NewPathAlert) {
+        if (type === 'success') NewPathAlert.success(message);
+        else if (type === 'warning') NewPathAlert.warning(message);
+        else if (type === 'error') NewPathAlert.error(message);
+        else NewPathAlert.info(message);
+    }
+})();
+
+function deleteUser(userId, fullName) {
+    if (!confirm('Delete "' + fullName + '"? This action cannot be undone.')) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/user-management/delete';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'userId';
+    input.value = String(userId);
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>

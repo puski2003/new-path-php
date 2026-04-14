@@ -9,4 +9,9 @@ $filters = [
     'search' => Request::get('search') ?? '',
 ];
 
-$users = UserManagementModel::getUsers($filters);
+$page = Pagination::sanitizePage(Request::get('page') ?? 1);
+$perPage = 15;
+
+$result = UserManagementModel::getUsersPaginated($filters, $page, $perPage);
+$users = $result['items'];
+$pagination = $result['pagination'];

@@ -1153,6 +1153,28 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_active` (`is_active`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Archive table for soft-deleted users (admin user-management)
+CREATE TABLE IF NOT EXISTS `archived_users` (
+  `archive_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` enum('user','counselor','admin') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'user',
+  `display_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `onboarding_completed` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `archived_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `archived_by` int DEFAULT NULL,
+  PRIMARY KEY (`archive_id`),
+  KEY `idx_archived_user_id` (`user_id`),
+  KEY `idx_archived_at` (`archived_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Dumping data for table new_path_2.users: ~8 rows (approximately)
 INSERT INTO `users` (`user_id`, `email`, `username`, `password_hash`, `salt`, `role`, `first_name`, `last_name`, `display_name`, `profile_picture`, `phone_number`, `age`, `gender`, `is_email_verified`, `email_verification_token`, `password_reset_token`, `password_reset_expires`, `is_active`, `last_login`, `onboarding_completed`, `current_onboarding_step`, `created_at`, `updated_at`, `bio`) VALUES
 	(1, 'admin@newpath.com', 'admin', '$2a$10$m3uVRJ8S7NVswiFpooQowuqLGMjeNlPGssXScEPVyqQ8LrM7oQXMe', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye', 'admin', 'System', 'Administrator', 'System Admin', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 1, NULL, 0, 1, '2026-01-02 18:00:38', '2026-01-19 08:49:41', NULL),

@@ -1,5 +1,6 @@
 <?php
 $pageTitle = 'Counselor Management';
+$pageStyle = ['admin/counselor-management'];
 require_once __DIR__ . '/../common/admin.html.head.php';
 ?>
 <main class="admin-main-container">
@@ -8,7 +9,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <h1>Counselor Management</h1>
 
         <div class="admin-sub-container-1">
-            <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Average Rating</p><p class="admin-summary-card-info"><?= $stats['averageRating'] > 0 ? number_format($stats['averageRating'], 1) : 'N/A' ?></p><p class="admin-summary-card-subinfo">Overall rating</p></div></div>
+            <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Avg Sessions per Counselor</p><p class="admin-summary-card-info"><?= $stats['avgSessionsPerCounselor'] > 0 ? number_format($stats['avgSessionsPerCounselor'], 1) : 'N/A' ?></p><p class="admin-summary-card-subinfo">Avg completed sessions</p></div></div>
             <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Total Sessions</p><p class="admin-summary-card-info"><?= $stats['totalSessions'] ?></p><p class="admin-summary-card-subinfo">Sessions completed</p></div></div>
             <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Active Counselors</p><p class="admin-summary-card-info"><?= $stats['activeCounselorsCount'] ?></p><p class="admin-summary-card-subinfo">Currently active</p></div></div>
             <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Pending Applications</p><p class="admin-summary-card-info"><?= $stats['pendingApplicationsCount'] ?></p><p class="admin-summary-card-subinfo">Awaiting review</p></div></div>
@@ -38,17 +39,20 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <td class="admin-table-td"><?= htmlspecialchars(ucfirst($app['status'])) ?></td>
                         <td class="admin-table-td admin-table-td--action">
                             <div class="admin-table-actions">
-                                <?php if ($app['status'] === 'pending'): ?>
-                                    <button type="button" class="admin-button admin-button--success" onclick="reviewApplication('approve', <?= $app['applicationId'] ?>)">Approve</button>
-                                    <button type="button" class="admin-button admin-button--danger" onclick="reviewApplication('reject', <?= $app['applicationId'] ?>)">Reject</button>
-                                <?php endif; ?>
-                                <button type="button" class="admin-button admin-button--ghost" onclick='showApplication(<?= json_encode($app, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>View</button>
+                                <a href="/admin/counselor-management/application-view?id=<?= (int) $app['applicationId'] ?>" class="admin-button admin-button--ghost">View</a>
                             </div>
                         </td>
                     </tr>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $pagination = $applicationsPagination;
+            $basePath = '/admin/counselor-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
 
         <div class="admin-sub-container-2">
@@ -72,9 +76,9 @@ require_once __DIR__ . '/../common/admin.html.head.php';
             </div>
 
             <table class="admin-table">
-                <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Counselor</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Languages</th><th class="admin-table-th">Rating</th><th class="admin-table-th">Reviews</th><th class="admin-table-th">Status</th></tr></thead>
+                <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Counselor</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Languages</th><th class="admin-table-th">Rating</th><th class="admin-table-th">Reviews</th><th class="admin-table-th">Status</th><th class="admin-table-th">Actions</th></tr></thead>
                 <tbody class="admin-table-body">
-                <?php if ($counselors === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="6">No counselors found.</td></tr><?php endif; ?>
+                <?php if ($counselors === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="7">No counselors found.</td></tr><?php endif; ?>
                 <?php foreach ($counselors as $index => $counselor): ?>
                     <tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>">
                         <td class="admin-table-td"><strong><?= htmlspecialchars($counselor['fullName']) ?></strong><br><small><?= htmlspecialchars($counselor['email']) ?></small></td>
@@ -83,36 +87,23 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                         <td class="admin-table-td"><?= $counselor['rating'] > 0 ? number_format($counselor['rating'], 1) : '-' ?></td>
                         <td class="admin-table-td"><?= $counselor['totalReviews'] ?></td>
                         <td class="admin-table-td"><?= $counselor['active'] ? 'Active' : 'Inactive' ?></td>
+                        <td class="admin-table-td admin-table-td--action">
+                            <a href="/admin/counselor-management/counselor-view?id=<?= (int) $counselor['counselorId'] ?>" class="admin-button admin-button--ghost">View</a>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $pagination = $counselorsPagination;
+            $basePath = '/admin/counselor-management';
+            $query = $filters;
+            require __DIR__ . '/../common/admin.pagination.php';
+            ?>
         </div>
     </section>
 </main>
-<script>
-function reviewApplication(action, applicationId) {
-    const notes = action === 'reject' ? prompt('Enter rejection reason (optional):', '') : '';
-    if (action === 'reject' && notes === null) return;
-    fetch('/admin/counselor-management', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({action, applicationId, notes: notes || ''})
-    }).then(r => r.json()).then(data => {
-        alert(data.message || (data.success ? 'Done' : 'Failed'));
-        if (data.success) window.location.reload();
-    });
-}
-function showApplication(app) {
-    alert(
-        'Name: ' + app.fullName + '\n' +
-        'Email: ' + app.email + '\n' +
-        'Specialty: ' + app.specialty + '\n' +
-        'Experience: ' + (app.experienceYears === null ? '-' : app.experienceYears + ' years') + '\n\n' +
-        'Bio:\n' + app.bio
-    );
-}
-</script>
 
 <?php require_once __DIR__ . '/../common/admin.footer.php'; ?>
 </body>
