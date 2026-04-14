@@ -45,7 +45,7 @@
                 <button type="submit" class="btn btn-primary start-tracking-btn">Start Tracking</button>
             </form>
         <?php else: ?>
-            <button type="button" class="btn btn-primary log-progress-btn">Log Progress</button>
+            <a href="/user/recovery/journal" class="btn btn-primary" style="text-align:center;">Log Progress</a>
             <button type="button" class="btn btn-secondary reset-btn" onclick="showResetModal()">Reset</button>
         <?php endif; ?>
     </div>

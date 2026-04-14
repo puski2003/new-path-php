@@ -38,11 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  bindClick('.log-progress-btn', function (e) {
-    e.preventDefault();
-    showProgressModal();
-  });
-
   bindClick('.view-analytics-btn', function () {
     showNotification('Opening detailed analytics dashboard...', 'info');
   });
