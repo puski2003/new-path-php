@@ -220,7 +220,7 @@
     </div>
     <?php endif; ?>
 
-    <script src="/assets/js/user/sessions-view-more.js"></script>
+    <script src="/assets/js/user/sessions/sessions-view-more.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
 

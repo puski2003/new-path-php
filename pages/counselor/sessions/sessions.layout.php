@@ -2,9 +2,9 @@
 $activePage = 'sessions';
 $pageScripts = [
     '/assets/js/components/followup-thread.js',
-    '/assets/js/counselor/sessions.js',
-    '/assets/js/counselor/followUp.js',
-    '/assets/js/counselor/rescheduleRequests.js',
+    '/assets/js/counselor/sessions/sessions.js',
+    '/assets/js/counselor/sessions/followUp.js',
+    '/assets/js/counselor/sessions/rescheduleRequests.js',
 ];
 ?>
 <!DOCTYPE html>

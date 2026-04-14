@@ -7,7 +7,7 @@ $completedPct = $clientProfile['totalSessions'] > 0
 
 $pageHeaderTitle    = 'Clients';
 $pageHeaderSubtitle = 'Your path to guidance starts here.';
-$pageScripts = ['/assets/js/counselor/clientProfile.js'];
+$pageScripts = ['/assets/js/counselor/client-profile/clientProfile.js'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

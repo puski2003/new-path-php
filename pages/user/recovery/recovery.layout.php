@@ -3,7 +3,7 @@
 <?php
 $pageScripts = [
     '/assets/js/components/toast.js',
-    '/assets/js/user/recovery.js',
+    '/assets/js/user/recovery/recovery.js',
 ];
 ?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>

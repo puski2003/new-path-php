@@ -154,8 +154,8 @@
             <?php require __DIR__ . '/../common/user.help-service-detail.php'; ?>
         <?php endforeach; ?>
     </div>
-    <script src="/assets/js/user/helpCenter.js"></script>
-    <script src="/assets/js/user/log-urge-popup.js"></script>
+    <script src="/assets/js/user/help/helpCenter.js"></script>
+    <script src="/assets/js/user/common/log-urge-popup.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
     </script>

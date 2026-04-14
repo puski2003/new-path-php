@@ -3,8 +3,8 @@
 <?php
 $pageScripts = [
     '/assets/js/components/toast.js',
-    '/assets/js/user/post-recovery.js',
-    '/assets/js/user/log-urge-popup.js',
+    '/assets/js/user/post-recovery/post-recovery.js',
+    '/assets/js/user/common/log-urge-popup.js',
 ];
 ?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>

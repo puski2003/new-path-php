@@ -101,7 +101,7 @@
     <?php require __DIR__ . '/../common/user.community-chat.php'; ?>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="/assets/js/user/profile.js"></script>
+    <script src="/assets/js/user/profile/profile.js"></script>
     <script src="/assets/js/user/community/chat.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

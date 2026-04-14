@@ -6,7 +6,7 @@
  */
 $activePage = 'dashboard';
 $pageScripts = [
-    '/assets/js/user/dashboard.js',
+    '/assets/js/user/dashboard/dashboard.js',
 ];
 
 

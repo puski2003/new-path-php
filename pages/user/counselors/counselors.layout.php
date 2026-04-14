@@ -278,7 +278,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
     </script>
     <?php
     $pageScripts = [
-        '/assets/js/user/counselors.js',
+        '/assets/js/user/counselors/counselors.js',
     ];
     require_once __DIR__ . '/../common/user.footer.php';
     ?>
