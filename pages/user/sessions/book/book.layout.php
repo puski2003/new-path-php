@@ -70,7 +70,7 @@
                                             <div>
                                                 <span class="detail-label">Date</span>
                                                 <span class="detail-value">
-                                                    <?= htmlspecialchars(date('D, d M Y', strtotime($slotDatetime))) ?>
+                                                    <?= htmlspecialchars(date('D, d M Y', strtotime($slotDatetime ?? ''))) ?>
                                                 </span>
                                             </div>
                                         </div>
@@ -79,7 +79,7 @@
                                             <div>
                                                 <span class="detail-label">Time</span>
                                                 <span class="detail-value">
-                                                    <?= htmlspecialchars(date('g:i A', strtotime($slotDatetime))) ?>
+                                                    <?= htmlspecialchars(date('g:i A', strtotime($slotDatetime ?? ''))) ?>
                                                 </span>
                                             </div>
                                         </div>

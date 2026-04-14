@@ -76,6 +76,19 @@ class SessionsModel
         $row = $rs->fetch_assoc();
         if (!$row) return null;
 
+        // Auto-complete sessions whose datetime has passed but status was never updated.
+        // Sessions are created as 'scheduled' and nothing flips them to 'completed' automatically.
+        if (
+            in_array($row['status'], ['scheduled', 'confirmed'], true)
+            && strtotime((string)$row['session_datetime']) < time()
+        ) {
+            Database::iud(
+                "UPDATE sessions SET status = 'completed', updated_at = NOW()
+                 WHERE session_id = {$row['session_id']} AND status IN ('scheduled','confirmed')"
+            );
+            $row['status'] = 'completed';
+        }
+
         $transaction = null;
         $txRs = Database::search(
             "SELECT t.transaction_uuid, t.payment_method_id, t.processed_at, t.created_at
@@ -346,7 +359,7 @@ class SessionsModel
             "SELECT session_id, counselor_id, rating FROM sessions
              WHERE session_id = $sessionId
                AND user_id   = $userId
-               AND status    = 'completed'
+               AND (status = 'completed' OR (status IN ('scheduled','confirmed') AND session_datetime < NOW()))
              LIMIT 1"
         );
         if (!$rs || $rs->num_rows === 0) return false;

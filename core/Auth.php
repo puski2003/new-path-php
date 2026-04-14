@@ -44,7 +44,6 @@ class Auth
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) return null;
-
         [$header, $body, $sig] = $parts;
 
         // Verify signature

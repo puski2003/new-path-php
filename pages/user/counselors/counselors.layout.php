@@ -276,8 +276,11 @@ require_once __DIR__ . '/../common/user.html.head.php';
             <?php endif; ?>
         });
     </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
-    <script src="/assets/js/user/counselors.js"></script>
+    <?php
+    $pageScripts = [
+        '/assets/js/user/counselors.js',
+    ];
+    require_once __DIR__ . '/../common/user.footer.php';
+    ?>
 </body>
 </html>

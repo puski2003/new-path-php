@@ -5,6 +5,7 @@
  * POST → save and redirect
  */
 require_once __DIR__ . '/../../../common/user.head.php';
+require_once __DIR__ . '/../../recovery.model.php';
 
 $userId  = (int)$user['id'];
 $entryId = (int)($_GET['id'] ?? $_POST['entry_id'] ?? 0);
@@ -58,13 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Database::iud("INSERT INTO journal_entries (user_id, title, content, category_id, mood, is_highlight)
                 VALUES ($userId, '$safeTitle', '$safeContent', $catVal, '$safeMood', $isHighlight)");
         }
+        RecoveryModel::checkAndAwardAchievements($userId);
         Response::redirect('/user/recovery/journal?saved=1');
     }
 }
 
 $pageTitle = $existing ? 'Edit Entry' : 'New Journal Entry';
 $pageStyle = ['user/recovery', 'user/journal'];
-$moods = ['Grateful','Hopeful','Anxious','Sad','Calm','Proud','Overwhelmed','Motivated'];
+$moods = [
+    'Grateful'    => '🙏',
+    'Hopeful'     => '🌱',
+    'Calm'        => '😌',
+    'Proud'       => '💪',
+    'Motivated'   => '🔥',
+    'Anxious'     => '😰',
+    'Sad'         => '😔',
+    'Overwhelmed' => '😓',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,45 +112,54 @@ $moods = ['Grateful','Hopeful','Anxious','Sad','Calm','Proud','Overwhelmed','Mot
 
                     <!-- Title -->
                     <div class="journal-write-field">
+                        <label class="journal-field-label">
+                            <i data-lucide="pen-line" style="width:13px;height:13px;"></i>
+                            Title
+                        </label>
                         <input type="text" name="title" class="journal-title-input"
-                               placeholder="Entry title (optional)"
+                               placeholder="Give your entry a title… (optional)"
                                value="<?= htmlspecialchars($existing['title'] ?? '') ?>"
                                maxlength="255" />
                     </div>
 
-                    <!-- Category + Mood row -->
-                    <div class="journal-meta-row">
-                        <div class="journal-write-field" style="flex:1;">
-                            <label class="journal-field-label">
-                                <i data-lucide="folder" style="width:13px;height:13px;"></i>
-                                Category
-                            </label>
-                            <select name="category_id" class="journal-select">
-                                <option value="">No category</option>
-                                <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['category_id'] ?>"
-                                        <?= ($existing['category_id'] ?? 0) == $cat['category_id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cat['name']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="journal-write-field" style="flex:1;">
-                            <label class="journal-field-label">
-                                <i data-lucide="smile" style="width:13px;height:13px;"></i>
-                                Mood
-                            </label>
-                            <select name="mood" class="journal-select">
-                                <option value="">Select mood</option>
-                                <?php foreach ($moods as $m): ?>
-                                <option value="<?= $m ?>"
-                                        <?= ($existing['mood'] ?? '') === $m ? 'selected' : '' ?>>
-                                    <?= $m ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
+                    <!-- Mood chips -->
+                    <div class="journal-write-field">
+                        <label class="journal-field-label">
+                            <i data-lucide="smile" style="width:13px;height:13px;"></i>
+                            How are you feeling?
+                        </label>
+                        <input type="hidden" name="mood" id="moodInput" value="<?= htmlspecialchars($existing['mood'] ?? '') ?>">
+                        <div class="journal-mood-chips">
+                            <?php foreach ($moods as $label => $emoji): ?>
+                            <button type="button"
+                                    class="mood-chip <?= ($existing['mood'] ?? '') === $label ? 'selected' : '' ?>"
+                                    data-mood="<?= $label ?>"
+                                    title="<?= $label ?>">
+                                <span class="mood-chip-emoji"><?= $emoji ?></span>
+                                <span class="mood-chip-label"><?= $label ?></span>
+                            </button>
+                            <?php endforeach; ?>
                         </div>
                     </div>
+
+                    <!-- Category -->
+                    <?php if (!empty($categories)): ?>
+                    <div class="journal-write-field">
+                        <label class="journal-field-label">
+                            <i data-lucide="folder" style="width:13px;height:13px;"></i>
+                            Category
+                        </label>
+                        <select name="category_id" class="journal-select">
+                            <option value="">No category</option>
+                            <?php foreach ($categories as $cat): ?>
+                            <option value="<?= $cat['category_id'] ?>"
+                                    <?= ($existing['category_id'] ?? 0) == $cat['category_id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['name']) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
 
                     <!-- Content -->
                     <div class="journal-write-field">
@@ -156,7 +176,7 @@ $moods = ['Grateful','Hopeful','Anxious','Sad','Calm','Proud','Overwhelmed','Mot
                     <label class="journal-highlight-toggle">
                         <input type="checkbox" name="is_highlight" value="1"
                                <?= ($existing['is_highlight'] ?? 0) ? 'checked' : '' ?>>
-                        <i data-lucide="star" style="width:15px;height:15px;"></i>
+                        <i data-lucide="star" style="width:15px;height:15px;color:#f59e0b;"></i>
                         Mark as a highlight entry
                     </label>
 
@@ -168,6 +188,19 @@ $moods = ['Grateful','Hopeful','Anxious','Sad','Calm','Proud','Overwhelmed','Mot
                         </button>
                     </div>
                 </form>
+
+                <script>
+                    lucide.createIcons();
+                    const chips = document.querySelectorAll('.mood-chip');
+                    const moodInput = document.getElementById('moodInput');
+                    chips.forEach(chip => {
+                        chip.addEventListener('click', () => {
+                            chips.forEach(c => c.classList.remove('selected'));
+                            chip.classList.add('selected');
+                            moodInput.value = chip.dataset.mood;
+                        });
+                    });
+                </script>
             </div>
         </div>
     </section>

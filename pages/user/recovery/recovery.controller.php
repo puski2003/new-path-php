@@ -26,10 +26,11 @@ if (!empty($activePlans)) {
 }
 
 $progressStats = RecoveryModel::getProgressStats($userId);
-$daysSober = (int)$progressStats['daysSober'];
+$daysSober        = (int)$progressStats['daysSober'];
 $totalDaysTracked = (int)$progressStats['totalDaysTracked'];
-$urgesLogged = (int)$progressStats['urgesLogged'];
+$urgesLogged      = (int)$progressStats['urgesLogged'];
 $sessionsCompleted = (int)$progressStats['sessionsCompleted'];
+$trackingStarted  = (bool)$progressStats['trackingStarted'];
 
 $progressCirclePercentage = min(100, (int)(($daysSober * 100) / 100));
 $strokeOffset = number_format(282.7 - (282.7 * $progressCirclePercentage / 100), 1, '.', '');
@@ -43,8 +44,10 @@ $counselorName = $nextSession['counselorName'];
 $counselorNotes = "Great progress this week! Let's focus on mindfulness techniques next session.";
 
 // Flash messages from sub-pages
-$flashCheckin = isset($_GET['checkinDone']) ? 'Daily check-in saved!' : null;
-$flashUrge    = isset($_GET['urgeDone'])    ? 'Urge logged successfully.' : null;
+$flashCheckin  = isset($_GET['checkinDone']) ? 'Daily check-in saved!' : null;
+$flashUrge     = isset($_GET['urgeDone'])    ? 'Urge logged successfully.' : null;
+$flashEcSaved  = isset($_GET['ecSaved'])     ? 'Emergency contact saved.' : null;
+$flashStarted  = isset($_GET['started'])     ? 'Sobriety tracking started! Day 1 begins today.' : null;
 
 // Check if already checked in today
 $todayCheckRs = Database::search(

@@ -97,7 +97,7 @@ $pageStyle = ['user/recovery', 'user/journal'];
                     <div class="journal-card <?= $entry['is_highlight'] ? 'highlighted' : '' ?>">
                         <div class="journal-card-meta">
                             <?php if ($entry['category_name']): ?>
-                            <span class="journal-category-tag" style="background:<?= htmlspecialchars($catColor) ?>22;color:<?= htmlspecialchars($catColor) ?>;border-color:<?= htmlspecialchars($catColor) ?>44;">
+                            <span class="journal-category-tag">
                                 <?= htmlspecialchars($entry['category_name']) ?>
                             </span>
                             <?php endif; ?>
@@ -116,7 +116,10 @@ $pageStyle = ['user/recovery', 'user/journal'];
                         <?php endif; ?>
                         <p class="journal-card-preview"><?= htmlspecialchars($preview) ?></p>
                         <a href="/user/recovery/journal/write?id=<?= $entry['entry_id'] ?>"
-                           class="journal-read-link">Read & Edit →</a>
+                           class="journal-read-link">
+                            Read &amp; Edit
+                            <i data-lucide="arrow-right" style="width:12px;height:12px;"></i>
+                        </a>
                     </div>
                     <?php endforeach; ?>
                 </div>

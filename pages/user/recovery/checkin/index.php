@@ -58,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (user_id, checkin_date, mood_rating, mood_label, energy_level, sleep_quality, stress_level, is_sober, notes)
                 VALUES ($userId, '$today', $mood, '$safeMoodLabel', $energy, $sleep, $stress, $isSober, '$safeNotes')");
         }
+        RecoveryModel::checkAndAwardAchievements($userId);
         Response::redirect('/user/recovery?checkinDone=1');
     }
 }

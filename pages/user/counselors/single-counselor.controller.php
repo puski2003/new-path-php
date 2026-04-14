@@ -30,5 +30,14 @@ if ($availabilityJson === false) {
     $availabilityJson = '{}';
 }
 
+// Reviews data for the reviews section
+$reviewsPerPage    = 5;
+$reviewsPage       = max(1, (int)(Request::get('reviewsPage') ?? 1));
+$reviewsData       = CounselorsModel::getReviewsByCounselor((int)$counselorId, $reviewsPage, $reviewsPerPage);
+$reviews           = $reviewsData['data'];
+$reviewsTotal      = $reviewsData['total'];
+$reviewsTotalPages = max(1, (int)ceil($reviewsTotal / $reviewsPerPage));
+$ratingBreakdown   = CounselorsModel::getRatingBreakdown((int)$counselorId);
+
 $pageTitle = 'Counselor Details';
 $pageStyle = ['user/dashboard', 'user/counselors'];

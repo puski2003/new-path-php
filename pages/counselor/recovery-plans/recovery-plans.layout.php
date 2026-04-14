@@ -15,6 +15,10 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
 
         <div class="main-content-body">
 
+            <?php if (!empty($_GET['updated'])): ?>
+                <div class="success-message" style="margin: 0 0 var(--spacing-md);">Plan updated successfully.</div>
+            <?php endif; ?>
+
             <!-- Toolbar -->
             <div class="rp-toolbar">
                 <span class="rp-toolbar-title">Created Plans</span>
@@ -56,6 +60,11 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
                                class="btn btn-primary" style="font-size:var(--font-size-xs);">
                                 <i data-lucide="eye" style="width:14px;height:14px;margin-right:4px;" stroke-width="1"></i>
                                 View Plan
+                            </a>
+                            <a href="/counselor/recovery-plans/view?planId=<?= (int) $plan['planId'] ?>"
+                               class="btn btn-secondary" style="font-size:var(--font-size-xs);">
+                                <i data-lucide="pencil" style="width:14px;height:14px;margin-right:4px;" stroke-width="1"></i>
+                                Edit
                             </a>
                             <a href="/counselor/recovery-plans/delete?planId=<?= (int) $plan['planId'] ?>"
                                onclick="return confirm('Are you sure you want to delete this plan?');"

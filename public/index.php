@@ -25,7 +25,8 @@ if (str_contains($path, '..')) {
 
 
 if ($path === '/') {
-    Response::redirect('/auth/login');
+    require_once ROOT . '/pages/landing/index.php';
+    exit;
 }
 
 // Serve the page if it exists
