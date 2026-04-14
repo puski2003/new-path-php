@@ -378,7 +378,7 @@ class CounselorData
 
         Database::iud("DELETE FROM recovery_goals WHERE plan_id = $planId");
         self::syncGoals($planId, $input);
-        self::syncTasks($planId, $input, true);
+        self::syncTasks($planId, $input, false);
         self::recalculatePlanProgress($planId);
         return true;
     }
@@ -428,34 +428,100 @@ class CounselorData
 
     private static function syncTasks(int $planId, array $input, bool $replaceExisting): void
     {
-        if ($replaceExisting) {
-            Database::iud("DELETE FROM recovery_tasks WHERE plan_id = $planId");
-        }
-
         $titles = $input['taskTitle'] ?? [];
         $types = $input['taskType'] ?? [];
         $recurrences = $input['recurrencePattern'] ?? [];
         $phases = $input['taskPhase'] ?? [];
 
         if (!is_array($titles)) {
+            if ($replaceExisting) {
+                Database::iud("DELETE FROM recovery_tasks WHERE plan_id = $planId");
+            }
             return;
         }
 
+        // Build the set of incoming titles (non-empty only)
+        $incomingTitles = [];
+        foreach ($titles as $rawTitle) {
+            $t = trim((string) $rawTitle);
+            if ($t !== '') {
+                $incomingTitles[] = $t;
+            }
+        }
+
+        if ($replaceExisting) {
+            // Hard replace — wipe everything (used on plan creation)
+            Database::iud("DELETE FROM recovery_tasks WHERE plan_id = $planId");
+            foreach ($titles as $index => $rawTitle) {
+                $title = trim((string) $rawTitle);
+                if ($title === '') continue;
+                $taskType  = self::esc((string) ($types[$index] ?? 'custom'));
+                $recurrence = self::esc((string) ($recurrences[$index] ?? ''));
+                $phase     = max(1, (int) ($phases[$index] ?? 1));
+                $safeTitle = self::esc($title);
+                $isRecurring = $recurrence !== '' ? 1 : 0;
+                Database::iud(
+                    "INSERT INTO recovery_tasks (plan_id, title, description, task_type, status, priority, is_recurring, recurrence_pattern, sort_order, phase, created_at, updated_at)
+                     VALUES ($planId, '$safeTitle', '', '$taskType', 'pending', 'medium', $isRecurring, '$recurrence', $index, $phase, NOW(), NOW())"
+                );
+            }
+            return;
+        }
+
+        // Smart merge — preserve completion status of existing tasks
+        // 1. Load existing tasks keyed by title (lower-cased for comparison)
+        $existingRs = Database::search(
+            "SELECT task_id, title, status FROM recovery_tasks WHERE plan_id = $planId"
+        );
+        $existing = []; // lowercase title => ['task_id' => int, 'status' => string]
+        while ($row = $existingRs->fetch_assoc()) {
+            $existing[strtolower(trim($row['title']))] = [
+                'task_id' => (int) $row['task_id'],
+                'status'  => $row['status'],
+            ];
+        }
+
+        // 2. Build set of incoming titles (lowercase) so we can detect removals
+        $incomingLower = [];
+        foreach ($incomingTitles as $t) {
+            $incomingLower[] = strtolower($t);
+        }
+
+        // 3. Delete tasks that the counselor removed from the list
+        foreach ($existing as $lcTitle => $data) {
+            if (!in_array($lcTitle, $incomingLower, true)) {
+                Database::iud("DELETE FROM recovery_tasks WHERE task_id = {$data['task_id']}");
+            }
+        }
+
+        // 4. Insert new tasks / update metadata of existing ones
         foreach ($titles as $index => $rawTitle) {
             $title = trim((string) $rawTitle);
-            if ($title === '') {
-                continue;
-            }
-            $taskType = self::esc((string) ($types[$index] ?? 'custom'));
+            if ($title === '') continue;
+            $lcTitle    = strtolower($title);
+            $taskType   = self::esc((string) ($types[$index] ?? 'custom'));
             $recurrence = self::esc((string) ($recurrences[$index] ?? ''));
-            $phase = max(1, (int) ($phases[$index] ?? 1));
-            $safeTitle = self::esc($title);
+            $phase      = max(1, (int) ($phases[$index] ?? 1));
+            $safeTitle  = self::esc($title);
             $isRecurring = $recurrence !== '' ? 1 : 0;
 
-            Database::iud(
-                "INSERT INTO recovery_tasks (plan_id, title, description, task_type, status, priority, is_recurring, recurrence_pattern, sort_order, phase, created_at, updated_at)
-                 VALUES ($planId, '$safeTitle', '', '$taskType', 'pending', 'medium', $isRecurring, '$recurrence', $index, $phase, NOW(), NOW())"
-            );
+            if (isset($existing[$lcTitle])) {
+                // Task already exists — update metadata but keep its status intact
+                $taskId = $existing[$lcTitle]['task_id'];
+                Database::iud(
+                    "UPDATE recovery_tasks
+                     SET task_type = '$taskType', is_recurring = $isRecurring,
+                         recurrence_pattern = '$recurrence', sort_order = $index,
+                         phase = $phase, updated_at = NOW()
+                     WHERE task_id = $taskId"
+                );
+            } else {
+                // Brand new task — insert as pending
+                Database::iud(
+                    "INSERT INTO recovery_tasks (plan_id, title, description, task_type, status, priority, is_recurring, recurrence_pattern, sort_order, phase, created_at, updated_at)
+                     VALUES ($planId, '$safeTitle', '', '$taskType', 'pending', 'medium', $isRecurring, '$recurrence', $index, $phase, NOW(), NOW())"
+                );
+            }
         }
     }
 
@@ -471,7 +537,8 @@ class CounselorData
         $total = (int) ($row['total_count'] ?? 0);
         $completed = (int) ($row['completed_count'] ?? 0);
         $progress = $total > 0 ? (int) round(($completed / $total) * 100) : 0;
-        Database::iud("UPDATE recovery_plans SET progress_percentage = $progress, updated_at = NOW() WHERE plan_id = $planId");
+        $newStatus = ($total > 0 && $completed >= $total) ? 'completed' : 'active';
+        Database::iud("UPDATE recovery_plans SET progress_percentage = $progress, status = '$newStatus', updated_at = NOW() WHERE plan_id = $planId");
     }
 
     private static function getLatestPlanIdForClient(int $counselorId, int $clientUserId): ?int
