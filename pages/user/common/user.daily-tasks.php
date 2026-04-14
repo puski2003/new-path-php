@@ -1,7 +1,13 @@
 <div class="col-2-row-1 dashboard-card">
     <div class="card-header">
         <h3>Daily Tasks</h3>
-        <span class="tasks-progress"><?= $completedCount ?>/<?= ($completedCount + $pendingCount) ?> completed</span>
+        <div style="display:flex;align-items:center;gap:var(--spacing-sm);">
+            <span class="tasks-progress"><?= $completedCount ?>/<?= ($completedCount + $pendingCount) ?> completed</span>
+            <a href="/user/recovery/goals" class="view-all-link">
+                <i data-lucide="target" stroke-width="2"></i>
+                Goals
+            </a>
+        </div>
     </div>
 
     <div class="tasks-list">
