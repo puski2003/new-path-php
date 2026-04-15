@@ -52,3 +52,4 @@ $navItems = [
 <form id="counselorLogoutForm" method="POST" action="/auth/logout" style="display: none;"></form>
 
 <?php require_once __DIR__ . '/counselor-profile-modal.php'; ?>
+<?php require_once __DIR__ . '/counselor.followup-popup.php'; ?>

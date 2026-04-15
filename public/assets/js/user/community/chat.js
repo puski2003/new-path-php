@@ -12,8 +12,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentDmConversationId = null;
     let currentGroupId = null;
-    let dmPollInterval = null;
-    let groupPollInterval = null;
+
+    // ── Centralized poller ────────────────────────────────────────
+    // Only one conversation is open at a time, so a single timer covers both.
+    const poll = { timer: null, containerId: null, lastMsgId: 0, urlFn: null };
+
+    function startPolling(urlFn, containerId, initialLastMsgId) {
+        stopPolling();
+        poll.urlFn       = urlFn;
+        poll.containerId = containerId;
+        poll.lastMsgId   = initialLastMsgId || 0;
+        poll.timer = setInterval(function () {
+            fetch(poll.urlFn(poll.lastMsgId))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.success || !data.html) return;
+                    appendMessages(poll.containerId, data.html);
+                    poll.lastMsgId = data.lastMsgId;
+                })
+                .catch(function () {});
+        }, 4000);
+    }
+
+    function stopPolling() {
+        if (poll.timer) {
+            clearInterval(poll.timer);
+            poll.timer = null;
+        }
+        poll.lastMsgId   = 0;
+        poll.containerId = null;
+        poll.urlFn       = null;
+    }
+
+    function pollNow() {
+        if (!poll.urlFn || !poll.containerId) return Promise.resolve();
+        return fetch(poll.urlFn(poll.lastMsgId))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success && data.html) {
+                    appendMessages(poll.containerId, data.html);
+                    poll.lastMsgId = data.lastMsgId;
+                }
+            })
+            .catch(function () {});
+    }
+    // ─────────────────────────────────────────────────────────────
 
     if (chatToggleBtn) {
         chatToggleBtn.addEventListener('click', function() {
@@ -159,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openDmConversation(conversationId, userName, profilePicture) {
         currentDmConversationId = conversationId;
+        lastDmMsgId = 0;
 
         document.getElementById('dmConversationName').textContent = userName;
         document.getElementById('dmConversationAvatar').src = profilePicture || '/assets/img/avatar.png';
@@ -169,15 +213,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         loadDmMessages(conversationId);
 
-        dmPollInterval = setInterval(() => {
-            loadDmMessages(conversationId, true);
-        }, 5000);
+        dmPollInterval = setInterval(function() {
+            if (!currentDmConversationId) return;
+            fetch(`/user/community?ajax=poll_dm_messages&conversation_id=${currentDmConversationId}&last_id=${lastDmMsgId}`)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success || !data.html) return;
+                    appendMessages('dmMessagesContainer', data.html);
+                    lastDmMsgId = data.lastMsgId;
+                })
+                .catch(function() {});
+        }, 4000);
 
         lucide.createIcons();
     }
 
     function closeDmConversation() {
         currentDmConversationId = null;
+        lastDmMsgId = 0;
         if (dmPollInterval) {
             clearInterval(dmPollInterval);
             dmPollInterval = null;
@@ -192,12 +245,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             document.getElementById('supportTab').style.display = 'flex';
         }
-
-        refreshChatData();
     }
 
     function openGroupConversation(groupId, groupName) {
         currentGroupId = groupId;
+        lastGroupMsgId = 0;
 
         document.getElementById('groupConversationName').textContent = groupName;
 
@@ -220,15 +272,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         loadGroupMessages(groupId);
 
-        groupPollInterval = setInterval(() => {
-            loadGroupMessages(groupId, true);
-        }, 5000);
+        groupPollInterval = setInterval(function() {
+            if (!currentGroupId) return;
+            fetch(`/user/community?ajax=poll_group_messages&group_id=${currentGroupId}&last_id=${lastGroupMsgId}`)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success || !data.html) return;
+                    appendMessages('groupMessagesContainer', data.html);
+                    lastGroupMsgId = data.lastMsgId;
+                })
+                .catch(function() {});
+        }, 4000);
 
         lucide.createIcons();
     }
 
     function closeGroupConversation() {
         currentGroupId = null;
+        lastGroupMsgId = 0;
         if (groupPollInterval) {
             clearInterval(groupPollInterval);
             groupPollInterval = null;
@@ -243,69 +304,61 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             document.getElementById('supportTab').style.display = 'flex';
         }
-
-        refreshChatData();
     }
 
-    function loadDmMessages(conversationId, silent = false) {
+    function appendMessages(containerId, html) {
+        const container = document.getElementById(containerId);
+        if (!container || !html) return;
+        const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+        container.insertAdjacentHTML('beforeend', html);
+        lucide.createIcons();
+        if (atBottom) container.scrollTop = container.scrollHeight;
+    }
+
+    function loadDmMessages(conversationId) {
         fetch(`/user/community?ajax=get_dm_messages&conversation_id=${conversationId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderDmMessages(data.html, silent);
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) return;
+                const container = document.getElementById('dmMessagesContainer');
+                if (container) {
+                    container.innerHTML = data.html || '';
+                    lucide.createIcons();
+                    container.scrollTop = container.scrollHeight;
                 }
+                lastDmMsgId = data.lastMsgId || 0;
             })
-            .catch(error => console.error('Error loading DM messages:', error));
+            .catch(function(e) { console.error('Error loading DM messages:', e); });
     }
 
-    function renderDmMessages(html, silent = false) {
-        const container = document.getElementById('dmMessagesContainer');
-        if (!container) return;
-
-        container.innerHTML = html || '';
-        lucide.createIcons();
-        container.scrollTop = container.scrollHeight;
-    }
-
-    function loadGroupMessages(groupId, silent = false) {
+    function loadGroupMessages(groupId) {
         fetch(`/user/community?ajax=get_group_messages&group_id=${groupId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderGroupMessages(data.html, data.group);
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) return;
+                const container = document.getElementById('groupMessagesContainer');
+                if (container) {
+                    container.innerHTML = data.html || '';
+                    lucide.createIcons();
+                    container.scrollTop = container.scrollHeight;
+                }
+                lastGroupMsgId = data.lastMsgId || 0;
+
+                const group = data.group;
+                if (group) {
+                    const statusEl = document.getElementById('groupConversationStatus');
+                    if (statusEl) statusEl.textContent = `${group.memberCount} members`;
+                    const countEl = document.getElementById('groupMemberCount');
+                    if (countEl) countEl.textContent = group.memberCount;
+                    const infoPanel  = document.getElementById('groupInfoPanel');
+                    const description = document.getElementById('groupDescription');
+                    const schedule   = document.getElementById('groupMeetingSchedule');
+                    if (description) description.textContent = group.description || '';
+                    if (schedule)    schedule.textContent    = group.meetingSchedule || '';
+                    if (infoPanel)   infoPanel.style.display = (group.description || group.meetingSchedule) ? 'block' : 'none';
                 }
             })
-            .catch(error => console.error('Error loading group messages:', error));
-    }
-
-    function renderGroupMessages(html, group) {
-        const container = document.getElementById('groupMessagesContainer');
-        if (!container) return;
-
-        container.innerHTML = html || '';
-        lucide.createIcons();
-        container.scrollTop = container.scrollHeight;
-
-        if (group) {
-            document.getElementById('groupConversationStatus').textContent = `${group.memberCount} members`;
-            document.getElementById('groupMemberCount').textContent = group.memberCount;
-
-            const infoPanel = document.getElementById('groupInfoPanel');
-            const description = document.getElementById('groupDescription');
-            const schedule = document.getElementById('groupMeetingSchedule');
-            const hasDescription = Boolean(group.description);
-            const hasSchedule = Boolean(group.meetingSchedule);
-
-            if (description) {
-                description.textContent = group.description || '';
-            }
-            if (schedule) {
-                schedule.textContent = group.meetingSchedule || '';
-            }
-            if (infoPanel) {
-                infoPanel.style.display = (hasDescription || hasSchedule) ? 'block' : 'none';
-            }
-        }
+            .catch(function(e) { console.error('Error loading group messages:', e); });
     }
 
     function sendDmMessage() {
@@ -317,19 +370,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('conversation_id', currentDmConversationId);
         formData.append('content', content);
+        input.value = '';
 
         fetch('/user/community?ajax=send_dm_message', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                input.value = '';
-                loadDmMessages(currentDmConversationId, true);
-            }
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) { input.value = content; return; }
+            // Poll immediately to pick up the sent message via server-rendered HTML
+            fetch(`/user/community?ajax=poll_dm_messages&conversation_id=${currentDmConversationId}&last_id=${lastDmMsgId}`)
+                .then(function(r) { return r.json(); })
+                .then(function(poll) {
+                    if (poll.success && poll.html) {
+                        appendMessages('dmMessagesContainer', poll.html);
+                        lastDmMsgId = poll.lastMsgId;
+                    }
+                })
+                .catch(function() {});
         })
-        .catch(error => console.error('Error sending DM:', error));
+        .catch(function(e) { console.error('Error sending DM:', e); input.value = content; });
     }
 
     function sendGroupMessage() {
@@ -341,19 +402,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('group_id', currentGroupId);
         formData.append('content', content);
+        input.value = '';
 
         fetch('/user/community?ajax=send_group_message', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                input.value = '';
-                loadGroupMessages(currentGroupId, true);
-            }
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) { input.value = content; return; }
+            fetch(`/user/community?ajax=poll_group_messages&group_id=${currentGroupId}&last_id=${lastGroupMsgId}`)
+                .then(function(r) { return r.json(); })
+                .then(function(poll) {
+                    if (poll.success && poll.html) {
+                        appendMessages('groupMessagesContainer', poll.html);
+                        lastGroupMsgId = poll.lastMsgId;
+                    }
+                })
+                .catch(function() {});
         })
-        .catch(error => console.error('Error sending group message:', error));
+        .catch(function(e) { console.error('Error sending group message:', e); input.value = content; });
     }
 
     function handleAcceptConnection(connectionId, btn) {
@@ -399,13 +467,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => console.error('Error declining connection:', error));
-    }
-
-    function refreshChatData() {
-        fetch('/user/community?ajax=get_dm_messages&conversation_id=0')
-            .catch(() => {});
-
-        location.reload();
     }
 
     function stopPolling() {

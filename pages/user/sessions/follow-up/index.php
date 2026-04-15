@@ -13,7 +13,6 @@ if ($sessionId <= 0) {
     Response::redirect('/user/sessions');
 }
 
-const FOLLOWUP_MAX_MESSAGES = 5;
 const FOLLOWUP_WINDOW_DAYS  = 7;
 
 /* ── Fetch session + counselor info ─────────────────────────── */
@@ -59,13 +58,48 @@ $msgsRs = Database::search("
     WHERE sm.session_id = $sessionId
     ORDER BY sm.created_at ASC
 ");
+$lastMsgId = 0;
 if ($msgsRs) {
     while ($row = $msgsRs->fetch_assoc()) {
         $messages[] = $row;
+        $lastMsgId = max($lastMsgId, (int)$row['message_id']);
     }
     $msgCount = count($messages);
 }
-$isLocked = $isExpired || $msgCount >= FOLLOWUP_MAX_MESSAGES;
+$isLocked = $isExpired;
+
+/* ── AJAX poll ───────────────────────────────────────────────── */
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && Request::get('ajax') === 'poll') {
+    header('Content-Type: application/json');
+    $lastId = (int)(Request::get('last_id') ?? 0);
+
+    $newRs = Database::search("
+        SELECT sm.message_id, sm.sender_id, sm.message, sm.created_at,
+               COALESCE(u.display_name, u.username) AS sender_name,
+               u.profile_picture AS sender_avatar
+        FROM session_messages sm
+        JOIN users u ON u.user_id = sm.sender_id
+        WHERE sm.session_id = $sessionId AND sm.message_id > $lastId
+        ORDER BY sm.created_at ASC
+    ");
+    $newMsgs   = [];
+    $newLastId = $lastId;
+    while ($newRs && ($row = $newRs->fetch_assoc())) {
+        $isMe   = (int)$row['sender_id'] === $userId;
+        $avatar = $row['sender_avatar'] ?: '/assets/img/avatar.png';
+        $newMsgs[] = [
+            'id'      => (int)$row['message_id'],
+            'isMe'    => $isMe,
+            'name'    => $isMe ? 'You' : $row['sender_name'],
+            'avatar'  => $avatar,
+            'message' => $row['message'],
+            'time'    => date('M j, g:i A', strtotime($row['created_at'])),
+        ];
+        $newLastId = max($newLastId, (int)$row['message_id']);
+    }
+    echo json_encode(['success' => true, 'messages' => $newMsgs, 'isLocked' => $isLocked, 'lastMsgId' => $newLastId]);
+    exit;
+}
 
 /* ── AJAX send ───────────────────────────────────────────────── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && Request::get('ajax') === 'send') {
@@ -84,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Request::get('ajax') === 'send') {
     Database::setUpConnection();
     $safeMsg = Database::$connection->real_escape_string($msg);
     Database::iud("INSERT INTO session_messages (session_id, sender_id, message) VALUES ($sessionId, $userId, '$safeMsg')");
+    $newMsgId = (int) Database::$connection->insert_id;
 
     $counselorUserId = (int) ($session['counselor_user_id'] ?? 0);
     if ($counselorUserId > 0) {
@@ -97,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Request::get('ajax') === 'send') {
     echo json_encode([
         'success'  => true,
         'message'  => [
+            'id'      => $newMsgId,
             'isMe'    => true,
             'sender'  => 'You',
             'avatar'  => $myAvatar,
@@ -183,9 +219,9 @@ $pageScripts = ['/assets/js/components/followup-thread.js'];
                     </div>
                     <div class="followup-thread-status">
                         <div class="followup-counters">
-                            <div class="followup-counter <?= $isLocked ? 'locked' : '' ?>">
+                            <div class="followup-counter">
                                 <i data-lucide="message-square" style="width:14px;height:14px;"></i>
-                                <span><?= $msgCount ?>/<?= FOLLOWUP_MAX_MESSAGES ?> messages</span>
+                                <span><?= $msgCount ?> message<?= $msgCount !== 1 ? 's' : '' ?></span>
                             </div>
                             <?php if (!$isExpired): ?>
                             <div class="followup-counter <?= $daysLeft <= 1 ? 'urgent' : '' ?>">
@@ -246,11 +282,7 @@ $pageScripts = ['/assets/js/components/followup-thread.js'];
                     <i data-lucide="lock" style="width:24px;height:24px;color:var(--color-text-muted);"></i>
                     <div>
                         <p class="followup-locked-title">Follow-up window closed</p>
-                        <p class="followup-locked-sub">
-                            <?= $isExpired
-                                ? 'The 7-day follow-up period has ended.'
-                                : 'The 5-message limit has been reached.' ?>
-                        </p>
+                        <p class="followup-locked-sub">The 7-day follow-up period has ended.</p>
                     </div>
                     <a href="/user/counselors?tab=find" class="btn btn-primary" style="font-size:var(--font-size-sm);">
                         Book Another Session →
@@ -271,8 +303,7 @@ $pageScripts = ['/assets/js/components/followup-thread.js'];
                         </button>
                     </div>
                     <p class="followup-hint" id="fuHint">
-                        <?= FOLLOWUP_MAX_MESSAGES - $msgCount ?> message<?= (FOLLOWUP_MAX_MESSAGES - $msgCount) !== 1 ? 's' : '' ?> remaining
-                        · <?= $daysLeft ?> day<?= $daysLeft !== 1 ? 's' : '' ?> left
+                        <?= $daysLeft ?> day<?= $daysLeft !== 1 ? 's' : '' ?> left
                     </p>
                 </form>
                 <?php endif; ?>
@@ -285,21 +316,47 @@ $pageScripts = ['/assets/js/components/followup-thread.js'];
 <script>
 lucide.createIcons();
 
-const msgs    = document.querySelector('.followup-messages');
+const msgs      = document.querySelector('.followup-messages');
 if (msgs) msgs.scrollTop = msgs.scrollHeight;
 
-const form    = document.getElementById('fuForm');
-const textarea = document.getElementById('fuTextarea');
-const sendBtn  = document.getElementById('fuSendBtn');
-const hint     = document.getElementById('fuHint');
+const form      = document.getElementById('fuForm');
+const textarea  = document.getElementById('fuTextarea');
+const sendBtn   = document.getElementById('fuSendBtn');
+const hint      = document.getElementById('fuHint');
 const sessionId = <?= $sessionId ?>;
 const myAvatar  = <?= json_encode($user['profilePictureUrl'] ?? '/assets/img/avatar.png') ?>;
+let lastMsgId   = <?= $lastMsgId ?>;
+let fuLocked    = <?= $isLocked ? 'true' : 'false' ?>;
 
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function appendBubble(msg) {
+    const div = document.createElement('div');
+    div.className = 'followup-message ' + (msg.isMe ? 'message-mine' : 'message-theirs');
+    const avatarHtml = '<img src="' + escHtml(msg.avatar) + '" class="message-avatar" alt="" />';
+    const wrapHtml =
+        '<div class="message-bubble-wrap">' +
+            '<span class="message-sender">' + escHtml(msg.name) + '</span>' +
+            '<div class="message-bubble">' + escHtml(msg.message).replace(/\n/g, '<br>') + '</div>' +
+            '<span class="message-time">' + escHtml(msg.time) + '</span>' +
+        '</div>';
+    div.innerHTML = msg.isMe ? wrapHtml + avatarHtml : avatarHtml + wrapHtml;
+
+    const empty = msgs.querySelector('.followup-empty-state');
+    if (empty) { msgs.classList.remove('empty'); empty.remove(); }
+
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ── Send ────────────────────────────────────────────────────── */
 if (form) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         const text = textarea.value.trim();
-        if (!text) return;
+        if (!text || fuLocked) return;
 
         sendBtn.disabled = true;
 
@@ -311,38 +368,45 @@ if (form) {
             method: 'POST',
             body: fd,
         })
-        .then(r => r.json())
+        .then(function (r) { return r.json(); })
         .then(function (data) {
             if (!data.success) return;
             textarea.value = '';
 
-            const bubble = document.createElement('div');
-            bubble.className = 'followup-message message-mine';
-            bubble.innerHTML =
-                '<div class="message-bubble-wrap">' +
-                    '<span class="message-sender">You</span>' +
-                    '<div class="message-bubble">' + escHtml(data.message.text) + '</div>' +
-                    '<span class="message-time">' + escHtml(data.message.time) + '</span>' +
-                '</div>' +
-                '<img src="' + escHtml(myAvatar) + '" class="message-avatar" alt="" />';
+            const bubble = {
+                isMe: true,
+                name: 'You',
+                avatar: myAvatar,
+                message: data.message.text || data.message.message || '',
+                time: data.message.time,
+            };
+            appendBubble(bubble);
 
-            const empty = msgs.querySelector('.followup-empty-state');
-            if (empty) { msgs.classList.remove('empty'); empty.remove(); }
-
-            msgs.appendChild(bubble);
-            msgs.scrollTop = msgs.scrollHeight;
-
-            const rem = 5 - data.msgCount;
-            if (hint) hint.textContent = rem + ' message' + (rem !== 1 ? 's' : '') + ' remaining · ' + data.daysLeft + ' day' + (data.daysLeft !== 1 ? 's' : '') + ' left';
-
-            if (data.msgCount >= 5) location.reload();
+            if (data.message.id) lastMsgId = Math.max(lastMsgId, data.message.id);
+            if (hint) hint.textContent = data.daysLeft + ' day' + (data.daysLeft !== 1 ? 's' : '') + ' left';
         })
         .finally(function () { sendBtn.disabled = false; });
     });
 }
 
-function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* ── Poll ────────────────────────────────────────────────────── */
+if (!fuLocked) {
+    setInterval(function () {
+        if (fuLocked) return;
+        fetch('/user/sessions/follow-up?session_id=' + sessionId + '&ajax=poll&last_id=' + lastMsgId)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) return;
+                if (data.isLocked) fuLocked = true;
+                (data.messages || []).forEach(function (m) {
+                    if (!m.isMe) {
+                        appendBubble(m);
+                    }
+                    lastMsgId = Math.max(lastMsgId, m.id || 0);
+                });
+            })
+            .catch(function () {});
+    }, 4000);
 }
 </script>
 <?php require_once __DIR__ . '/../../common/user.footer.php'; ?>

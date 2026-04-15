@@ -14,8 +14,6 @@
     }
 
     return (
-      msgCount +
-      "/5 messages · " +
       daysLeft +
       " day" +
       (daysLeft !== 1 ? "s" : "") +
@@ -68,6 +66,8 @@
     let isLocked = false;
     let msgCount = 0;
     let daysLeft = 0;
+    let lastMsgId = 0;
+    let pollTimer = null;
 
     toggleButton.addEventListener("click", function () {
       popup.classList.toggle("active");
@@ -111,8 +111,43 @@
     backButton?.addEventListener("click", closeThread);
 
     function closeThread() {
+      stopPolling();
       threadView?.classList.remove("active");
       currentSessionId = null;
+      lastMsgId = 0;
+    }
+
+    function startPolling() {
+      stopPolling();
+      if (!config.pollMessagesUrl) return;
+      pollTimer = setInterval(function () {
+        if (!currentSessionId || isLocked) return;
+        fetch(config.pollMessagesUrl(currentSessionId, lastMsgId))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data.success) return;
+            isLocked = data.isLocked;
+            if (data.messages && data.messages.length) {
+              data.messages.forEach(function (m) {
+                messagesElement.insertAdjacentHTML("beforeend", renderMessageBubble(m));
+                lastMsgId = Math.max(lastMsgId, m.id || 0);
+              });
+              messagesElement.scrollTop = messagesElement.scrollHeight;
+              if (typeof lucide !== "undefined") lucide.createIcons();
+            }
+            if (data.isLocked) {
+              updateCompose();
+            }
+          })
+          .catch(function () {});
+      }, 4000);
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
     }
 
     function loadMessages() {
@@ -129,8 +164,10 @@
           isLocked = data.isLocked;
           msgCount = data.msgCount;
           daysLeft = data.daysLeft;
+          lastMsgId = data.lastMsgId || 0;
           renderMessages(data.messages || []);
           updateCompose();
+          startPolling();
         })
         .catch(function () {
           messagesElement.innerHTML = '<div class="fu-empty"><p>Could not load messages.</p></div>';
@@ -235,7 +272,10 @@
           messagesElement.scrollTop = messagesElement.scrollHeight;
           msgCount = data.msgCount;
           daysLeft = data.daysLeft;
-          isLocked = msgCount >= 5 || data.isLocked === true;
+          isLocked = data.isLocked === true;
+          if (data.message && data.message.id) {
+            lastMsgId = Math.max(lastMsgId, data.message.id);
+          }
           updateCompose();
         })
         .finally(function () {
@@ -313,21 +353,12 @@
           messagesElement.scrollTop = messagesElement.scrollHeight;
 
           const hint = form.querySelector(".followup-hint");
-          const remaining = 5 - data.msgCount;
           if (hint) {
             hint.textContent =
-              remaining +
-              " message" +
-              (remaining !== 1 ? "s" : "") +
-              " remaining · " +
               data.daysLeft +
               " day" +
               (data.daysLeft !== 1 ? "s" : "") +
               " left";
-          }
-
-          if (data.msgCount >= 5) {
-            window.location.reload();
           }
         })
         .finally(function () {

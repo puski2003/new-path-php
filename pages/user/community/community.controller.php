@@ -53,6 +53,7 @@ if ($ajaxAction) {
         case 'get_dm_messages':
             $conversationId = (int)Request::get('conversation_id');
             $messages = DirectMessageModel::getConversationMessages($userId, $conversationId);
+            $lastMsgId = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
             $html = $renderChatHtml(
                 $messages,
                 __DIR__ . '/../common/user.chat-dm-message-item.php',
@@ -62,7 +63,24 @@ if ($ajaxAction) {
                     'text' => 'Start the conversation!',
                 ]
             );
-            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages)]);
+            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'lastMsgId' => $lastMsgId]);
+            exit;
+
+        case 'poll_dm_messages':
+            $conversationId = (int)Request::get('conversation_id');
+            $afterId        = (int)Request::get('last_id');
+            $messages = DirectMessageModel::getConversationMessages($userId, $conversationId, 50, $afterId);
+            $lastMsgId = $afterId;
+            $html = '';
+            if (!empty($messages)) {
+                $lastMsgId = max(array_column($messages, 'messageId'));
+                $html = $renderChatHtml(
+                    $messages,
+                    __DIR__ . '/../common/user.chat-dm-message-item.php',
+                    []
+                );
+            }
+            echo json_encode(['success' => true, 'html' => $html, 'lastMsgId' => $lastMsgId]);
             exit;
             
         case 'send_dm_message':
@@ -84,6 +102,7 @@ if ($ajaxAction) {
             $groupId = (int)Request::get('group_id');
             $messages = SupportGroupModel::getGroupMessages($groupId, $userId);
             $group = SupportGroupModel::getGroupDetails($groupId, $userId);
+            $lastMsgId = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
             $html = $renderChatHtml(
                 $messages,
                 __DIR__ . '/../common/user.chat-group-message-item.php',
@@ -93,7 +112,24 @@ if ($ajaxAction) {
                     'text' => 'Be the first to say hello!',
                 ]
             );
-            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'group' => $group]);
+            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'group' => $group, 'lastMsgId' => $lastMsgId]);
+            exit;
+
+        case 'poll_group_messages':
+            $groupId = (int)Request::get('group_id');
+            $afterId = (int)Request::get('last_id');
+            $messages = SupportGroupModel::getGroupMessages($groupId, $userId, 50, $afterId);
+            $lastMsgId = $afterId;
+            $html = '';
+            if (!empty($messages)) {
+                $lastMsgId = max(array_column($messages, 'messageId'));
+                $html = $renderChatHtml(
+                    $messages,
+                    __DIR__ . '/../common/user.chat-group-message-item.php',
+                    []
+                );
+            }
+            echo json_encode(['success' => true, 'html' => $html, 'lastMsgId' => $lastMsgId]);
             exit;
             
         case 'send_group_message':

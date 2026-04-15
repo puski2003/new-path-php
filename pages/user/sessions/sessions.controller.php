@@ -1,6 +1,5 @@
 <?php
 
-const FOLLOWUP_MAX_MESSAGES = 5;
 const FOLLOWUP_WINDOW_DAYS  = 7;
 
 $userId = (int) $user['id'];
@@ -50,7 +49,7 @@ if ($ajaxAction = Request::get('ajax')) {
                 $msgCount++;
             }
 
-            $isLocked = $isLocked || $msgCount >= FOLLOWUP_MAX_MESSAGES;
+            // isLocked is already set to time-based check above
             $daysLeft = max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400));
 
             echo json_encode([
@@ -88,7 +87,7 @@ if ($ajaxAction = Request::get('ajax')) {
             $completedTs = !empty($sess['updated_at']) ? strtotime($sess['updated_at']) : strtotime($sess['session_datetime']);
             $msgCount    = (int) $sess['msg_count'];
 
-            if (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400 || $msgCount >= FOLLOWUP_MAX_MESSAGES) {
+            if (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400) {
                 echo json_encode(['success' => false, 'error' => 'Thread is closed']);
                 exit;
             }
@@ -210,7 +209,7 @@ $rs = Database::search(
 while ($rs && ($row = $rs->fetch_assoc())) {
     $completedTs = !empty($row['updated_at']) ? strtotime($row['updated_at']) : strtotime($row['session_datetime']);
     $daysLeft    = max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400));
-    $isLocked    = (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400) || ((int) $row['msg_count'] >= FOLLOWUP_MAX_MESSAGES);
+    $isLocked    = time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400;
     $followupSessions[] = [
         'sessionId'       => (int) $row['session_id'],
         'counselorName'   => $row['counselor_name'],
