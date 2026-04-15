@@ -129,7 +129,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
 
                     <div class="">
                         <button class="btn btn-bg-light-green filter-button" onclick="toggleFilters()">
-                            <i data-lucide="filter" stroke-width="1" class="filter-icon"></i>
+                            <i data-lucide="filter"  width="16" height="16" stroke-width="1" class="filter-icon"></i>
                             <span>Filter</span>
                         </button>
                     </div>

@@ -56,10 +56,6 @@ class CounselorsModel
         $counselors = [];
 
         while ($row = $rs->fetch_assoc()) {
-            if ($row['rating_value'] === null) {
-                // Determine random fallback rating between 4.0 and 5.0 for UI if none exists
-                $row['rating_value'] = rand(40, 50) / 10;
-            }
             $counselors[] = $row;
         }
 
@@ -110,14 +106,14 @@ class CounselorsModel
 
         $row = $rs->fetch_assoc();
 
-        $rating = $row['rating_value'] !== null ? (float)$row['rating_value'] : 4.8;
-        if ($rating <= 0) {
-            $rating = 4.8;
+        $rating = $row['rating_value'] !== null ? (float)$row['rating_value'] : null;
+        if ($rating !== null && $rating <= 0) {
+            $rating = null;
         }
 
-        $totalReviews = isset($row['total_reviews']) ? (int)$row['total_reviews'] : 150;
-        if ($totalReviews <= 0) {
-            $totalReviews = 150;
+        $totalReviews = isset($row['total_reviews']) ? (int)$row['total_reviews'] : 0;
+        if ($totalReviews < 0) {
+            $totalReviews = 0;
         }
 
         $price = isset($row['consultation_fee']) ? (float)$row['consultation_fee'] : 0.0;
@@ -132,7 +128,7 @@ class CounselorsModel
             'experience_years' => isset($row['experience_years']) ? (int)$row['experience_years'] : 0,
             'consultation_fee' => $price,
             'price_formatted' => 'Rs. ' . number_format($price, 2),
-            'rating' => number_format($rating, 1, '.', ''),
+            'rating' => $rating !== null ? number_format($rating, 1, '.', '') : null,
             'total_reviews' => $totalReviews,
             'availability_schedule' => !empty($row['availability_schedule']) ? $row['availability_schedule'] : '{}'
         ];

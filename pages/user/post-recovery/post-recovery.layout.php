@@ -35,7 +35,7 @@ $pageScripts = [
                 <div class="post-recovery-container">
                     <div class="filter-section">
                         <button class="btn btn-bg-light-green filter-button" type="button">
-                            <i data-lucide="filter" class="filter-icon" stroke-width="1.8"></i>
+                            <i data-lucide="filter"   width="16" height="16" class="filter-icon" stroke-width="1.8"></i>
                             <span>Filter</span>
                         </button>
                         <a class="btn btn-primary my-job-button <?= $onlySaved ? 'active-filter' : '' ?>" href="/user/post-recovery?my=1<?= $searchQuery !== '' ? '&q=' . urlencode($searchQuery) : '' ?>">

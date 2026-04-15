@@ -64,6 +64,7 @@
   border-bottom: 3px solid transparent;
   transition: all 0.2s ease;
   position: relative;
+  text-decoration: none;
 }
 
 .tab-btn:hover {

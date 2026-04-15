@@ -8,7 +8,10 @@ $avatarUrl = !empty($counselor['profile_picture']) ? $counselor['profile_picture
 $name = $counselor['name'] ?? 'Counselor';
 $specialty = $counselor['specialty_short'] ?? 'Specialist';
 $experience = ($counselor['experience_years'] ?? '0') . ' years experience';
-$rating = number_format((float)($counselor['rating_value'] ?? 0), 1);
+$ratingValue = isset($counselor['rating_value']) ? (float)$counselor['rating_value'] : null;
+$hasRating = $ratingValue !== null && $ratingValue > 0;
+$rating = $hasRating ? number_format($ratingValue, 1) : 'New';
+$ratingInt = $hasRating ? (int)round($ratingValue) : 0;
 $price = 'Rs. ' . number_format((float)($counselor['consultation_fee'] ?? 0), 2);
 $counselorId = $counselor['counselor_id'] ?? 0;
 ?>
@@ -21,16 +24,17 @@ $counselorId = $counselor['counselor_id'] ?? 0;
         <span class="counselor-specialty"><?= htmlspecialchars($specialty) ?></span>
         <h3 class="counselor-name"><?= htmlspecialchars($name) ?></h3>
         <p class="counselor-schedule"><?= htmlspecialchars($experience) ?></p>
-        <?php if (!empty($counselor['hasFreeCredit'])): ?>
+        <div>
+             <?php if (!empty($counselor['hasFreeCredit'])): ?>
         <span class="counselor-free-credit-badge">Free Session Available</span>
         <?php endif; ?>
+        </div>
+       
         <div class="counselor-rating">
             <div class="stars">
-                <img src="/assets/icons/star.svg" class="star" alt="star-icon" />
-                <img src="/assets/icons/star.svg" class="star" alt="star-icon" />
-                <img src="/assets/icons/star.svg" class="star" alt="star-icon" />
-                <img src="/assets/icons/star.svg" class="star" alt="star-icon" />
-                <img src="/assets/icons/star.svg" class="star" alt="star-icon" />
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <img src="/assets/icons/star.svg" class="star<?= $i > $ratingInt ? ' star-empty' : '' ?>" alt="<?= $i <= $ratingInt ? 'filled' : 'empty' ?> star" />
+                <?php endfor; ?>
             </div>
             <span class="rating-score"><?= $rating ?></span>
         </div>

@@ -3,11 +3,11 @@ $avatarUrl = !empty($counselor['profile_picture']) ? $counselor['profile_picture
 $name = $counselor['name'] ?? 'Counselor';
 $title = $counselor['title'] ?? 'Counselor';
 $specialty = $counselor['specialty'] ?? 'Specialist';
-$rating = $counselor['rating'] ?? '4.8';
-$totalReviews = (int)($counselor['total_reviews'] ?? 150);
-if ($totalReviews <= 0) {
-    $totalReviews = 150;
-}
+$rating = $counselor['rating'] ?? null;
+$totalReviews = max(0, (int)($counselor['total_reviews'] ?? 0));
+$ratingLabel = $rating !== null ? htmlspecialchars((string)$rating) . ' (' . $totalReviews . ' reviews)' : 'No reviews yet';
+$ratingValue = $rating !== null ? (float)$rating : null;
+$ratingInt = $ratingValue !== null && $ratingValue > 0 ? (int)round($ratingValue) : 0;
 $priceFormatted = $counselor['price_formatted'] ?? 'Rs. 0.00';
 ?>
 
@@ -21,13 +21,11 @@ $priceFormatted = $counselor['price_formatted'] ?? 'Rs. 0.00';
         <p class="counselor-profile-specialty"><?= htmlspecialchars($specialty) ?></p>
         <div class="counselor-rating">
             <div class="stars">
-                <img src="/assets/icons/star.svg" class="star" alt="star" />
-                <img src="/assets/icons/star.svg" class="star" alt="star" />
-                <img src="/assets/icons/star.svg" class="star" alt="star" />
-                <img src="/assets/icons/star.svg" class="star" alt="star" />
-                <img src="/assets/icons/star.svg" class="star" alt="star" />
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <img src="/assets/icons/star.svg" class="star<?= $i > $ratingInt ? ' star-empty' : '' ?>" alt="<?= $i <= $ratingInt ? 'filled' : 'empty' ?> star" />
+                <?php endfor; ?>
             </div>
-            <span class="rating-score"><?= htmlspecialchars((string)$rating) ?> (<?= $totalReviews ?> reviews)</span>
+            <span class="rating-score"><?= $ratingLabel ?></span>
         </div>
     </div>
     <div class="counselor-profile-pricing">
