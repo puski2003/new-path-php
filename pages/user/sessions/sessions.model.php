@@ -288,68 +288,6 @@ class SessionsModel
     }
 
     // ------------------------------------------------------------------
-    // Cancel session (counselor/admin-initiated only)
-    // ------------------------------------------------------------------
-
-    /**
-     * Cancel an upcoming session owned by $userId.
-     * Sets status = 'cancelled', records who cancelled and why,
-     * and inserts a notification for the counselor.
-     * Returns false if the session is not found, already past, or not cancellable.
-     */
-    public static function cancelSession(int $userId, int $sessionId, string $reason): bool
-    {
-        if ($sessionId <= 0) return false;
-
-        $rs = Database::search(
-            "SELECT session_id, counselor_id FROM sessions
-             WHERE session_id = $sessionId
-               AND user_id    = $userId
-               AND status     IN ('scheduled','confirmed')
-               AND session_datetime > NOW()
-             LIMIT 1"
-        );
-        if (!$rs || $rs->num_rows === 0) return false;
-
-        $session = $rs->fetch_assoc();
-
-        Database::setUpConnection();
-        $safeReason = Database::$connection->real_escape_string(trim($reason));
-
-        Database::iud(
-            "UPDATE sessions
-             SET status              = 'cancelled',
-                 cancelled_by        = $userId,
-                 cancellation_reason = '$safeReason',
-                 updated_at          = NOW()
-             WHERE session_id = $sessionId AND user_id = $userId"
-        );
-
-        // Notify the counselor
-        $counselorId = (int)$session['counselor_id'];
-        $cuRs = Database::search(
-            "SELECT u.user_id FROM counselors c
-             JOIN users u ON u.user_id = c.user_id
-             WHERE c.counselor_id = $counselorId LIMIT 1"
-        );
-        if ($cuRs) {
-            $cuRow = $cuRs->fetch_assoc();
-            $counselorUserId = (int)($cuRow['user_id'] ?? 0);
-            if ($counselorUserId > 0) {
-                $t = Database::$connection->real_escape_string('Session Cancelled');
-                $m = Database::$connection->real_escape_string('A client has cancelled their upcoming session.');
-                $l = Database::$connection->real_escape_string('/counselor/sessions');
-                Database::iud(
-                    "INSERT INTO notifications (user_id, type, title, message, link)
-                     VALUES ($counselorUserId, 'session_cancelled', '$t', '$m', '$l')"
-                );
-            }
-        }
-
-        return true;
-    }
-
-    // ------------------------------------------------------------------
     // Submit review + rating for a completed session
     // ------------------------------------------------------------------
 

@@ -31,7 +31,9 @@ $meetingLink    = (string)($session['meetingLink'] ?? '');
                 default    => '',
             };
         ?>
-        <span class="session-reschedule-badge <?= $rsBadgeClass ?>"><?= htmlspecialchars($rsBadgeLabel) ?></span>
+       <div>
+         <span class="session-reschedule-badge <?= $rsBadgeClass ?>"><?= htmlspecialchars($rsBadgeLabel) ?></span>
+       </div>
         <?php endif; ?>
         <a href="/user/sessions?id=<?= $sessionId ?>" class="btn btn-bg-light-green btn-view-more">View More</a>
     </div>
