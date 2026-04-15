@@ -121,15 +121,25 @@
                     <div class="session-payment-section">
                         <div class="payment-header">
                             <h3 class="payment-title">Payment</h3>
-                            <button class="btn btn-bg-light-green view-order-btn" type="button">View order</button>
+                            <?php if (!empty($sessionData['orderUrl'])): ?>
+                                <a class="btn btn-bg-light-green view-order-btn" href="<?= htmlspecialchars($sessionData['orderUrl']) ?>">View order</a>
+                            <?php else: ?>
+                                <button class="btn btn-bg-light-green view-order-btn" type="button" disabled>View order</button>
+                            <?php endif; ?>
                         </div>
                         <div class="payment-details">
                             <div class="payment-method">
-                                <img src="/assets/img/visa.png" alt="Visa" class="payment-icon" />
+                                <img src="/assets/img/visa.png" alt="Payment method" class="payment-icon" />
                                 <span class="payment-card"><?= htmlspecialchars($sessionData['cardNumber']) ?></span>
-                                <span class="payment-expiry"><?= htmlspecialchars($sessionData['cardExpiry']) ?></span>
+                                <?php if (!empty($sessionData['cardExpiry'])): ?>
+                                    <span class="payment-expiry"><?= htmlspecialchars($sessionData['cardExpiry']) ?></span>
+                                <?php endif; ?>
                             </div>
-                            <button class="btn btn-bg-light-green download-receipt-btn" type="button">Download receipt (PDF)</button>
+                            <?php if (!empty($sessionData['receiptUrl'])): ?>
+                                <a class="btn btn-bg-light-green download-receipt-btn" href="<?= htmlspecialchars($sessionData['receiptUrl']) ?>" target="_blank" rel="noopener">Download receipt (PDF)</a>
+                            <?php else: ?>
+                                <button class="btn btn-bg-light-green download-receipt-btn" type="button" disabled>Download receipt (PDF)</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

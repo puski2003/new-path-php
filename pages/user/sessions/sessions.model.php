@@ -97,7 +97,9 @@ class SessionsModel
 
         $transaction = null;
         $txRs = Database::search(
-            "SELECT t.transaction_uuid, t.payment_method_id, t.processed_at, t.created_at
+            "SELECT t.transaction_id, t.transaction_uuid, t.payment_method_id, t.amount,
+                    t.currency, t.payment_type, t.status, t.payhere_order_id,
+                    t.payhere_payment_id, t.processed_at, t.created_at
              FROM transactions t
              WHERE t.session_id = $sessionId
              ORDER BY t.created_at DESC
@@ -108,12 +110,13 @@ class SessionsModel
             $transaction = $tx;
         }
 
-        $cardLast4 = '6714';
-        $cardExpiry = '03/25';
+        $cardLast4 = '';
+        $cardExpiry = '';
+        $cardBrand = '';
         if (!empty($transaction['payment_method_id'])) {
             $paymentMethodId = (int)$transaction['payment_method_id'];
             $pmRs = Database::search(
-                "SELECT card_last_four, expiry_month, expiry_year
+                "SELECT card_last_four, card_brand, expiry_month, expiry_year
                  FROM payment_methods
                  WHERE payment_method_id = $paymentMethodId
                  LIMIT 1"
@@ -123,6 +126,9 @@ class SessionsModel
                 if (!empty($pm['card_last_four'])) {
                     $cardLast4 = (string)$pm['card_last_four'];
                 }
+                if (!empty($pm['card_brand'])) {
+                    $cardBrand = strtoupper((string)$pm['card_brand']);
+                }
                 if (!empty($pm['expiry_month']) && !empty($pm['expiry_year'])) {
                     $cardExpiry = str_pad((string)$pm['expiry_month'], 2, '0', STR_PAD_LEFT) . '/' . substr((string)$pm['expiry_year'], -2);
                 }
@@ -130,28 +136,52 @@ class SessionsModel
         }
 
         $sessionDateTime = strtotime((string)$row['session_datetime']);
-        $joinWindow = $sessionDateTime ? date('Y-m-d H:i', $sessionDateTime - (15 * 60)) : null;
+        $joinWindow = $sessionDateTime ? date('Y-m-d H:i', $sessionDateTime - (15 * 60)) . ' Asia/Colombo' : null;
+        $bookedAt = !empty($row['created_at']) ? date('Y-m-d H:i', strtotime($row['created_at'])) . ' Asia/Colombo' : null;
+        $paymentCaptured = !empty($transaction['processed_at'])
+            ? date('Y-m-d H:i', strtotime($transaction['processed_at'])) . ' Asia/Colombo'
+            : (!empty($transaction['created_at']) ? date('Y-m-d H:i', strtotime($transaction['created_at'])) . ' Asia/Colombo' : null);
+        $bookingId = !empty($transaction['transaction_uuid'])
+            ? (string)$transaction['transaction_uuid']
+            : ('S' . str_pad((string)$row['session_id'], 10, '0', STR_PAD_LEFT));
+        $amount = isset($transaction['amount']) ? (float)$transaction['amount'] : null;
+        $currency = !empty($transaction['currency']) ? (string)$transaction['currency'] : 'LKR';
+        $hasPayment = $transaction !== null;
+        $paymentMethodLabel = $cardLast4 !== ''
+            ? trim(($cardBrand !== '' ? $cardBrand . ' ' : '') . '**** ' . $cardLast4)
+            : ($hasPayment ? 'Card details unavailable' : 'No payment record');
 
         return [
             'sessionId' => (int)$row['session_id'],
             'counselorId' => (int)$row['counselor_id'],
-            'doctorName' => $row['counselor_name'] ?? 'Dr. Amelia Harper',
-            'doctorTitle' => $row['counselor_title'] ?: 'Licensed Clinical Social Worker',
-            'specialization' => $row['specialty'] ?: 'Specializes in addiction recovery and trauma-informed care',
+            'doctorName' => $row['counselor_name'] ?? 'Counselor',
+            'doctorTitle' => $row['counselor_title'] ?: 'Counselor',
+            'specialization' => $row['specialty'] ?: 'Counseling',
             'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
             'sessionTypeRaw' => $row['session_type'] ?? 'video',
             'sessionType' => self::formatSessionType((string)($row['session_type'] ?? 'video')),
             'status' => $row['status'] ?? 'scheduled',
             'location' => $row['location'] ?: ucfirst((string)($row['session_type'] ?? 'video')),
-            'bookingId' => !empty($transaction['transaction_uuid']) ? $transaction['transaction_uuid'] : ('S' . str_pad((string)$row['session_id'], 10, '0', STR_PAD_LEFT)),
-            'bookedAt' => !empty($row['created_at']) ? date('Y-m-d H:i', strtotime($row['created_at'])) . ' Asia/Colombo' : '2025-09-01 10:00 Asia/Colombo',
-            'paymentCaptured' => !empty($transaction['processed_at'])
-                ? date('Y-m-d H:i', strtotime($transaction['processed_at'])) . ' Asia/Colombo'
-                : (!empty($transaction['created_at']) ? date('Y-m-d H:i', strtotime($transaction['created_at'])) . ' Asia/Colombo' : '2025-09-01 10:05 Asia/Colombo'),
-            'joinWindow' => $joinWindow ? ($joinWindow . ' Asia/Colombo') : '2025-09-01 14:15 Asia/Colombo',
-            'notes' => $row['session_notes'] ?: 'Discussing strategies for managing stress and improving communication in relationships.',
-            'cardNumber' => '**** ' . $cardLast4,
+            'bookingId' => $bookingId,
+            'bookedAt' => $bookedAt ?: 'Not available',
+            'paymentCaptured' => $paymentCaptured ?: 'Not available',
+            'joinWindow' => $joinWindow ?: 'Not available',
+            'notes' => trim((string)($row['session_notes'] ?? '')) !== '' ? trim((string)$row['session_notes']) : 'No session notes available.',
+            'cardNumber' => $paymentMethodLabel,
             'cardExpiry' => $cardExpiry,
+            'cardBrand' => $cardBrand,
+            'hasPayment' => $hasPayment,
+            'amount' => $amount,
+            'amountFormatted' => $amount !== null ? number_format($amount, 2) . ' ' . $currency : 'Not available',
+            'currency' => $currency,
+            'paymentStatus' => !empty($transaction['status']) ? ucfirst((string)$transaction['status']) : 'Not available',
+            'paymentType' => !empty($transaction['payment_type']) ? ucfirst((string)$transaction['payment_type']) : 'Session',
+            'transactionId' => !empty($transaction['transaction_id']) ? (int)$transaction['transaction_id'] : null,
+            'transactionUuid' => $transaction['transaction_uuid'] ?? '',
+            'payhereOrderId' => $transaction['payhere_order_id'] ?? '',
+            'payherePaymentId' => $transaction['payhere_payment_id'] ?? '',
+            'orderUrl' => $hasPayment ? '/user/sessions/order?id=' . (int)$row['session_id'] : '',
+            'receiptUrl' => $hasPayment ? '/user/sessions/receipt?id=' . (int)$row['session_id'] . '&print=1' : '',
             'meetingLink'     => $row['meeting_link'] ?: '',
             'sessionDateTime' => $row['session_datetime'],
             'rating'          => $row['rating'] !== null ? (int)$row['rating'] : null,
