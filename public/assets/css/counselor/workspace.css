@@ -4,6 +4,12 @@
 /* ══════════════════════════════════════════
    Join Meeting banner
    ══════════════════════════════════════════ */
+
+.ws-plan-actions{
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
 .ws-meeting-banner {
     display: flex;
     align-items: center;
@@ -155,6 +161,26 @@
 .ws-profile-link i {
     width: 14px;
     height: 14px;
+}
+
+.ws-link-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.ws-create-plan-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-xs) !important;
+}
+
+.ws-create-plan-btn i {
+    width: 16px;
+    height: 16px;
 }
 
 /* ══════════════════════════════════════════
@@ -368,5 +394,9 @@
 
     .ws-meta-grid {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .ws-link-row {
+        align-items: flex-start;
     }
 }

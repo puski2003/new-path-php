@@ -122,10 +122,13 @@ $pageScripts        = ['/assets/js/counselor/sessions/workspace.js'];
                     </div>
                     <?php endif; ?>
                 </div>
-                <a class="ws-profile-link" href="/counselor/client-profile?id=<?= (int)$session['userId'] ?>">
-                    <i data-lucide="external-link" stroke-width="1.5"></i>
-                    View Full Client Profile
-                </a>
+                <div class="ws-link-row">
+                    <a class="ws-profile-link" href="/counselor/client-profile?id=<?= (int)$session['userId'] ?>">
+                        <i data-lucide="external-link" stroke-width="1.5"></i>
+                        View Full Client Profile
+                    </a>
+                   
+                </div>
             </div>
 
             <!-- ── Private session notes ── -->
@@ -147,13 +150,18 @@ $pageScripts        = ['/assets/js/counselor/sessions/workspace.js'];
             <div class="cc-section">
                 <div class="cc-section-header">
                     <h4>Recovery Plan</h4>
-                    <?php if ($clientProfile && !empty($clientProfile['plan']['planId'])): ?>
+                    <div class="ws-plan-actions">
+                        <?php if ($clientProfile && !empty($clientProfile['plan']['planId'])): ?>
                         <a href="/counselor/recovery-plans/view?planId=<?= (int)$clientProfile['plan']['planId'] ?>"
                            class="btn btn-primary" style="font-size:var(--font-size-xs);">View Full Plan</a>
-                    <?php else: ?>
-                        <a href="/counselor/recovery-plans/create?userId=<?= (int)$session['userId'] ?>"
-                           class="btn btn-primary" style="font-size:var(--font-size-xs);">Create Plan</a>
                     <?php endif; ?>
+                       <a class="btn btn-secondary ws-create-plan-btn"
+                       href="/counselor/recovery-plans/create?userId=<?= (int)$session['userId'] ?>">
+                        <i data-lucide="clipboard-plus" stroke-width="1.8" width="16" height="16"></i>
+                        Create Recovery Plan
+                    </a>
+                    </div>
+                    
                 </div>
 
                 <?php if ($clientProfile && !empty($clientProfile['plan'])): ?>
