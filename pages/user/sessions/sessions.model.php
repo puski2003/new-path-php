@@ -2,6 +2,75 @@
 
 class SessionsModel
 {
+    public static function getReportItems(int $userId, int $page = 1, int $perPage = 5): array
+    {
+        $safePage = max(1, $page);
+        $safePerPage = max(1, min(50, $perPage));
+        $offset = ($safePage - 1) * $safePerPage;
+
+        $countRs = Database::search(
+            "SELECT COUNT(*) AS total
+             FROM session_disputes sd
+             INNER JOIN sessions s ON s.session_id = sd.session_id
+             WHERE sd.reported_by = $userId"
+        );
+        $countRow = $countRs ? ($countRs->fetch_assoc() ?: []) : [];
+        $total = (int)($countRow['total'] ?? 0);
+
+        $rs = Database::search(
+            "SELECT sd.dispute_id, sd.reason, sd.description, sd.status AS report_status,
+                    sd.admin_note AS report_admin_note, sd.created_at AS reported_at,
+                    s.session_id, s.session_datetime, s.counselor_id, s.status AS session_status,
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name,
+                    u.profile_picture,
+                    t.transaction_id, t.transaction_uuid, t.amount, t.currency,
+                    rd.status AS refund_status, rd.admin_notes AS refund_admin_notes,
+                    rd.requested_amount, rd.refunded_amount, rd.created_at AS refund_created_at
+             FROM session_disputes sd
+             INNER JOIN sessions s ON s.session_id = sd.session_id
+             INNER JOIN counselors c ON c.counselor_id = s.counselor_id
+             INNER JOIN users u ON u.user_id = c.user_id
+             LEFT JOIN transactions t ON t.session_id = s.session_id
+             LEFT JOIN refund_disputes rd
+                    ON rd.transaction_id = t.transaction_id
+                   AND rd.user_id = sd.reported_by
+                   AND rd.issue_type = 'missed_session'
+             WHERE sd.reported_by = $userId
+             ORDER BY sd.created_at DESC
+             LIMIT $safePerPage OFFSET $offset"
+        );
+
+        $items = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $items[] = [
+                'disputeId' => (int)$row['dispute_id'],
+                'sessionId' => (int)$row['session_id'],
+                'counselorId' => (int)$row['counselor_id'],
+                'counselorName' => $row['counselor_name'] ?? 'Counselor',
+                'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
+                'sessionDate' => !empty($row['session_datetime']) ? date('M j, Y \a\t g:ia', strtotime($row['session_datetime'])) : '',
+                'sessionStatus' => $row['session_status'] ?? '',
+                'reason' => $row['reason'] ?? 'no_show',
+                'description' => trim((string)($row['description'] ?? '')),
+                'reportStatus' => $row['report_status'] ?? 'pending',
+                'reportAdminNote' => trim((string)($row['report_admin_note'] ?? '')),
+                'reportedAt' => !empty($row['reported_at']) ? date('M j, Y g:i A', strtotime($row['reported_at'])) : '',
+                'refundStatus' => $row['refund_status'] ?? null,
+                'refundAdminNotes' => trim((string)($row['refund_admin_notes'] ?? '')),
+                'requestedAmount' => $row['requested_amount'] !== null ? number_format((float)$row['requested_amount'], 2) . ' ' . ($row['currency'] ?: 'LKR') : null,
+                'refundedAmount' => $row['refunded_amount'] !== null ? number_format((float)$row['refunded_amount'], 2) . ' ' . ($row['currency'] ?: 'LKR') : null,
+                'transactionUuid' => $row['transaction_uuid'] ?? '',
+            ];
+        }
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $safePage,
+            'totalPages' => max(1, (int)ceil($total / $safePerPage)),
+        ];
+    }
+
     public static function getSessionsByType(int $userId, string $type, int $page = 1, int $perPage = 5): array
     {
         $safePage = max(1, $page);
@@ -30,6 +99,8 @@ class SessionsModel
                     c.title AS counselor_title, c.specialty,
                     u.profile_picture,
                     COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name,
+                    (SELECT COUNT(1) FROM session_disputes sd
+                     WHERE sd.session_id = s.session_id AND sd.reported_by = s.user_id) AS has_dispute,
                     (SELECT rr.status FROM reschedule_requests rr
                      WHERE rr.session_id = s.session_id
                      ORDER BY rr.requested_at DESC LIMIT 1) AS reschedule_status,
@@ -211,6 +282,7 @@ class SessionsModel
             'status'           => $row['status'] ?? '',
             'meetingLink'      => $row['meeting_link'] ?? '',
             'hasReview'        => $row['rating'] !== null,
+            'hasDispute'       => (int)($row['has_dispute'] ?? 0) > 0,
             'rescheduleStatus' => $row['reschedule_status'] ?? null,
             'rescheduleNote'   => $row['reschedule_note']   ?? '',
         ];
@@ -413,6 +485,38 @@ class SessionsModel
             "INSERT INTO session_disputes (session_id, reported_by, reason, description)
              VALUES ($sessionId, $userId, 'no_show', '$safeDesc')"
         );
+
+        $txRs = Database::search(
+            "SELECT transaction_id, amount, currency
+             FROM transactions
+             WHERE session_id = $sessionId
+               AND user_id = $userId
+               AND status = 'completed'
+             ORDER BY created_at DESC
+             LIMIT 1"
+        );
+        $txRow = $txRs ? $txRs->fetch_assoc() : null;
+
+        if ($txRow) {
+            $transactionId = (int)($txRow['transaction_id'] ?? 0);
+            if ($transactionId > 0) {
+                $refundExisting = Database::search(
+                    "SELECT dispute_id FROM refund_disputes
+                     WHERE transaction_id = $transactionId
+                       AND user_id = $userId
+                       AND issue_type = 'missed_session'
+                     LIMIT 1"
+                );
+
+                if (!$refundExisting || $refundExisting->num_rows === 0) {
+                    $requestedAmount = isset($txRow['amount']) ? number_format((float)$txRow['amount'], 2, '.', '') : '0.00';
+                    Database::iud(
+                        "INSERT INTO refund_disputes (transaction_id, user_id, issue_type, description, requested_amount, status)
+                         VALUES ($transactionId, $userId, 'missed_session', '$safeDesc', $requestedAmount, 'pending')"
+                    );
+                }
+            }
+        }
 
         return true;
     }

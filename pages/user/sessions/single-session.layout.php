@@ -63,9 +63,9 @@
                                     <button class="btn btn-secondary" type="button" id="openReviewModal">Leave Review</button>
                                 <?php endif; ?>
                                 <?php if ($sessionData['hasDispute']): ?>
-                                    <button class="btn btn-secondary" type="button" disabled>No-Show Reported</button>
+                                    <button class="btn btn-secondary" type="button" disabled>Counselor Reported</button>
                                 <?php elseif (in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
-                                    <button class="btn btn-secondary" type="button" id="openNoShowModal">Report No-Show</button>
+                                    <button class="btn btn-secondary" type="button" id="openNoShowModal">Report Counselor Absence</button>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -210,11 +210,11 @@
     <div class="session-modal-overlay" id="noShowModalOverlay" style="display:none;">
         <div class="session-modal">
             <div class="session-modal-header">
-                <h3>Report No-Show</h3>
+                <h3>Report Counselor Absence</h3>
                 <button type="button" class="session-modal-close" id="closeNoShowModal">&times;</button>
             </div>
             <div class="session-modal-body">
-                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Let us know if your counselor did not attend this session. Our team will review your report and may issue a refund.</p>
+                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Let us know if your counselor did not show up for this session. Our team will review your report and may issue a refund.</p>
                 <div class="form-group">
                     <label for="noShowDescription">Details <span class="optional">(optional)</span></label>
                     <textarea class="form-input" id="noShowDescription" rows="3" maxlength="1000"
@@ -376,6 +376,7 @@
             ];
             var noShowError = document.getElementById('noShowError');
             var submitNoShowBtn = document.getElementById('submitNoShowBtn');
+            var autoOpenNoShow = <?= $autoOpenNoShow ? 'true' : 'false' ?>;
 
             if (openNoShowBtn && noShowOverlay) {
                 openNoShowBtn.addEventListener('click', function () {
@@ -389,6 +390,9 @@
                 noShowOverlay.addEventListener('click', function (e) {
                     if (e.target === noShowOverlay) closeNoShow();
                 });
+                if (autoOpenNoShow) {
+                    openNoShowBtn.click();
+                }
             }
             function closeNoShow() {
                 if (!noShowOverlay) return;
@@ -410,7 +414,7 @@
                             if (data.success) {
                                 closeNoShow();
                                 if (openNoShowBtn) {
-                                    openNoShowBtn.textContent = 'No-Show Reported';
+                                    openNoShowBtn.textContent = 'Counselor Reported';
                                     openNoShowBtn.disabled = true;
                                 }
                             } else {

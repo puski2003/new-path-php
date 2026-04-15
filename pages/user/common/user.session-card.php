@@ -46,10 +46,16 @@ $meetingLink    = (string)($session['meetingLink'] ?? '');
             <?php endif; ?>
         <?php else: ?>
             <?php $hasReview = !empty($session['hasReview']); ?>
+            <?php $hasDispute = !empty($session['hasDispute']); ?>
             <?php if ($hasReview): ?>
                 <button class="btn btn-secondary" type="button" disabled>Reviewed ✓</button>
             <?php else: ?>
                 <a class="btn btn-secondary" href="/user/sessions?id=<?= $sessionId ?>&review=1">Leave Review</a>
+            <?php endif; ?>
+            <?php if ($hasDispute): ?>
+                <button class="btn btn-secondary" type="button" disabled>Counselor Reported</button>
+            <?php elseif (in_array((string)($session['status'] ?? ''), ['completed', 'no_show'], true)): ?>
+                <a class="btn btn-secondary" href="/user/sessions?id=<?= $sessionId ?>&report=1">Report Counselor Absence</a>
             <?php endif; ?>
             <a class="btn btn-primary" href="/user/counselors?id=<?= (int)($session['counselorId'] ?? 0) ?>">Rebook</a>
         <?php endif; ?>

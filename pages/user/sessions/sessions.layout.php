@@ -33,6 +33,7 @@ $pageScripts = [
                 <div class="sessions-tabs">
                     <button class="tab-btn <?= $activeTab === 'upcoming' ? 'active' : '' ?>" data-tab="upcoming">Upcoming</button>
                     <button class="tab-btn <?= $activeTab === 'history' ? 'active' : '' ?>" data-tab="history">History</button>
+                    <button class="tab-btn <?= $activeTab === 'reports' ? 'active' : '' ?>" data-tab="reports">Reports & Refunds</button>
                 </div>
 
                 <div class="sessions-container <?= $activeTab === 'history' ? 'hidden' : '' ?>" id="upcoming-sessions">
@@ -106,6 +107,83 @@ $pageScripts = [
 
                             <?php if ($historyCurrentPage < $historyTotalPages): ?>
                                 <a class="pagination-btn pagination-next" href="/user/sessions?tab=history&hpage=<?= $historyCurrentPage + 1 ?>&upage=<?= $upcomingCurrentPage ?>">
+                                    <i data-lucide="arrow-right" stroke-width="1.8"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="pagination-btn pagination-next" disabled>
+                                    <i data-lucide="arrow-right" stroke-width="1.8"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="sessions-container <?= $activeTab === 'reports' ? '' : 'hidden' ?>" id="report-sessions">
+                    <?php if (empty($reportItems)): ?>
+                        <div class="session-card">
+                            <div class="session-info">
+                                <h3 class="session-name">No reports or refunds yet</h3>
+                                <p class="session-schedule">No-show reports and refund updates will appear here.</p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($reportItems as $report): ?>
+                            <div class="session-card">
+                                <div class="session-avatar">
+                                    <img src="<?= htmlspecialchars($report['profilePicture']) ?>" alt="<?= htmlspecialchars($report['counselorName']) ?>" />
+                                </div>
+                                <div class="session-info">
+                                    <span class="session-specialty">No-Show Report</span>
+                                    <h3 class="session-name"><?= htmlspecialchars($report['counselorName']) ?></h3>
+                                    <p class="session-schedule"><?= htmlspecialchars($report['sessionDate']) ?></p>
+                                    <div>
+                                        <span class="session-reschedule-badge session-reschedule-badge--pending">
+                                            Report <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $report['reportStatus']))) ?>
+                                        </span>
+                                        <?php if (!empty($report['refundStatus'])): ?>
+                                            <span class="session-reschedule-badge <?= in_array($report['refundStatus'], ['approved', 'resolved'], true) ? 'session-reschedule-badge--approved' : ($report['refundStatus'] === 'rejected' ? 'session-reschedule-badge--rejected' : 'session-reschedule-badge--pending') ?>">
+                                                Refund <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $report['refundStatus']))) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if ($report['description'] !== ''): ?>
+                                        <p class="session-schedule"><?= htmlspecialchars($report['description']) ?></p>
+                                    <?php endif; ?>
+                                    <?php if (!empty($report['requestedAmount'])): ?>
+                                        <p class="session-schedule">Requested refund: <?= htmlspecialchars($report['requestedAmount']) ?></p>
+                                    <?php endif; ?>
+                                    <?php if (!empty($report['refundedAmount'])): ?>
+                                        <p class="session-schedule">Refunded: <?= htmlspecialchars($report['refundedAmount']) ?></p>
+                                    <?php endif; ?>
+                                    <?php if ($report['refundAdminNotes'] !== ''): ?>
+                                        <p class="session-schedule">Admin note: <?= htmlspecialchars($report['refundAdminNotes']) ?></p>
+                                    <?php elseif ($report['reportAdminNote'] !== ''): ?>
+                                        <p class="session-schedule">Admin note: <?= htmlspecialchars($report['reportAdminNote']) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="session-actions">
+                                    <a class="btn btn-bg-light-green btn-view-more" href="/user/sessions?id=<?= (int)$report['sessionId'] ?>">View Session</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if ($reportsTotalPages > 1): ?>
+                        <div class="pagination">
+                            <?php if ($reportsCurrentPage > 1): ?>
+                                <a class="pagination-btn pagination-prev" href="/user/sessions?tab=reports&rpage=<?= $reportsCurrentPage - 1 ?>&upage=<?= $upcomingCurrentPage ?>&hpage=<?= $historyCurrentPage ?>">
+                                    <i data-lucide="arrow-left" stroke-width="1.8"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="pagination-btn pagination-prev" disabled>
+                                    <i data-lucide="arrow-left" stroke-width="1.8"></i>
+                                </button>
+                            <?php endif; ?>
+
+                            <button class="pagination-btn pagination-number active"><?= $reportsCurrentPage ?></button>
+
+                            <?php if ($reportsCurrentPage < $reportsTotalPages): ?>
+                                <a class="pagination-btn pagination-next" href="/user/sessions?tab=reports&rpage=<?= $reportsCurrentPage + 1 ?>&upage=<?= $upcomingCurrentPage ?>&hpage=<?= $historyCurrentPage ?>">
                                     <i data-lucide="arrow-right" stroke-width="1.8"></i>
                                 </a>
                             <?php else: ?>
