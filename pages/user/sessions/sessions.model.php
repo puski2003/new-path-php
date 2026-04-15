@@ -29,7 +29,13 @@ class SessionsModel
                     s.rating,
                     c.title AS counselor_title, c.specialty,
                     u.profile_picture,
-                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name,
+                    (SELECT rr.status FROM reschedule_requests rr
+                     WHERE rr.session_id = s.session_id
+                     ORDER BY rr.requested_at DESC LIMIT 1) AS reschedule_status,
+                    (SELECT rr.counselor_note FROM reschedule_requests rr
+                     WHERE rr.session_id = s.session_id
+                     ORDER BY rr.requested_at DESC LIMIT 1) AS reschedule_note
              FROM sessions s
              JOIN counselors c ON c.counselor_id = s.counselor_id
              JOIN users u ON u.user_id = c.user_id
@@ -158,24 +164,25 @@ class SessionsModel
     private static function mapSessionCard(array $row, string $type): array
     {
         $sessionDate = strtotime((string)$row['session_datetime']);
-        $formattedDayTime = $sessionDate ? date('D g:ia', $sessionDate) : 'Wed 2pm';
-        $formattedDayTime = str_replace('am', 'am', str_replace('pm', 'pm', $formattedDayTime));
+        $formattedDayTime = $sessionDate ? date('M j, Y \a\t g:ia', $sessionDate) : '';
 
         $schedule = $type === 'upcoming'
-            ? (self::formatSessionTypeShort((string)($row['session_type'] ?? 'video')) . ' - ' . $formattedDayTime)
-            : ('Completed - ' . $formattedDayTime);
+            ? (self::formatSessionTypeShort((string)($row['session_type'] ?? 'video')) . ' · ' . $formattedDayTime)
+            : ('Completed · ' . $formattedDayTime);
 
         return [
-            'sessionId'      => (int)$row['session_id'],
-            'counselorId'    => (int)$row['counselor_id'],
-            'doctorName'     => $row['counselor_name'] ?? 'Counselor',
-            'specialty'      => $row['specialty'] ?: 'Addiction Specialist',
-            'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
-            'schedule'       => $schedule,
-            'sessionType'    => $type,
-            'status'         => $row['status'] ?? '',
-            'meetingLink'    => $row['meeting_link'] ?? '',
-            'hasReview'      => $row['rating'] !== null,
+            'sessionId'        => (int)$row['session_id'],
+            'counselorId'      => (int)$row['counselor_id'],
+            'doctorName'       => $row['counselor_name'] ?? 'Counselor',
+            'specialty'        => $row['specialty'] ?: 'Addiction Specialist',
+            'profilePicture'   => $row['profile_picture'] ?: '/assets/img/avatar.png',
+            'schedule'         => $schedule,
+            'sessionType'      => $type,
+            'status'           => $row['status'] ?? '',
+            'meetingLink'      => $row['meeting_link'] ?? '',
+            'hasReview'        => $row['rating'] !== null,
+            'rescheduleStatus' => $row['reschedule_status'] ?? null,
+            'rescheduleNote'   => $row['reschedule_note']   ?? '',
         ];
     }
 

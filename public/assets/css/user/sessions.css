@@ -1,3 +1,31 @@
+/* ── Reschedule status badge on session cards ────────────────── */
+.session-reschedule-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+}
+.session-reschedule-badge--pending {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+.session-reschedule-badge--approved {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+.session-reschedule-badge--rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
 .session-image{
     width: 140px;
     position: absolute;

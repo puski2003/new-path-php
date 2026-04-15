@@ -1,6 +1,6 @@
 <div class="notif-bell-wrapper" id="notifBellWrapper">
     <button class="notif-bell-btn" id="notifBellBtn" type="button" aria-label="Notifications">
-        <i data-lucide="bell" stroke-width="1.5"></i>
+        <i data-lucide="bell" width="15" height="15" stroke-width="1.5"></i>
         <span class="notif-badge" id="notifBadge" style="display:none;"></span>
     </button>
 

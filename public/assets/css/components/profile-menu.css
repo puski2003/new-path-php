@@ -1,13 +1,10 @@
 /* Shared profile menu and profile modal styles */
-.user-menu-container {
-    position: relative;
-    display: inline-block;
-}
 
+/* user-menu-dropdown is now a direct child of .user-info (position:relative) */
 .user-menu-dropdown {
     position: absolute;
-    bottom: 100%;
-    right: 0;
+    bottom: calc(100% + 4px);
+    right: var(--spacing-md);
     background: var(--color-bg-white);
     border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-sm);

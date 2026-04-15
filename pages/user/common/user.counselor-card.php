@@ -21,6 +21,9 @@ $counselorId = $counselor['counselor_id'] ?? 0;
         <span class="counselor-specialty"><?= htmlspecialchars($specialty) ?></span>
         <h3 class="counselor-name"><?= htmlspecialchars($name) ?></h3>
         <p class="counselor-schedule"><?= htmlspecialchars($experience) ?></p>
+        <?php if (!empty($counselor['hasFreeCredit'])): ?>
+        <span class="counselor-free-credit-badge">Free Session Available</span>
+        <?php endif; ?>
         <div class="counselor-rating">
             <div class="stars">
                 <img src="/assets/icons/star.svg" class="star" alt="star-icon" />

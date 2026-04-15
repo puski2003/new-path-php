@@ -556,7 +556,7 @@ body {
 .user-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  
   margin: 0 var(--spacing-md) var(--spacing-2xl) var(--spacing-md);
   flex-shrink: 0;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -566,7 +566,13 @@ body {
 }
 
 
-
+.user-info-inner{
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+}
 
 .user-icon {
   width: 35px;
@@ -1171,6 +1177,36 @@ body.app-alert-open {
     color: var(--color-text-secondary);
     position: relative;
     transition: background 0.15s;
+}
+
+/* ── Bell inside user-info (replaces chevron arrow) ─────────── */
+.user-info .notif-bell-wrapper {
+    margin: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.user-info .notif-bell-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: none;
+}
+
+.user-info .notif-bell-btn svg,
+.user-info .notif-bell-btn i {
+    width: 17px;
+    height: 17px;
+}
+
+.user-info .notif-badge {
+    top: 1px;
+    right: 1px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
 }
 
 .notif-bell-btn:hover {

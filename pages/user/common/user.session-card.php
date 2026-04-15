@@ -15,6 +15,24 @@ $meetingLink    = (string)($session['meetingLink'] ?? '');
         <span class="session-specialty"><?= htmlspecialchars($specialty) ?></span>
         <h3 class="session-name"><?= htmlspecialchars($doctorName) ?></h3>
         <p class="session-schedule"><?= htmlspecialchars($schedule) ?></p>
+        <?php
+        $rescheduleStatus = $session['rescheduleStatus'] ?? null;
+        if ($rescheduleStatus):
+            $rsBadgeClass = match ($rescheduleStatus) {
+                'pending'  => 'session-reschedule-badge--pending',
+                'approved' => 'session-reschedule-badge--approved',
+                'rejected' => 'session-reschedule-badge--rejected',
+                default    => '',
+            };
+            $rsBadgeLabel = match ($rescheduleStatus) {
+                'pending'  => 'Reschedule Pending',
+                'approved' => 'Reschedule Approved — Rebook Free',
+                'rejected' => 'Reschedule Declined',
+                default    => '',
+            };
+        ?>
+        <span class="session-reschedule-badge <?= $rsBadgeClass ?>"><?= htmlspecialchars($rsBadgeLabel) ?></span>
+        <?php endif; ?>
         <a href="/user/sessions?id=<?= $sessionId ?>" class="btn btn-bg-light-green btn-view-more">View More</a>
     </div>
     <div class="session-actions">

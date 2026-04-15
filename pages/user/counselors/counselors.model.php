@@ -213,6 +213,33 @@ class CounselorsModel
     }
 
     /**
+     * Return counselor_ids for which the user has an unused approved
+     * reschedule credit (approved request with no new non-cancelled session booked after it).
+     */
+    public static function getFreeCreditCounselorIds(int $userId): array
+    {
+        if ($userId <= 0) return [];
+        $rs = Database::search(
+            "SELECT DISTINCT rr.counselor_id
+             FROM reschedule_requests rr
+             WHERE rr.user_id = $userId
+               AND rr.status  = 'approved'
+               AND NOT EXISTS (
+                   SELECT 1 FROM sessions s
+                   WHERE s.user_id      = $userId
+                     AND s.counselor_id = rr.counselor_id
+                     AND s.created_at   > rr.reviewed_at
+                     AND s.status NOT IN ('cancelled')
+               )"
+        );
+        $ids = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $ids[] = (int)$row['counselor_id'];
+        }
+        return $ids;
+    }
+
+    /**
      * Counselors the user has had at least one completed session with,
      * ordered by most recent session.
      */

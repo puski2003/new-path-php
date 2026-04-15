@@ -83,6 +83,12 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                         <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
                                         <?= $mc['sessions_count'] ?> session<?= $mc['sessions_count'] !== 1 ? 's' : '' ?>
                                     </span>
+                                    <?php if (!empty($mc['hasFreeCredit'])): ?>
+                                    <span class="meta-pill meta-pill--free">
+                                        <i data-lucide="gift" style="width:12px;height:12px;"></i>
+                                        Free Session
+                                    </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="counselor-actions">
@@ -101,9 +107,10 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                     </button>
                                 <?php endif; ?>
                                 <a href="/user/counselors?id=<?= $mc['counselor_id'] ?>"
-                                   class="btn btn-secondary" style="font-size:var(--font-size-xs);">
-                                    <i data-lucide="calendar-plus" style="width:14px;height:14px;margin-right:4px;"></i>
-                                    Book Again
+                                   class="btn <?= !empty($mc['hasFreeCredit']) ? 'btn-primary' : 'btn-secondary' ?>"
+                                   style="font-size:var(--font-size-xs);">
+                                    <i data-lucide="<?= !empty($mc['hasFreeCredit']) ? 'gift' : 'calendar-plus' ?>" style="width:14px;height:14px;margin-right:4px;"></i>
+                                    <?= !empty($mc['hasFreeCredit']) ? 'Book Free' : 'Book Again' ?>
                                 </a>
                             </div>
                         </div>
