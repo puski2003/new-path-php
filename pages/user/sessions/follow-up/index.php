@@ -390,23 +390,29 @@ if (form) {
 }
 
 /* ── Poll ────────────────────────────────────────────────────── */
+const followupPoller = window.NewPathPolling.createTask({
+    interval: 4000,
+    shouldRun: function () {
+        return !fuLocked;
+    },
+    request: function () {
+        return fetch('/user/sessions/follow-up?session_id=' + sessionId + '&ajax=poll&last_id=' + lastMsgId)
+            .then(function (r) { return r.json(); });
+    },
+    onSuccess: function (data) {
+        if (!data || !data.success) return;
+        if (data.isLocked) fuLocked = true;
+        (data.messages || []).forEach(function (m) {
+            if (!m.isMe) {
+                appendBubble(m);
+            }
+            lastMsgId = Math.max(lastMsgId, m.id || 0);
+        });
+    }
+});
+
 if (!fuLocked) {
-    setInterval(function () {
-        if (fuLocked) return;
-        fetch('/user/sessions/follow-up?session_id=' + sessionId + '&ajax=poll&last_id=' + lastMsgId)
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!data.success) return;
-                if (data.isLocked) fuLocked = true;
-                (data.messages || []).forEach(function (m) {
-                    if (!m.isMe) {
-                        appendBubble(m);
-                    }
-                    lastMsgId = Math.max(lastMsgId, m.id || 0);
-                });
-            })
-            .catch(function () {});
-    }, 4000);
+    followupPoller.start();
 }
 </script>
 <?php require_once __DIR__ . '/../../common/user.footer.php'; ?>

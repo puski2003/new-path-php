@@ -154,18 +154,18 @@
 
     // ------------------------------------------------------------------ polling
 
-    function pollBadge() {
-        fetch(endpoint + '?ajax=list')
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.success) {
-                    renderBadge(data.unread);
-                    if (isOpen) renderList(data.notifications);
-                }
-            })
-            .catch(function () {});
-    }
+    var badgePoller = window.NewPathPolling.createTask({
+        interval: 60000,
+        request: function () {
+            return fetch(endpoint + '?ajax=list')
+                .then(function (r) { return r.json(); });
+        },
+        onSuccess: function (data) {
+            if (!data || !data.success) return;
+            renderBadge(data.unread);
+            if (isOpen) renderList(data.notifications);
+        }
+    });
 
-    setInterval(pollBadge, 60000);
-    pollBadge(); // initial badge on page load
+    badgePoller.start();
 }());

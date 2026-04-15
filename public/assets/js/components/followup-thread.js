@@ -67,7 +67,31 @@
     let msgCount = 0;
     let daysLeft = 0;
     let lastMsgId = 0;
-    let pollTimer = null;
+    const poller = window.NewPathPolling.createTask({
+      interval: 4000,
+      shouldRun: function () {
+        return Boolean(currentSessionId && !isLocked && config.pollMessagesUrl);
+      },
+      request: function () {
+        return fetch(config.pollMessagesUrl(currentSessionId, lastMsgId))
+          .then(function (r) { return r.json(); });
+      },
+      onSuccess: function (data) {
+        if (!data || !data.success) return;
+        isLocked = data.isLocked;
+        if (data.messages && data.messages.length) {
+          data.messages.forEach(function (m) {
+            messagesElement.insertAdjacentHTML("beforeend", renderMessageBubble(m));
+            lastMsgId = Math.max(lastMsgId, m.id || 0);
+          });
+          messagesElement.scrollTop = messagesElement.scrollHeight;
+          if (typeof lucide !== "undefined") lucide.createIcons();
+        }
+        if (data.isLocked) {
+          updateCompose();
+        }
+      }
+    });
 
     toggleButton.addEventListener("click", function () {
       popup.classList.toggle("active");
@@ -118,36 +142,12 @@
     }
 
     function startPolling() {
-      stopPolling();
       if (!config.pollMessagesUrl) return;
-      pollTimer = setInterval(function () {
-        if (!currentSessionId || isLocked) return;
-        fetch(config.pollMessagesUrl(currentSessionId, lastMsgId))
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (!data.success) return;
-            isLocked = data.isLocked;
-            if (data.messages && data.messages.length) {
-              data.messages.forEach(function (m) {
-                messagesElement.insertAdjacentHTML("beforeend", renderMessageBubble(m));
-                lastMsgId = Math.max(lastMsgId, m.id || 0);
-              });
-              messagesElement.scrollTop = messagesElement.scrollHeight;
-              if (typeof lucide !== "undefined") lucide.createIcons();
-            }
-            if (data.isLocked) {
-              updateCompose();
-            }
-          })
-          .catch(function () {});
-      }, 4000);
+      poller.start();
     }
 
     function stopPolling() {
-      if (pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-      }
+      poller.stop();
     }
 
     function loadMessages() {

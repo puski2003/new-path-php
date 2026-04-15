@@ -12,32 +12,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentDmConversationId = null;
     let currentGroupId = null;
+    let lastDmMsgId = 0;
+    let lastGroupMsgId = 0;
 
     // ── Centralized poller ────────────────────────────────────────
     // Only one conversation is open at a time, so a single timer covers both.
-    const poll = { timer: null, containerId: null, lastMsgId: 0, urlFn: null };
+    const poll = {
+        task: null,
+        containerId: null,
+        lastMsgId: 0,
+        urlFn: null
+    };
 
     function startPolling(urlFn, containerId, initialLastMsgId) {
         stopPolling();
         poll.urlFn       = urlFn;
         poll.containerId = containerId;
         poll.lastMsgId   = initialLastMsgId || 0;
-        poll.timer = setInterval(function () {
-            fetch(poll.urlFn(poll.lastMsgId))
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data.success || !data.html) return;
-                    appendMessages(poll.containerId, data.html);
-                    poll.lastMsgId = data.lastMsgId;
-                })
-                .catch(function () {});
-        }, 4000);
+        poll.task = window.NewPathPolling.createTask({
+            interval: 4000,
+            runImmediately: false,
+            request: function () {
+                return fetch(poll.urlFn(poll.lastMsgId))
+                    .then(function (r) { return r.json(); });
+            },
+            onSuccess: function (data) {
+                if (!data || !data.success || !data.html) return;
+                appendMessages(poll.containerId, data.html);
+                poll.lastMsgId = data.lastMsgId || poll.lastMsgId;
+                if (poll.containerId === 'dmMessagesContainer') {
+                    lastDmMsgId = poll.lastMsgId;
+                } else if (poll.containerId === 'groupMessagesContainer') {
+                    lastGroupMsgId = poll.lastMsgId;
+                }
+            }
+        });
+        poll.task.start();
     }
 
     function stopPolling() {
-        if (poll.timer) {
-            clearInterval(poll.timer);
-            poll.timer = null;
+        if (poll.task) {
+            poll.task.stop();
+            poll.task = null;
         }
         poll.lastMsgId   = 0;
         poll.containerId = null;
@@ -46,15 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function pollNow() {
         if (!poll.urlFn || !poll.containerId) return Promise.resolve();
-        return fetch(poll.urlFn(poll.lastMsgId))
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.success && data.html) {
-                    appendMessages(poll.containerId, data.html);
-                    poll.lastMsgId = data.lastMsgId;
-                }
-            })
-            .catch(function () {});
+        if (poll.task) {
+            return poll.task.runNow();
+        }
+        return Promise.resolve();
     }
     // ─────────────────────────────────────────────────────────────
 
@@ -201,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function openDmConversation(conversationId, userName, profilePicture) {
+        stopPolling();
         currentDmConversationId = conversationId;
         lastDmMsgId = 0;
 
@@ -212,29 +224,17 @@ document.addEventListener('DOMContentLoaded', function() {
         dmConversationView.classList.add('active');
 
         loadDmMessages(conversationId);
-
-        dmPollInterval = setInterval(function() {
-            if (!currentDmConversationId) return;
-            fetch(`/user/community?ajax=poll_dm_messages&conversation_id=${currentDmConversationId}&last_id=${lastDmMsgId}`)
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data.success || !data.html) return;
-                    appendMessages('dmMessagesContainer', data.html);
-                    lastDmMsgId = data.lastMsgId;
-                })
-                .catch(function() {});
-        }, 4000);
+        startPolling(function (lastMsgId) {
+            return '/user/community?ajax=poll_dm_messages&conversation_id=' + currentDmConversationId + '&last_id=' + lastMsgId;
+        }, 'dmMessagesContainer', lastDmMsgId);
 
         lucide.createIcons();
     }
 
     function closeDmConversation() {
+        stopPolling();
         currentDmConversationId = null;
         lastDmMsgId = 0;
-        if (dmPollInterval) {
-            clearInterval(dmPollInterval);
-            dmPollInterval = null;
-        }
 
         dmConversationView.classList.remove('active');
         const activeTab = document.querySelector('.chat-tab--active');
@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function openGroupConversation(groupId, groupName) {
+        stopPolling();
         currentGroupId = groupId;
         lastGroupMsgId = 0;
 
@@ -271,29 +272,17 @@ document.addEventListener('DOMContentLoaded', function() {
         groupConversationView.classList.add('active');
 
         loadGroupMessages(groupId);
-
-        groupPollInterval = setInterval(function() {
-            if (!currentGroupId) return;
-            fetch(`/user/community?ajax=poll_group_messages&group_id=${currentGroupId}&last_id=${lastGroupMsgId}`)
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data.success || !data.html) return;
-                    appendMessages('groupMessagesContainer', data.html);
-                    lastGroupMsgId = data.lastMsgId;
-                })
-                .catch(function() {});
-        }, 4000);
+        startPolling(function (lastMsgId) {
+            return '/user/community?ajax=poll_group_messages&group_id=' + currentGroupId + '&last_id=' + lastMsgId;
+        }, 'groupMessagesContainer', lastGroupMsgId);
 
         lucide.createIcons();
     }
 
     function closeGroupConversation() {
+        stopPolling();
         currentGroupId = null;
         lastGroupMsgId = 0;
-        if (groupPollInterval) {
-            clearInterval(groupPollInterval);
-            groupPollInterval = null;
-        }
 
         groupConversationView.classList.remove('active');
         const activeTab = document.querySelector('.chat-tab--active');
@@ -327,6 +316,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     container.scrollTop = container.scrollHeight;
                 }
                 lastDmMsgId = data.lastMsgId || 0;
+                if (currentDmConversationId === conversationId) {
+                    poll.lastMsgId = lastDmMsgId;
+                }
             })
             .catch(function(e) { console.error('Error loading DM messages:', e); });
     }
@@ -343,6 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     container.scrollTop = container.scrollHeight;
                 }
                 lastGroupMsgId = data.lastMsgId || 0;
+                if (currentGroupId === groupId) {
+                    poll.lastMsgId = lastGroupMsgId;
+                }
 
                 const group = data.group;
                 if (group) {
@@ -379,16 +374,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data.success) { input.value = content; return; }
-            // Poll immediately to pick up the sent message via server-rendered HTML
-            fetch(`/user/community?ajax=poll_dm_messages&conversation_id=${currentDmConversationId}&last_id=${lastDmMsgId}`)
-                .then(function(r) { return r.json(); })
-                .then(function(poll) {
-                    if (poll.success && poll.html) {
-                        appendMessages('dmMessagesContainer', poll.html);
-                        lastDmMsgId = poll.lastMsgId;
-                    }
-                })
-                .catch(function() {});
+            pollNow().then(function () {
+                lastDmMsgId = poll.lastMsgId;
+            });
         })
         .catch(function(e) { console.error('Error sending DM:', e); input.value = content; });
     }
@@ -411,15 +399,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data.success) { input.value = content; return; }
-            fetch(`/user/community?ajax=poll_group_messages&group_id=${currentGroupId}&last_id=${lastGroupMsgId}`)
-                .then(function(r) { return r.json(); })
-                .then(function(poll) {
-                    if (poll.success && poll.html) {
-                        appendMessages('groupMessagesContainer', poll.html);
-                        lastGroupMsgId = poll.lastMsgId;
-                    }
-                })
-                .catch(function() {});
+            pollNow().then(function () {
+                lastGroupMsgId = poll.lastMsgId;
+            });
         })
         .catch(function(e) { console.error('Error sending group message:', e); input.value = content; });
     }
@@ -467,17 +449,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => console.error('Error declining connection:', error));
-    }
-
-    function stopPolling() {
-        if (dmPollInterval) {
-            clearInterval(dmPollInterval);
-            dmPollInterval = null;
-        }
-        if (groupPollInterval) {
-            clearInterval(groupPollInterval);
-            groupPollInterval = null;
-        }
     }
 
     const searchInput = document.getElementById('chatSearch');
