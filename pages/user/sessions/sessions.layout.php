@@ -2,9 +2,7 @@
 <html lang="en">
 <?php
 $pageScripts = [
-    '/assets/js/components/followup-thread.js',
     '/assets/js/user/sessions/sessions.js',
-    '/assets/js/user/sessions/followUp.js',
 ];
 ?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>
@@ -121,9 +119,6 @@ $pageScripts = [
             </div>
         </section>
     </main>
-
-    <?php require_once __DIR__ . '/../common/user.followup-popup.php'; ?>
-
     <?php require_once __DIR__ . '/../common/user.footer.php'; ?>
 </body>
 
