@@ -83,7 +83,10 @@ class ApproveApplicationModel
 
         $checkCounselor = Database::search("SELECT counselor_id FROM counselors WHERE user_id = $userId LIMIT 1");
         if (!($checkCounselor && $checkCounselor->num_rows > 0)) {
-            $availability = self::esc($application['availabilitySchedule']);
+            $rawAvail = $application['availabilitySchedule'];
+            $availability = self::esc(
+                (json_decode($rawAvail) !== null || $rawAvail === 'null') ? $rawAvail : '{}'
+            );
             $consultationFee = $application['consultationFee'] !== null ? (float) $application['consultationFee'] : 'NULL';
             Database::iud(
                 "INSERT INTO counselors
@@ -93,15 +96,16 @@ class ApproveApplicationModel
             );
         }
 
-        $adminRs = Database::search("SELECT admin_id FROM admin WHERE user_id = " . max(0, $adminUserId) . " LIMIT 1");
-        $adminId = (int) ($adminRs && $row = $adminRs->fetch_assoc() ? ($row['admin_id'] ?? 0) : 0);
+        $adminRs  = Database::search("SELECT admin_id FROM admin WHERE user_id = " . max(0, $adminUserId) . " LIMIT 1");
+        $adminRow = $adminRs ? $adminRs->fetch_assoc() : null;
+        $reviewedBy = ($adminRow && !empty($adminRow['admin_id'])) ? (int) $adminRow['admin_id'] : null;
         $notes = self::esc('Application approved and counselor account created');
 
         Database::iud(
             "UPDATE counselor_applications
              SET status = 'approved',
                  admin_notes = '$notes',
-                 reviewed_by = " . max(0, $adminId) . ",
+                 reviewed_by = " . ($reviewedBy !== null ? $reviewedBy : 'NULL') . ",
                  review_date = NOW(),
                  updated_at = NOW()
              WHERE application_id = $applicationId"

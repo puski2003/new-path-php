@@ -270,18 +270,125 @@ $specialties = [
                 </div>
                 <div>
                     <h2 class="ca-section__title">Availability</h2>
-                    <p class="ca-section__sub">Let us know when you're generally available for sessions</p>
+                    <p class="ca-section__sub">Toggle days on/off and add time slots for each day you're available</p>
                 </div>
             </div>
 
-            <div class="ca-row ca-row--full">
-                <div class="ca-group">
-                    <label class="ca-label" for="availabilitySchedule">Availability Schedule</label>
-                    <textarea class="ca-textarea" id="availabilitySchedule" name="availabilitySchedule"
-                              placeholder="e.g. Monday to Friday: 9 AM – 5 PM (IST)&#10;Saturdays: 10 AM – 2 PM&#10;No availability on Sundays"><?= htmlspecialchars(Request::post('availabilitySchedule') ?? '') ?></textarea>
-                    <p class="ca-hint">Your final schedule will be configured in your dashboard after approval.</p>
+            <?php
+            function caRenderTimeOptions(string $selected): string {
+                $out = '';
+                for ($h = 6; $h <= 22; $h++) {
+                    $val   = sprintf('%02d:00', $h);
+                    $label = date('g:i A', mktime($h, 0, 0));
+                    $sel   = $selected === $val ? ' selected' : '';
+                    $out  .= "<option value=\"{$val}\"{$sel}>{$label}</option>";
+                }
+                return $out;
+            }
+            $caAllDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+            ?>
+            <div class="ca-avail-list">
+                <?php foreach ($caAllDays as $day): ?>
+                <div class="ca-avail-day-row" id="ca_day_<?= $day ?>">
+                    <div class="ca-avail-day-header">
+                        <label class="ca-avail-day-toggle">
+                            <input type="checkbox"
+                                   name="<?= $day ?>_enabled"
+                                   id="ca_<?= $day ?>_enabled"
+                                   onchange="caToggleAvailDay('<?= $day ?>')">
+                            <span class="ca-avail-day-name"><?= ucfirst($day) ?></span>
+                        </label>
+                        <button type="button" class="ca-avail-add-slot"
+                                onclick="caAddAvailSlot('<?= $day ?>')"
+                                style="display:none">
+                            + Add Slot
+                        </button>
+                    </div>
+                    <div class="ca-avail-slots-container"
+                         id="ca_<?= $day ?>_slots"
+                         style="display:none">
+                        <div class="ca-avail-slot-row">
+                            <select name="<?= $day ?>_slots[0][start]" class="ca-avail-time-select">
+                                <?= caRenderTimeOptions('09:00') ?>
+                            </select>
+                            <span class="ca-avail-to">to</span>
+                            <select name="<?= $day ?>_slots[0][end]" class="ca-avail-time-select">
+                                <?= caRenderTimeOptions('17:00') ?>
+                            </select>
+                        </div>
+                    </div>
                 </div>
+                <?php endforeach; ?>
             </div>
+
+            <script>
+            function caToggleAvailDay(day) {
+                var cb     = document.getElementById('ca_' + day + '_enabled');
+                var slots  = document.getElementById('ca_' + day + '_slots');
+                var addBtn = document.querySelector('#ca_day_' + day + ' .ca-avail-add-slot');
+                if (cb.checked) {
+                    slots.style.display  = '';
+                    addBtn.style.display = '';
+                } else {
+                    slots.style.display  = 'none';
+                    addBtn.style.display = 'none';
+                }
+            }
+
+            function caMakeTimeSelect(name, selected) {
+                var sel = document.createElement('select');
+                sel.name      = name;
+                sel.className = 'ca-avail-time-select';
+                for (var h = 6; h <= 22; h++) {
+                    var val  = (h < 10 ? '0' : '') + h + ':00';
+                    var ampm = h >= 12 ? 'PM' : 'AM';
+                    var dh   = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    var opt  = document.createElement('option');
+                    opt.value       = val;
+                    opt.textContent = dh + ':00 ' + ampm;
+                    if (val === selected) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+                return sel;
+            }
+
+            function caAddAvailSlot(day) {
+                var container = document.getElementById('ca_' + day + '_slots');
+                var index     = container.querySelectorAll('.ca-avail-slot-row').length;
+
+                var row = document.createElement('div');
+                row.className = 'ca-avail-slot-row';
+
+                row.appendChild(caMakeTimeSelect(day + '_slots[' + index + '][start]', '09:00'));
+
+                var toSpan = document.createElement('span');
+                toSpan.className   = 'ca-avail-to';
+                toSpan.textContent = 'to';
+                row.appendChild(toSpan);
+
+                row.appendChild(caMakeTimeSelect(day + '_slots[' + index + '][end]', '17:00'));
+
+                var removeBtn = document.createElement('button');
+                removeBtn.type        = 'button';
+                removeBtn.className   = 'ca-avail-remove-slot';
+                removeBtn.textContent = '×';
+                removeBtn.addEventListener('click', function() { caRemoveAvailSlot(this); });
+                row.appendChild(removeBtn);
+
+                container.appendChild(row);
+            }
+
+            function caRemoveAvailSlot(btn) {
+                var row       = btn.closest('.ca-avail-slot-row');
+                var container = row.closest('.ca-avail-slots-container');
+                row.remove();
+                container.querySelectorAll('.ca-avail-slot-row').forEach(function(r, i) {
+                    r.querySelectorAll('select').forEach(function(sel) {
+                        sel.name = sel.name.replace(/\[\d+\]/, '[' + i + ']');
+                    });
+                });
+            }
+            </script>
         </div>
 
         <!-- ------------------------------------------------

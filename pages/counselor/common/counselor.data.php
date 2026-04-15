@@ -284,8 +284,29 @@ class CounselorData
         $certifications = self::esc($input['certifications'] ?? '');
         $languagesSpoken = self::esc($input['languagesSpoken'] ?? '');
         $consultationFee = is_numeric($input['consultationFee'] ?? null) ? (float) $input['consultationFee'] : 'NULL';
-        $availabilitySchedule = self::esc($input['availabilitySchedule'] ?? '');
         $documentsUrl = self::esc($input['documentsUrl'] ?? '');
+
+        // Build availability JSON from day/slot POST fields
+        $allDays    = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        $validTimes = [];
+        for ($h = 6; $h <= 22; $h++) { $validTimes[] = sprintf('%02d:00', $h); }
+        $availabilityData = [];
+        foreach ($allDays as $day) {
+            if (empty($input["{$day}_enabled"])) continue;
+            $rawSlots = $input["{$day}_slots"] ?? [];
+            $slots    = [];
+            foreach ((array) $rawSlots as $slot) {
+                $start = trim((string) ($slot['start'] ?? ''));
+                $end   = trim((string) ($slot['end']   ?? ''));
+                if (in_array($start, $validTimes, true) && in_array($end, $validTimes, true) && $start < $end) {
+                    $slots[] = ['start' => $start, 'end' => $end];
+                }
+            }
+            if (!empty($slots)) {
+                $availabilityData[$day] = $slots;
+            }
+        }
+        $availabilitySchedule = self::esc(json_encode($availabilityData));
 
         Database::iud(
             "INSERT INTO counselor_applications

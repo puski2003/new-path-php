@@ -45,15 +45,16 @@ class RejectApplicationModel
             return ['ok' => false, 'message' => 'Application not found or already processed.'];
         }
 
-        $adminRs = Database::search("SELECT admin_id FROM admin WHERE user_id = " . max(0, $adminUserId) . " LIMIT 1");
-        $adminId = (int) ($adminRs && $row = $adminRs->fetch_assoc() ? ($row['admin_id'] ?? 0) : 0);
+        $adminRs  = Database::search("SELECT admin_id FROM admin WHERE user_id = " . max(0, $adminUserId) . " LIMIT 1");
+        $adminRow = $adminRs ? $adminRs->fetch_assoc() : null;
+        $reviewedBy = ($adminRow && !empty($adminRow['admin_id'])) ? (int) $adminRow['admin_id'] : null;
         $safeNotes = self::esc($notes);
 
         Database::iud(
             "UPDATE counselor_applications
              SET status = 'rejected',
                  admin_notes = '$safeNotes',
-                 reviewed_by = " . max(0, $adminId) . ",
+                 reviewed_by = " . ($reviewedBy !== null ? $reviewedBy : 'NULL') . ",
                  review_date = NOW(),
                  updated_at = NOW()
              WHERE application_id = $applicationId"
