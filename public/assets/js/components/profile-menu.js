@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   initUserProfileMenu();
   initCounselorProfileMenu();
+  initAdminProfileMenu();
 });
 
 function initUserProfileMenu() {
@@ -28,7 +29,7 @@ function initUserProfileMenu() {
 }
 
 function initCounselorProfileMenu() {
-  const menuButton = document.getElementById("counselorInfoClick");
+  const menuButton = document.getElementById("counselorMenuBtn");
   const dropdown = document.getElementById("counselorMenuDropdown");
   const editButton = document.getElementById("editCounselorProfileBtn");
   const logoutButton = document.getElementById("counselorLogoutBtn");
@@ -59,6 +60,12 @@ function initCounselorProfileMenu() {
 
   bindModalClose(modal, closeButton, cancelButton);
   bindImagePreview(fileInput, previewImage);
+}
+
+function initAdminProfileMenu() {
+  const menuButton = document.getElementById("adminMenuBtn");
+  const dropdown = document.getElementById("adminMenuDropdown");
+  bindDropdownMenu(menuButton, dropdown);
 }
 
 function bindDropdownMenu(button, dropdown) {

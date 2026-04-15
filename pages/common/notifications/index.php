@@ -1,20 +1,29 @@
 <?php
 
 /**
- * Route: /user/notifications
- * Kept for backwards-compatibility — delegates to the shared /notifications endpoint.
+ * Route: /common/notifications
+ * Shared AJAX endpoint for the notification bell — works for user, counselor, and admin.
+ *
+ * Authentication: reads the JWT cookie directly (any valid, non-expired token is accepted).
+ * Returns 401 JSON if the token is missing or invalid.
  *
  * GET  ?ajax=list              — fetch latest 20 notifications + unread count
  * POST ?ajax=mark_read         — mark all as read
  * POST ?ajax=mark_one_read     — body: {notification_id} — mark single as read
  */
 
-require_once __DIR__ . '/../common/user.head.php';
 require_once ROOT . '/core/NotificationService.php';
 
 header('Content-Type: application/json');
 
-$userId     = (int)$user['id'];
+$payload = Auth::getUser();
+if ($payload === null) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
+}
+
+$userId     = (int)($payload['id'] ?? 0);
 $ajaxAction = Request::get('ajax');
 
 switch ($ajaxAction) {

@@ -2,6 +2,7 @@
 $_defaultScripts = [
     '/assets/js/components/sidebar.js',
     '/assets/js/components/profile-menu.js',
+    '/assets/js/components/notification-bell.js',
 ];
 $_pageScripts = [];
 if (!empty($pageScripts)) {
