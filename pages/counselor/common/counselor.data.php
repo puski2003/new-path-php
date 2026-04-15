@@ -125,7 +125,8 @@ class CounselorData
         $safeCounselorId = max(0, $counselorId);
         $rs = Database::search(
             "SELECT s.session_id, s.user_id, s.session_datetime, s.session_type, s.status, s.location, s.meeting_link, s.session_notes,
-                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Client') AS user_name
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Client') AS user_name,
+                    u.profile_picture
              FROM sessions s
              INNER JOIN users u ON u.user_id = s.user_id
              WHERE s.counselor_id = $safeCounselorId
@@ -140,6 +141,7 @@ class CounselorData
                 'sessionId' => (int) $row['session_id'],
                 'userId' => (int) $row['user_id'],
                 'userName' => $row['user_name'] ?? 'Client',
+                'userAvatar' => $row['profile_picture'] ?: '/assets/img/avatar.png',
                 'sessionDatetime' => $dateTime,
                 'sessionType' => $row['session_type'] ?? 'video',
                 'location' => $row['location'] ?? '',
