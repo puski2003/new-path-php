@@ -91,18 +91,33 @@ function fillFormWithPlan(plan) {
 
             container.innerHTML = '';
 
-            (phaseData.tasks || []).forEach(function (task) {
+            normalisePhaseItems(phaseData.tasks).forEach(function (task) {
                 const title      = typeof task === 'string' ? task : (task.title      || '');
                 const type       = typeof task === 'object' ? (task.type       || 'custom') : 'custom';
                 const recurrence = typeof task === 'object' ? (task.recurrence || '')       : '';
                 addTaskWithValue(phaseNum, title, type, recurrence);
             });
 
-            (phaseData.milestones || []).forEach(function (m) {
+            normalisePhaseItems(phaseData.milestones).forEach(function (m) {
                 addMilestoneWithValue(phaseNum, m);
             });
         }
     }
+}
+
+function normalisePhaseItems(value) {
+    if (Array.isArray(value)) {
+        return value;
+    }
+
+    if (typeof value === 'string') {
+        return value
+            .split(/\n+/)
+            .map(function (item) { return item.replace(/^\s*[-*•]?\s*/, '').trim(); })
+            .filter(Boolean);
+    }
+
+    return [];
 }
 
 function setVal(id, value) {

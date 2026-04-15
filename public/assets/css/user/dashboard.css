@@ -16,7 +16,7 @@
 
 .days-sober-card h2 {
     color: var(--color-accent);
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
 }
 

@@ -18,6 +18,7 @@ $navItems = [
     ['Resources',            '/admin/resources',            'book-open'],
     ['Support Groups',       '/admin/support-groups',       'users-round'],
     ['Finances',             '/admin/finances',             'dollar-sign'],
+    ['Counselor Payouts',   '/admin/counselor-payouts',    'banknote'],
     ['Content Management',   '/admin/content-management',   'file-text'],
     ['Job Posts',            '/admin/job-posts',            'briefcase'],
     ['Help Center',          '/admin/help-center',          'circle-help'],

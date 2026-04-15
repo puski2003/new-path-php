@@ -1,33 +1,310 @@
 <?php
 
-/**
- * POST /counselor/recovery-plans/ai-generate
- *
- * Receives { "prompt": "..." } JSON, calls the Gemini API, and returns a
- * structured recovery-plan JSON object ready for the create/edit form.
- *
- * Response shape (success):
- *   { ok: true, plan: { title, goal, description, startDate, endDate,
- *       shortTermGoalTitle, shortTermGoalDays, longTermGoalTitle,
- *       longTermGoalDays, phases: { "1":…, "2":…, "3":… }, notes } }
- *
- * Response shape (error):
- *   { ok: false, error: "message" }
- */
-
 require_once __DIR__ . '/../../common/counselor.head.php';
 
 header('Content-Type: application/json');
 
-// ── Guard: POST only ──────────────────────────────────────────────────────────
+function cleanPlanText($value): string
+{
+    if (is_array($value)) {
+        $value = implode(', ', array_map('strval', $value));
+    }
+
+    $value = trim((string) $value);
+    $value = preg_replace('/^\s*[-*•]\s*/u', '', $value);
+    $value = preg_replace('/\s+/', ' ', $value);
+
+    return trim((string) $value);
+}
+
+function splitReadableLines($value): array
+{
+    if (is_array($value)) {
+        $lines = [];
+        foreach ($value as $item) {
+            $clean = cleanPlanText($item);
+            if ($clean !== '') {
+                $lines[] = $clean;
+            }
+        }
+        return $lines;
+    }
+
+    $value = str_replace(["\r\n", "\r"], "\n", (string) $value);
+    $parts = preg_split('/\n+/', $value) ?: [];
+    $lines = [];
+
+    foreach ($parts as $part) {
+        $clean = cleanPlanText($part);
+        if ($clean !== '') {
+            $lines[] = $clean;
+        }
+    }
+
+    return $lines;
+}
+
+function extractJsonObject(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+
+    $start = strpos($text, '{');
+    $end = strrpos($text, '}');
+
+    if ($start === false || $end === false || $end <= $start) {
+        return '';
+    }
+
+    return substr($text, $start, $end - $start + 1);
+}
+
+function decodePlanPayload(string $text): ?array
+{
+    $trimmed = trim($text);
+    $candidates = array_values(array_filter([
+        $trimmed,
+        extractJsonObject($trimmed),
+    ]));
+
+    foreach ($candidates as $candidate) {
+        $decoded = json_decode($candidate, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        $relaxed = preg_replace("/,\s*([}\]])/", '$1', $candidate);
+        if (!is_string($relaxed)) {
+            continue;
+        }
+
+        $decoded = json_decode($relaxed, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+    }
+
+    return null;
+}
+
+function extractLabelValue(string $text, array $labels): string
+{
+    foreach ($labels as $label) {
+        $pattern = '/(?:^|\n)\s*' . preg_quote($label, '/') . '\s*:\s*(.+?)(?=\n\s*[A-Za-z][A-Za-z0-9 \-\/()]*\s*:|\z)/is';
+        if (preg_match($pattern, $text, $matches)) {
+            return cleanPlanText($matches[1]);
+        }
+    }
+
+    return '';
+}
+
+function parseBullets(string $text): array
+{
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    $matches = [];
+    preg_match_all('/(?:^|\n)\s*(?:[-*•]|\d+[.)])\s+(.+)/u', $text, $matches);
+
+    if (!empty($matches[1])) {
+        return array_values(array_filter(array_map('cleanPlanText', $matches[1])));
+    }
+
+    return splitReadableLines($text);
+}
+
+function normaliseTask($task): array
+{
+    $taskTypes = ['custom', 'journal', 'meditation', 'session', 'exercise'];
+    $recurrences = ['', 'daily', 'weekly', 'bi-weekly'];
+
+    if (is_string($task)) {
+        return [
+            'title' => cleanPlanText($task),
+            'type' => 'custom',
+            'recurrence' => '',
+        ];
+    }
+
+    if (!is_array($task)) {
+        return [
+            'title' => '',
+            'type' => 'custom',
+            'recurrence' => '',
+        ];
+    }
+
+    $type = strtolower(trim((string) ($task['type'] ?? 'custom')));
+    $recurrence = strtolower(trim((string) ($task['recurrence'] ?? '')));
+
+    if (!in_array($type, $taskTypes, true)) {
+        $type = 'custom';
+    }
+
+    if (!in_array($recurrence, $recurrences, true)) {
+        $recurrence = '';
+    }
+
+    return [
+        'title' => cleanPlanText($task['title'] ?? ''),
+        'type' => $type,
+        'recurrence' => $recurrence,
+    ];
+}
+
+function normalisePhase($phase, string $fallbackName): array
+{
+    $phase = is_array($phase) ? $phase : ['tasks' => $phase];
+    $tasks = [];
+    $milestones = [];
+
+    foreach ((array) ($phase['tasks'] ?? []) as $task) {
+        $normalisedTask = normaliseTask($task);
+        if ($normalisedTask['title'] !== '') {
+            $tasks[] = $normalisedTask;
+        }
+    }
+
+    foreach ((array) ($phase['milestones'] ?? []) as $milestone) {
+        $cleanMilestone = cleanPlanText($milestone);
+        if ($cleanMilestone !== '') {
+            $milestones[] = $cleanMilestone;
+        }
+    }
+
+    if (empty($tasks) && !empty($phase['tasks']) && !is_array($phase['tasks'])) {
+        foreach (splitReadableLines($phase['tasks']) as $taskLine) {
+            $tasks[] = normaliseTask($taskLine);
+        }
+    }
+
+    if (empty($milestones) && !empty($phase['milestones']) && !is_array($phase['milestones'])) {
+        $milestones = splitReadableLines($phase['milestones']);
+    }
+
+    return [
+        'name' => cleanPlanText($phase['name'] ?? $fallbackName),
+        'tasks' => array_slice($tasks, 0, 5),
+        'milestones' => array_slice($milestones, 0, 3),
+    ];
+}
+
+function parsePhaseBlock(string $block, string $fallbackName): array
+{
+    $name = extractLabelValue($block, ['Name']) ?: $fallbackName;
+    $tasksText = extractLabelValue($block, ['Tasks', 'Action Steps']);
+    $milestonesText = extractLabelValue($block, ['Milestones', 'Milestone']);
+
+    $tasks = [];
+    foreach (parseBullets($tasksText) as $task) {
+        $tasks[] = normaliseTask($task);
+    }
+
+    return [
+        'name' => $name,
+        'tasks' => array_slice($tasks, 0, 5),
+        'milestones' => array_slice(parseBullets($milestonesText), 0, 3),
+    ];
+}
+
+function parsePlanFromReadableText(string $text): ?array
+{
+    $text = trim(str_replace(["\r\n", "\r"], "\n", $text));
+    if ($text === '') {
+        return null;
+    }
+
+    $phaseMatches = [];
+    preg_match_all('/(?:^|\n)\s*(?:Phase\s*)?([123])\s*[:.-]?\s*([^\n]*)\n(.*?)(?=(?:\n\s*(?:Phase\s*)?[123]\s*[:.-]?\s*[^\n]*\n)|\z)/is', $text, $phaseMatches, PREG_SET_ORDER);
+
+    $phases = [];
+    foreach ($phaseMatches as $match) {
+        $phaseNum = (string) $match[1];
+        $phaseName = cleanPlanText($match[2] ?: '');
+        $phases[$phaseNum] = parsePhaseBlock($match[3], $phaseName !== '' ? $phaseName : match ($phaseNum) {
+            '1' => 'Stabilization',
+            '2' => 'Reduction',
+            default => 'Maintenance',
+        });
+    }
+
+    $plan = [
+        'title' => extractLabelValue($text, ['Title', 'Plan Title']),
+        'goal' => extractLabelValue($text, ['Goal', 'Primary Goal', 'Plan Goal']),
+        'description' => extractLabelValue($text, ['Description', 'Overview', 'Summary']),
+        'startDate' => extractLabelValue($text, ['Start Date']),
+        'endDate' => extractLabelValue($text, ['End Date', 'Target Completion Date']),
+        'shortTermGoalTitle' => extractLabelValue($text, ['Short-term Goal', 'Short Term Goal']),
+        'shortTermGoalDays' => (int) extractLabelValue($text, ['Short-term Goal Days', 'Short Term Goal Days']),
+        'longTermGoalTitle' => extractLabelValue($text, ['Long-term Goal', 'Long Term Goal']),
+        'longTermGoalDays' => (int) extractLabelValue($text, ['Long-term Goal Days', 'Long Term Goal Days']),
+        'notes' => extractLabelValue($text, ['Notes', 'Care Notes', 'Counselor Notes']),
+        'phases' => $phases,
+    ];
+
+    if ($plan['title'] === '' && $plan['description'] === '' && empty($plan['phases'])) {
+        $lines = splitReadableLines($text);
+        if (!empty($lines)) {
+            $plan['title'] = $lines[0];
+            $plan['description'] = implode(' ', array_slice($lines, 1, 3));
+        }
+    }
+
+    if ($plan['title'] === '' && $plan['description'] === '' && empty($plan['phases'])) {
+        return null;
+    }
+
+    return $plan;
+}
+
+function normaliseDateValue($value, string $fallback): string
+{
+    $value = trim((string) $value);
+    if ($value !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+        return $value;
+    }
+
+    $timestamp = strtotime($value);
+    if ($timestamp !== false) {
+        return date('Y-m-d', $timestamp);
+    }
+
+    return $fallback;
+}
+
+function normalisePlan(array $plan): array
+{
+    $today = date('Y-m-d');
+    $defaultEnd = date('Y-m-d', strtotime('+3 months'));
+    $phases = is_array($plan['phases'] ?? null) ? $plan['phases'] : [];
+
+    return [
+        'title' => cleanPlanText($plan['title'] ?? 'Recovery Support Plan'),
+        'goal' => cleanPlanText($plan['goal'] ?? ''),
+        'description' => cleanPlanText($plan['description'] ?? ''),
+        'startDate' => normaliseDateValue($plan['startDate'] ?? '', $today),
+        'endDate' => normaliseDateValue($plan['endDate'] ?? '', $defaultEnd),
+        'shortTermGoalTitle' => cleanPlanText($plan['shortTermGoalTitle'] ?? ''),
+        'shortTermGoalDays' => max(1, (int) ($plan['shortTermGoalDays'] ?? 30)),
+        'longTermGoalTitle' => cleanPlanText($plan['longTermGoalTitle'] ?? ''),
+        'longTermGoalDays' => max(1, (int) ($plan['longTermGoalDays'] ?? 90)),
+        'phases' => [
+            '1' => normalisePhase($phases['1'] ?? $phases[1] ?? [], 'Stabilization'),
+            '2' => normalisePhase($phases['2'] ?? $phases[2] ?? [], 'Reduction'),
+            '3' => normalisePhase($phases['3'] ?? $phases[3] ?? [], 'Maintenance'),
+        ],
+        'notes' => cleanPlanText($plan['notes'] ?? ''),
+    ];
+}
+
 if (!Request::isPost()) {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'Method not allowed']);
     exit;
 }
 
-// ── Parse body ────────────────────────────────────────────────────────────────
-$body   = (string) file_get_contents('php://input');
+$body = (string) file_get_contents('php://input');
 $parsed = json_decode($body, true);
 $prompt = trim((string) ($parsed['prompt'] ?? ''));
 
@@ -37,7 +314,6 @@ if ($prompt === '') {
     exit;
 }
 
-// ── API key check ─────────────────────────────────────────────────────────────
 $apiKey = env('GEMINI_API_KEY', '');
 if ($apiKey === '') {
     http_response_code(503);
@@ -45,46 +321,43 @@ if ($apiKey === '') {
     exit;
 }
 
-// ── System prompt ─────────────────────────────────────────────────────────────
 $systemPrompt = <<<'PROMPT'
 You are an expert addiction-recovery counselor assistant. A counselor has described a recovery plan they want to create for a client.
 Generate a complete, clinically appropriate recovery plan.
 
-Return ONLY valid JSON — no markdown fences, no explanation, no extra text — with exactly this structure:
+Return ONLY valid JSON with exactly this structure:
 {
-  "title":               "Short plan title",
-  "goal":                "One-sentence primary goal",
-  "description":         "2-3 sentence plan description",
-  "startDate":           "YYYY-MM-DD (today)",
-  "endDate":             "YYYY-MM-DD (based on duration in prompt, default 3 months)",
-  "shortTermGoalTitle":  "Short-term goal text",
-  "shortTermGoalDays":   30,
-  "longTermGoalTitle":   "Long-term goal text",
-  "longTermGoalDays":    90,
+  "title": "Short plan title",
+  "goal": "One-sentence primary goal",
+  "description": "2-3 sentence plan description",
+  "startDate": "YYYY-MM-DD (today)",
+  "endDate": "YYYY-MM-DD (based on duration in prompt, default 3 months)",
+  "shortTermGoalTitle": "Short-term goal text",
+  "shortTermGoalDays": 30,
+  "longTermGoalTitle": "Long-term goal text",
+  "longTermGoalDays": 90,
   "phases": {
     "1": {
       "name": "Stabilization",
       "tasks": [
-        { "title": "task description", "type": "custom",      "recurrence": "" },
-        { "title": "task description", "type": "session",     "recurrence": "weekly" },
-        { "title": "task description", "type": "journal",     "recurrence": "daily" }
+        { "title": "task description", "type": "custom", "recurrence": "" },
+        { "title": "task description", "type": "session", "recurrence": "weekly" }
       ],
       "milestones": ["milestone text"]
     },
     "2": {
       "name": "Reduction",
       "tasks": [
-        { "title": "task description", "type": "meditation",  "recurrence": "daily" },
-        { "title": "task description", "type": "exercise",    "recurrence": "weekly" },
-        { "title": "task description", "type": "session",     "recurrence": "bi-weekly" }
+        { "title": "task description", "type": "meditation", "recurrence": "daily" },
+        { "title": "task description", "type": "exercise", "recurrence": "weekly" }
       ],
       "milestones": ["milestone text"]
     },
     "3": {
       "name": "Maintenance",
       "tasks": [
-        { "title": "task description", "type": "custom",      "recurrence": "" },
-        { "title": "task description", "type": "session",     "recurrence": "weekly" }
+        { "title": "task description", "type": "custom", "recurrence": "" },
+        { "title": "task description", "type": "session", "recurrence": "weekly" }
       ],
       "milestones": ["milestone text"]
     }
@@ -95,41 +368,40 @@ Return ONLY valid JSON — no markdown fences, no explanation, no extra text —
 Rules:
 - task.type must be one of: custom, journal, meditation, session, exercise
 - task.recurrence must be one of: "" (one-time), "daily", "weekly", "bi-weekly"
-- Provide 3–5 tasks per phase
+- Provide 3-5 tasks per phase
 - Dates must use YYYY-MM-DD format
 - Keep all text concise and clinically appropriate
+- No markdown fences
+- No explanatory text before or after the JSON
 PROMPT;
 
-// ── Build Gemini request ──────────────────────────────────────────────────────
 $requestBody = json_encode([
     'contents' => [[
         'parts' => [[
-            'text' => $systemPrompt . "\n\nCounselor's request:\n" . $prompt,
+            'text' => $systemPrompt . "\n\nCounselor request:\n" . $prompt,
         ]],
     ]],
     'generationConfig' => [
-        'temperature'     => 0.7,
+        'temperature' => 0.6,
         'maxOutputTokens' => 2048,
         'responseMimeType' => 'application/json',
     ],
 ]);
 
-$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='
-     . urlencode($apiKey);
+$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . urlencode($apiKey);
 
-// ── cURL call ─────────────────────────────────────────────────────────────────
 $ch = curl_init($url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $requestBody,
-    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-    CURLOPT_TIMEOUT        => 30,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $requestBody,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_TIMEOUT => 30,
 ]);
 
-$raw      = curl_exec($ch);
+$raw = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlErr  = curl_error($ch);
+$curlErr = curl_error($ch);
 curl_close($ch);
 
 if ($curlErr || !$raw) {
@@ -140,29 +412,30 @@ if ($curlErr || !$raw) {
 
 if ($httpCode !== 200) {
     $errBody = json_decode($raw, true);
-    $errMsg  = $errBody['error']['message'] ?? 'Gemini API error (' . $httpCode . ')';
+    $errMsg = $errBody['error']['message'] ?? ('Gemini API error (' . $httpCode . ')');
     http_response_code(502);
     echo json_encode(['ok' => false, 'error' => $errMsg]);
     exit;
 }
 
-// ── Parse Gemini response ─────────────────────────────────────────────────────
-$gemini   = json_decode($raw, true);
+$gemini = json_decode($raw, true);
 $planText = $gemini['candidates'][0]['content']['parts'][0]['text'] ?? '';
-
-// Strip markdown code fences in case the model ignores responseMimeType
 $planText = preg_replace('/^```(?:json)?\s*/m', '', $planText);
-$planText = preg_replace('/\s*```$/m', '',  $planText);
-$planText = trim($planText);
+$planText = preg_replace('/\s*```$/m', '', $planText);
+$planText = trim((string) $planText);
 
-$plan = json_decode($planText, true);
+$plan = decodePlanPayload($planText);
+if (!is_array($plan)) {
+    $plan = parsePlanFromReadableText($planText);
+}
 
-if (!is_array($plan) || empty($plan['title'])) {
+if (!is_array($plan)) {
     http_response_code(502);
     echo json_encode(['ok' => false, 'error' => 'AI returned an unreadable response. Please try again with a clearer description.']);
     exit;
 }
 
-// ── Return ────────────────────────────────────────────────────────────────────
+$plan = normalisePlan($plan);
+
 echo json_encode(['ok' => true, 'plan' => $plan]);
 exit;
