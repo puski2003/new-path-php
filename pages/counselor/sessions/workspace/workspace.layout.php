@@ -2,13 +2,13 @@
 $activePage         = 'sessions';
 $pageHeaderTitle    = 'Session Workspace';
 $pageHeaderSubtitle = htmlspecialchars($session['clientName']) . ' · ' . $displayTime;
-$pageScripts        = ['/assets/js/counselor/workspace.js'];
+$pageScripts        = ['/assets/js/counselor/sessions/workspace.js'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <?php $pageTitle = 'Workspace · ' . $session['clientName']; $pageStyle = ['counselor/workspace']; require __DIR__ . '/../../common/counselor.html.head.php'; ?>
 <body>
-<main class="main-container theme-counselor">
+<main class="main-container theme-counselor" data-session-id="<?= (int)$sessionId ?>">
     <?php require __DIR__ . '/../../common/counselor.sidebar.php'; ?>
 
     <section class="main-content">
@@ -33,16 +33,25 @@ $pageScripts        = ['/assets/js/counselor/workspace.js'];
                         <span class="ws-meeting-time"><?= htmlspecialchars($displayTime) ?></span>
                     </div>
                 </div>
-                <?php if (!empty($session['meetingLink'])): ?>
-                    <a class="btn btn-primary ws-join-btn"
-                       href="<?= htmlspecialchars($session['meetingLink']) ?>"
-                       target="_blank" rel="noopener">
-                        <i data-lucide="video" stroke-width="2"></i>
-                        Join Meeting
-                    </a>
-                <?php else: ?>
-                    <span class="ws-no-link">No meeting link available</span>
-                <?php endif; ?>
+                <div class="ws-banner-actions">
+                    <?php if (!empty($session['meetingLink'])): ?>
+                        <a class="btn btn-primary ws-join-btn"
+                           href="<?= htmlspecialchars($session['meetingLink']) ?>"
+                           target="_blank" rel="noopener">
+                            <i data-lucide="video" stroke-width="2"></i>
+                            Join Meeting
+                        </a>
+                    <?php else: ?>
+                        <span class="ws-no-link">No meeting link available</span>
+                    <?php endif; ?>
+
+                    <?php if (!in_array($session['status'], ['completed', 'cancelled', 'no_show'], true)): ?>
+                        <button type="button" class="btn btn-secondary ws-complete-btn" id="markCompletedBtn">
+                            <i data-lucide="check-circle" stroke-width="2" width="16" height="16"></i>
+                            Mark as Completed
+                        </button>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- ── Client hero ── -->
@@ -77,7 +86,7 @@ $pageScripts        = ['/assets/js/counselor/workspace.js'];
             <div class="cc-section">
                 <div class="cc-section-header">
                     <h4>Session Details</h4>
-                    <span class="plan-status status-<?= htmlspecialchars($session['status']) ?>">
+                    <span class="plan-status status-<?= htmlspecialchars($session['status']) ?>" id="sessionStatusBadge">
                         <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $session['status']))) ?>
                     </span>
                 </div>
@@ -178,43 +187,30 @@ $pageScripts        = ['/assets/js/counselor/workspace.js'];
 
         </div><!-- /.main-content-body -->
     </section>
+<?php if (!in_array($session['status'], ['completed', 'cancelled', 'no_show'], true)): ?>
+<div class="session-modal-overlay" id="completeSessionOverlay" style="display:none;">
+    <div class="session-modal">
+        <div class="session-modal-header">
+            <h3>Complete Session</h3>
+            <button type="button" class="session-modal-close" id="closeCompleteSessionModal">&times;</button>
+        </div>
+        <div class="session-modal-body">
+            <p class="ws-complete-modal-copy">
+                Mark this session as completed? This will move it into the completed schedule history.
+            </p>
+            <p class="ws-complete-modal-copy ws-complete-modal-copy--muted">
+                Make sure your notes are saved before continuing.
+            </p>
+            <p id="completeSessionError" class="ws-complete-modal-error" style="display:none;"></p>
+            <div class="session-modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelCompleteSessionBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmCompleteSessionBtn">Mark as Completed</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 </main>
-
-<script>
-(function () {
-    var sessionId = <?= (int)$sessionId ?>;
-    var textarea  = document.getElementById('privateNotesInput');
-    var status    = document.getElementById('notesSaveStatus');
-    var btn       = document.getElementById('saveNotesBtn');
-
-    if (!textarea || !btn) return;
-
-    function saveNotes() {
-        var body = 'notes=' + encodeURIComponent(textarea.value);
-        fetch('/counselor/sessions/workspace?ajax=save_notes&session_id=' + sessionId, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            status.textContent = data.success ? 'Saved' : 'Error saving';
-            status.className   = 'ws-save-status ' + (data.success ? 'ws-save-ok' : 'ws-save-err');
-            setTimeout(function() {
-                status.textContent = '';
-                status.className   = 'ws-save-status';
-            }, 3000);
-        })
-        .catch(function() {
-            status.textContent = 'Error';
-            status.className   = 'ws-save-status ws-save-err';
-        });
-    }
-
-    btn.addEventListener('click', saveNotes);
-    textarea.addEventListener('blur', saveNotes);
-}());
-</script>
 
 <?php require __DIR__ . '/../../common/counselor.footer.php'; ?>
 </body>

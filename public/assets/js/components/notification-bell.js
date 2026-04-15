@@ -10,6 +10,7 @@
     var endpoint   = wrapper.dataset.notifEndpoint || '/notifications';
     var isOpen     = false;
     var loaded     = false;
+    var unreadCount = 0;
 
     // ------------------------------------------------------------------ open/close
 
@@ -57,10 +58,13 @@
     // ------------------------------------------------------------------ render
 
     function renderBadge(count) {
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : count;
+        unreadCount = Math.max(0, parseInt(count, 10) || 0);
+
+        if (unreadCount > 0) {
+            badge.textContent = '';
             badge.style.display = 'inline-flex';
         } else {
+            badge.textContent = '';
             badge.style.display = 'none';
         }
     }
@@ -133,8 +137,7 @@
                 el.classList.remove('notif-unread');
                 var dot = el.querySelector('.notif-dot');
                 if (dot) dot.style.opacity = '0';
-                var current = parseInt(badge.textContent, 10) || 0;
-                renderBadge(Math.max(0, current - 1));
+                renderBadge(unreadCount - 1);
             })
             .catch(function () {});
     }

@@ -14,6 +14,16 @@ if ($ajaxAction = Request::get('ajax')) {
         exit;
     }
 
+    if ($ajaxAction === 'mark_completed' && $sessionId > 0) {
+        $ok = WorkspaceModel::markSessionCompleted($counselorId, $sessionId);
+        echo json_encode([
+            'success' => $ok,
+            'status' => $ok ? 'completed' : null,
+            'label' => $ok ? 'Completed' : null,
+        ]);
+        exit;
+    }
+
     echo json_encode(['success' => false, 'error' => 'Unknown action']);
     exit;
 }

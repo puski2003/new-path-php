@@ -57,4 +57,40 @@ class WorkspaceModel
         );
         return true;
     }
+
+    /**
+     * Mark a counselor-owned session as completed.
+     * Idempotent for already-completed sessions and blocked for cancelled/no-show sessions.
+     */
+    public static function markSessionCompleted(int $counselorId, int $sessionId): bool
+    {
+        $rs = Database::search(
+            "SELECT status
+             FROM sessions
+             WHERE session_id = $sessionId AND counselor_id = $counselorId
+             LIMIT 1"
+        );
+
+        $row = $rs ? $rs->fetch_assoc() : null;
+        if (!$row) {
+            return false;
+        }
+
+        $status = (string) ($row['status'] ?? '');
+        if ($status === 'completed') {
+            return true;
+        }
+
+        if (in_array($status, ['cancelled', 'no_show'], true)) {
+            return false;
+        }
+
+        Database::iud(
+            "UPDATE sessions
+             SET status = 'completed', updated_at = NOW()
+             WHERE session_id = $sessionId AND counselor_id = $counselorId"
+        );
+
+        return true;
+    }
 }

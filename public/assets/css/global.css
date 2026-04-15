@@ -335,6 +335,10 @@ body {
   letter-spacing: var(--letter-spacing-widest);
 }
 
+i{
+  width: 16px;
+  height: 16px;
+}
 .btn {
   text-decoration: none;
   color: #000000;
@@ -1204,11 +1208,9 @@ body.app-alert-open {
 }
 
 .user-info .notif-badge {
-    top: 1px;
-    right: 1px;
-    min-width: 14px;
-    height: 14px;
-    font-size: 9px;
+    top: auto;
+    bottom: 2px;
+    right: 2px;
 }
 
 .notif-bell-btn:hover {
@@ -1220,21 +1222,20 @@ body.app-alert-open {
 
 .notif-badge {
     position: absolute;
-    top: 6px;
-    right: 10px;
+    top: auto;
+    bottom: 7px;
+    right: calc(50% - 10px);
     background: #dc2626;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
     border-radius: 999px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
+    width: 8px;
+    min-width: 8px;
+    height: 8px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
     pointer-events: none;
+    box-shadow: 0 0 0 2px var(--color-bg-white, #fff);
 }
 
 /* Dropdown */
