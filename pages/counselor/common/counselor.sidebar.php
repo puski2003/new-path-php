@@ -4,7 +4,6 @@ $navItems = [
     ['Schedule',        '/counselor/sessions',                   'calendar-days',  'sessions'],
     ['Clients',         '/counselor/clients',                    'heart-pulse',    'clients'],
     ['Recovery Plans',  '/counselor/recovery-plans',             'clipboard-plus', 'recovery'],
-    ['Change Requests', '/counselor/recovery-plans/task-changes','file-pen-line',  'task-changes'],
 ];
 ?>
 <section class="sidebar">

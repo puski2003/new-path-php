@@ -8,4 +8,9 @@ class CounselorRecoveryPlansModel
     {
         return CounselorData::getPlansByCounselor($counselorId);
     }
+
+    public static function getPendingChangeRequests(int $counselorId): array
+    {
+        return CounselorData::getChangeRequestsForCounselor($counselorId);
+    }
 }
