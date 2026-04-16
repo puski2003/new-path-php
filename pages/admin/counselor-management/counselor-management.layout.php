@@ -8,6 +8,13 @@ require_once __DIR__ . '/../common/admin.html.head.php';
     <section class="admin-main-content">
         <h1>Counselor Management</h1>
 
+        <div class="admin-sub-container-1" style="justify-content: flex-end; margin-bottom: -0.5rem;">
+            <a href="/admin/counselor-payouts" class="admin-button admin-button--secondary">
+                <i data-lucide="banknote" stroke-width="1" style="width:1rem;height:1rem;"></i>
+                <span class="button-text">Counselor Payouts</span>
+            </a>
+        </div>
+
         <div class="admin-sub-container-1">
             <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Avg Sessions per Counselor</p><p class="admin-summary-card-info"><?= $stats['avgSessionsPerCounselor'] > 0 ? number_format($stats['avgSessionsPerCounselor'], 1) : 'N/A' ?></p><p class="admin-summary-card-subinfo">Avg completed sessions</p></div></div>
             <div class="admin-summary-card"><div class="admin-summary-card-content"><p class="admin-summary-card-title">Total Sessions</p><p class="admin-summary-card-info"><?= $stats['totalSessions'] ?></p><p class="admin-summary-card-subinfo">Sessions completed</p></div></div>

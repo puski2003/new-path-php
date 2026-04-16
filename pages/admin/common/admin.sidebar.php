@@ -17,7 +17,6 @@ $navItems = [
     ['Recovery Plans',       '/admin/recovery-plans',       'heart-pulse'],
     ['Support Groups',       '/admin/support-groups',       'users-round'],
     ['Finances',             '/admin/finances',             'dollar-sign'],
-    ['Counselor Payouts',   '/admin/counselor-payouts',    'banknote'],
     ['Content Management',   '/admin/content-management',   'file-text'],
     ['Help Centers',         '/admin/help-centers',         'circle-help'],
     // ['Settings',             '/admin/settings',             'settings'],
