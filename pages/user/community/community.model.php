@@ -584,7 +584,7 @@ class DirectMessageModel
         return $conversations;
     }
 
-    public static function getConversationMessages(int $userId, int $conversationId, int $limit = 50, int $afterId = 0): array
+    public static function getConversationMessages(int $userId, int $conversationId, int $limit = 50, int $afterId = 0, int $beforeId = 0): array
     {
         $check = Database::search(
             "SELECT conversation_id FROM dm_conversations
@@ -597,14 +597,20 @@ class DirectMessageModel
             return [];
         }
 
-        Database::iud(
-            "UPDATE direct_messages SET is_read = 1
-             WHERE conversation_id = $conversationId
-             AND sender_id != $userId
-             AND is_read = 0"
-        );
+        // Only mark read on forward (non-paginating-backwards) loads
+        if ($beforeId === 0) {
+            Database::iud(
+                "UPDATE direct_messages SET is_read = 1
+                 WHERE conversation_id = $conversationId
+                 AND sender_id != $userId
+                 AND is_read = 0"
+            );
+        }
 
-        $afterClause = $afterId > 0 ? "AND m.message_id > $afterId" : '';
+        $afterClause  = $afterId  > 0 ? "AND m.message_id > $afterId"  : '';
+        $beforeClause = $beforeId > 0 ? "AND m.message_id < $beforeId" : '';
+        $order        = $beforeId > 0 ? "ORDER BY m.created_at DESC"   : "ORDER BY m.created_at ASC";
+
         $sql = "
             SELECT
                 m.message_id,
@@ -616,11 +622,11 @@ class DirectMessageModel
                 u.profile_picture
             FROM direct_messages m
             JOIN users u ON u.user_id = m.sender_id
-            WHERE m.conversation_id = $conversationId $afterClause
-            ORDER BY m.created_at ASC
+            WHERE m.conversation_id = $conversationId $afterClause $beforeClause
+            $order
             LIMIT $limit
         ";
-        
+
         $rs = Database::search($sql);
         $messages = [];
         while ($row = $rs->fetch_assoc()) {
@@ -635,6 +641,12 @@ class DirectMessageModel
                 'isOwnMessage' => (int)$row['sender_id'] === $userId,
             ];
         }
+
+        // Reverse so oldest-first when fetching backwards
+        if ($beforeId > 0) {
+            $messages = array_reverse($messages);
+        }
+
         return $messages;
     }
 
@@ -1031,7 +1043,7 @@ class SupportGroupModel
         return true;
     }
 
-    public static function getGroupMessages(int $groupId, int $userId, int $limit = 50, int $afterId = 0): array
+    public static function getGroupMessages(int $groupId, int $userId, int $limit = 50, int $afterId = 0, int $beforeId = 0): array
     {
         $check = Database::search(
             "SELECT membership_id FROM support_group_members
@@ -1043,7 +1055,10 @@ class SupportGroupModel
             return [];
         }
 
-        $afterClause = $afterId > 0 ? "AND m.message_id > $afterId" : '';
+        $afterClause  = $afterId  > 0 ? "AND m.message_id > $afterId"  : '';
+        $beforeClause = $beforeId > 0 ? "AND m.message_id < $beforeId" : '';
+        $order        = $beforeId > 0 ? "ORDER BY m.created_at DESC"   : "ORDER BY m.created_at ASC";
+
         $sql = "
             SELECT
                 m.message_id,
@@ -1060,11 +1075,11 @@ class SupportGroupModel
             JOIN users u ON u.user_id = m.user_id
             LEFT JOIN support_group_members sgm ON sgm.group_id = m.group_id AND sgm.user_id = m.user_id
             WHERE m.group_id = $groupId
-            AND m.is_deleted = 0 $afterClause
-            ORDER BY m.created_at ASC
+            AND m.is_deleted = 0 $afterClause $beforeClause
+            $order
             LIMIT $limit
         ";
-        
+
         $rs = Database::search($sql);
         $messages = [];
         while ($row = $rs->fetch_assoc()) {
@@ -1081,6 +1096,12 @@ class SupportGroupModel
                 'isOwnMessage' => (int)$row['user_id'] === $userId,
             ];
         }
+
+        // Reverse so oldest-first when fetching backwards
+        if ($beforeId > 0) {
+            $messages = array_reverse($messages);
+        }
+
         return $messages;
     }
 

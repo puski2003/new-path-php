@@ -37,7 +37,24 @@ $renderChatHtml = static function (array $messages, string $itemPartial, array $
         $emptyText = $emptyState['text'] ?? '';
         require __DIR__ . '/../common/user.chat-empty-state.php';
     } else {
+        $lastDate  = null;
+        $today     = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
         foreach ($messages as $message) {
+            $msgDate = !empty($message['createdAt'])
+                ? date('Y-m-d', strtotime((string)$message['createdAt']))
+                : null;
+            if ($msgDate && $msgDate !== $lastDate) {
+                $lastDate = $msgDate;
+                if ($msgDate === $today) {
+                    $label = 'Today';
+                } elseif ($msgDate === $yesterday) {
+                    $label = 'Yesterday';
+                } else {
+                    $label = date('F j, Y', strtotime($msgDate));
+                }
+                echo '<div class="date-separator"><span>' . htmlspecialchars($label) . '</span></div>';
+            }
             require $itemPartial;
         }
     }
@@ -52,8 +69,10 @@ if ($ajaxAction) {
     switch ($ajaxAction) {
         case 'get_dm_messages':
             $conversationId = (int)Request::get('conversation_id');
-            $messages = DirectMessageModel::getConversationMessages($userId, $conversationId);
-            $lastMsgId = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
+            $messages = DirectMessageModel::getConversationMessages($userId, $conversationId, 50);
+            $lastMsgId  = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
+            $firstMsgId = !empty($messages) ? min(array_column($messages, 'messageId')) : 0;
+            $hasMore    = count($messages) >= 50;
             $html = $renderChatHtml(
                 $messages,
                 __DIR__ . '/../common/user.chat-dm-message-item.php',
@@ -63,7 +82,7 @@ if ($ajaxAction) {
                     'text' => 'Start the conversation!',
                 ]
             );
-            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'lastMsgId' => $lastMsgId]);
+            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'lastMsgId' => $lastMsgId, 'firstMsgId' => $firstMsgId, 'hasMore' => $hasMore]);
             exit;
 
         case 'poll_dm_messages':
@@ -100,9 +119,11 @@ if ($ajaxAction) {
             
         case 'get_group_messages':
             $groupId = (int)Request::get('group_id');
-            $messages = SupportGroupModel::getGroupMessages($groupId, $userId);
-            $group = SupportGroupModel::getGroupDetails($groupId, $userId);
-            $lastMsgId = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
+            $messages = SupportGroupModel::getGroupMessages($groupId, $userId, 50);
+            $group      = SupportGroupModel::getGroupDetails($groupId, $userId);
+            $lastMsgId  = !empty($messages) ? max(array_column($messages, 'messageId')) : 0;
+            $firstMsgId = !empty($messages) ? min(array_column($messages, 'messageId')) : 0;
+            $hasMore    = count($messages) >= 50;
             $html = $renderChatHtml(
                 $messages,
                 __DIR__ . '/../common/user.chat-group-message-item.php',
@@ -112,7 +133,7 @@ if ($ajaxAction) {
                     'text' => 'Be the first to say hello!',
                 ]
             );
-            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'group' => $group, 'lastMsgId' => $lastMsgId]);
+            echo json_encode(['success' => true, 'html' => $html, 'hasMessages' => !empty($messages), 'group' => $group, 'lastMsgId' => $lastMsgId, 'firstMsgId' => $firstMsgId, 'hasMore' => $hasMore]);
             exit;
 
         case 'poll_group_messages':
@@ -209,6 +230,42 @@ if ($ajaxAction) {
             $targetUserId = (int)Request::post('user_id');
             $result = DirectMessageModel::blockUser($userId, $targetUserId);
             echo json_encode(['success' => $result]);
+            exit;
+
+        case 'load_older_dm_messages':
+            $conversationId = (int)Request::get('conversation_id');
+            $beforeId       = (int)Request::get('before_id');
+            if ($conversationId <= 0 || $beforeId <= 0) {
+                echo json_encode(['success' => false]);
+                exit;
+            }
+            $messages   = DirectMessageModel::getConversationMessages($userId, $conversationId, 20, 0, $beforeId);
+            $hasMore    = count($messages) >= 20;
+            $firstMsgId = !empty($messages) ? min(array_column($messages, 'messageId')) : 0;
+            $html = !empty($messages) ? $renderChatHtml(
+                $messages,
+                __DIR__ . '/../common/user.chat-dm-message-item.php',
+                []
+            ) : '';
+            echo json_encode(['success' => true, 'html' => $html, 'hasMore' => $hasMore, 'firstMsgId' => $firstMsgId]);
+            exit;
+
+        case 'load_older_group_messages':
+            $groupId  = (int)Request::get('group_id');
+            $beforeId = (int)Request::get('before_id');
+            if ($groupId <= 0 || $beforeId <= 0) {
+                echo json_encode(['success' => false]);
+                exit;
+            }
+            $messages   = SupportGroupModel::getGroupMessages($groupId, $userId, 20, 0, $beforeId);
+            $hasMore    = count($messages) >= 20;
+            $firstMsgId = !empty($messages) ? min(array_column($messages, 'messageId')) : 0;
+            $html = !empty($messages) ? $renderChatHtml(
+                $messages,
+                __DIR__ . '/../common/user.chat-group-message-item.php',
+                []
+            ) : '';
+            echo json_encode(['success' => true, 'html' => $html, 'hasMore' => $hasMore, 'firstMsgId' => $firstMsgId]);
             exit;
 
         default:

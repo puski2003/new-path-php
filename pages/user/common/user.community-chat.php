@@ -70,15 +70,19 @@ $totalUnread = $totalDmUnread + $totalGroupUnread;
                          data-profile-picture="<?= htmlspecialchars($conv['profilePicture']) ?>">
                         <div class="chat-avatar">
                             <img src="<?= !empty($conv['profilePicture']) ? htmlspecialchars($conv['profilePicture']) : '/assets/img/avatar.png' ?>" alt="<?= htmlspecialchars($conv['displayName']) ?>" />
-                            <span class="online-indicator"></span>
                         </div>
                         <div class="chat-info">
                             <h4 class="chat-name"><?= htmlspecialchars($conv['displayName']) ?></h4>
                             <span class="chat-preview"><?= htmlspecialchars($conv['lastMessagePreview'] ?: 'No messages yet') ?></span>
                         </div>
-                        <?php if ($conv['unreadCount'] > 0): ?>
-                        <span class="unread-badge"><?= $conv['unreadCount'] ?></span>
-                        <?php endif; ?>
+                        <div class="chat-meta">
+                            <?php if (!empty($conv['lastMessageAt'])): ?>
+                            <span class="chat-time"><?= date('g:i A', strtotime($conv['lastMessageAt'])) ?></span>
+                            <?php endif; ?>
+                            <?php if ($conv['unreadCount'] > 0): ?>
+                            <span class="unread-badge"><?= $conv['unreadCount'] ?></span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -130,14 +134,15 @@ $totalUnread = $totalDmUnread + $totalGroupUnread;
                     </div>
                     <div>
                         <h4 class="conversation-user-name" id="dmConversationName">User Name</h4>
-                        <span class="conversation-user-status online" id="dmConversationStatus">Active now</span>
+                        <span class="conversation-user-status" id="dmConversationStatus"></span>
                     </div>
                 </div>
             </div>
             <div class="messages-container" id="dmMessagesContainer">
             </div>
             <div class="message-input-container">
-                <input type="text" class="message-input" id="dmMessageInput" placeholder="Type a message..." />
+                <button class="emoji-btn" id="dmEmojiBtn" type="button" aria-label="Insert emoji">😊</button>
+                <input type="text" class="message-input" id="dmMessageInput" placeholder="Type a message..." maxlength="1000" />
                 <button class="send-btn" id="dmSendBtn">
                     <i data-lucide="send" stroke-width="2"></i>
                 </button>
@@ -181,7 +186,8 @@ $totalUnread = $totalDmUnread + $totalGroupUnread;
             <div class="messages-container" id="groupMessagesContainer">
             </div>
             <div class="message-input-container">
-                <input type="text" class="message-input" id="groupMessageInput" placeholder="Type a message..." />
+                <button class="emoji-btn" id="groupEmojiBtn" type="button" aria-label="Insert emoji">😊</button>
+                <input type="text" class="message-input" id="groupMessageInput" placeholder="Type a message..." maxlength="1000" />
                 <button class="send-btn" id="groupSendBtn">
                     <i data-lucide="send" stroke-width="2"></i>
                 </button>
