@@ -75,4 +75,83 @@ class SupportGroupsModel
             ['day' => 'Sat', 'time' => '10:00 AM', 'title' => 'New Members Orientation'],
         ];
     }
+
+    public static function createGroup(array $input, int $adminUserId): bool
+    {
+        $adminId = self::getAdminIdByUserId($adminUserId);
+        $maxMembers = is_numeric($input['max_members'] ?? null) ? (int) $input['max_members'] : 'NULL';
+
+        Database::iud(
+            "INSERT INTO support_groups
+                (name, description, category, meeting_schedule, meeting_link, max_members, is_active, created_by, created_at, updated_at)
+             VALUES
+                ('" . self::esc($input['name'] ?? '') . "',
+                 '" . self::esc($input['description'] ?? '') . "',
+                 '" . self::esc($input['category'] ?? '') . "',
+                 '" . self::esc($input['meeting_schedule'] ?? '') . "',
+                 '" . self::esc($input['meeting_link'] ?? '') . "',
+                 $maxMembers,
+                 1,
+                 " . max(1, $adminId) . ",
+                 NOW(),
+                 NOW())"
+        );
+        return true;
+    }
+
+    private static function getAdminIdByUserId(int $userId): int
+    {
+        $safeUserId = max(0, $userId);
+        $rs = Database::search("SELECT admin_id FROM admin WHERE user_id = $safeUserId LIMIT 1");
+        return (int) ($rs && $row = $rs->fetch_assoc() ? ($row['admin_id'] ?? 0) : 0);
+    }
+
+    public static function getGroupsForDropdown(): array
+    {
+        $rs = Database::search(
+            "SELECT group_id, name, category 
+             FROM support_groups 
+             WHERE is_active = 1 
+             ORDER BY name ASC"
+        );
+
+        $groups = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $groups[] = [
+                'groupId' => (int) $row['group_id'],
+                'name' => $row['name'],
+                'category' => $row['category'],
+            ];
+        }
+        return $groups;
+    }
+
+    public static function createSession(array $input, int $adminUserId): bool
+    {
+        $adminId = self::getAdminIdByUserId($adminUserId);
+        $groupId = (int) ($input['group_id'] ?? 0);
+        $title = self::esc(trim($input['title'] ?? ''));
+        $description = self::esc(trim($input['description'] ?? ''));
+        $sessionDatetime = self::esc($input['session_datetime'] ?? '');
+        $durationMinutes = is_numeric($input['duration_minutes'] ?? null) ? (int) $input['duration_minutes'] : 60;
+        $sessionType = self::esc($input['session_type'] ?? 'video');
+        $meetingLink = self::esc($input['meeting_link'] ?? '');
+        $meetingLocation = self::esc($input['meeting_location'] ?? '');
+        $maxParticipants = is_numeric($input['max_participants'] ?? null) ? (int) $input['max_participants'] : 'NULL';
+        $isRecurring = !empty($input['is_recurring']) ? 1 : 0;
+        $recurrencePattern = $isRecurring ? self::esc($input['recurrence_pattern'] ?? '') : 'NULL';
+
+        $sql = "INSERT INTO support_group_sessions
+                    (group_id, title, description, session_datetime, duration_minutes, 
+                     session_type, meeting_link, meeting_location, max_participants, 
+                     is_recurring, recurrence_pattern, status, created_by, created_at, updated_at)
+                 VALUES
+                    ($groupId, '$title', '$description', '$sessionDatetime', $durationMinutes,
+                     '$sessionType', '$meetingLink', '$meetingLocation', $maxParticipants,
+                     $isRecurring, " . ($recurrencePattern === 'NULL' ? 'NULL' : "'$recurrencePattern'") . ",
+                     'scheduled', " . max(1, $adminId) . ", NOW(), NOW())";
+
+        Database::iud($sql);
+        return true;
+    }
 }
