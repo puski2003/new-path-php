@@ -12,7 +12,6 @@ if (Request::isPost()) {
     }
 
     if ($error === '' && AddHelpCenterModel::create($_POST, (int) $user['id'])) {
-        $success = 'Help center created successfully.';
-        $_POST = [];
+        Response::redirect('/admin/resources?tab=help-centers');
     }
 }

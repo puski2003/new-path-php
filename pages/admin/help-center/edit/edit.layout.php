@@ -19,8 +19,27 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
                         <div class="form-group"><label class="form-label" for="<?= $field ?>"><?= $label ?></label><input class="form-input" id="<?= $field ?>" name="<?= $field ?>" value="<?= htmlspecialchars($helpCenter[$field] ?? '') ?>"></div>
                     <?php endforeach; ?>
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label" for="type">Type *</label><input class="form-input" id="type" name="type" value="<?= htmlspecialchars($helpCenter['type']) ?>"></div>
-                        <div class="form-group"><label class="form-label" for="category">Category *</label><input class="form-input" id="category" name="category" value="<?= htmlspecialchars($helpCenter['category']) ?>"></div>
+                        <div class="form-group">
+                            <label class="form-label" for="type">Type *</label>
+                            <select class="form-input" id="type" name="type">
+                                <option value="">-- Select Type --</option>
+                                <option value="hotline" <?= $helpCenter['type'] === 'hotline' ? 'selected' : '' ?>>Hotline</option>
+                                <option value="chat" <?= $helpCenter['type'] === 'chat' ? 'selected' : '' ?>>Live Chat</option>
+                                <option value="appointment" <?= $helpCenter['type'] === 'appointment' ? 'selected' : '' ?>>Appointment</option>
+                                <option value="resources" <?= $helpCenter['type'] === 'resources' ? 'selected' : '' ?>>Resources</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="category">Category *</label>
+                            <select class="form-input" id="category" name="category">
+                                <option value="">-- Select Category --</option>
+                                <option value="emergency" <?= $helpCenter['category'] === 'emergency' ? 'selected' : '' ?>>Emergency</option>
+                                <option value="counseling" <?= $helpCenter['category'] === 'counseling' ? 'selected' : '' ?>>Counseling</option>
+                                <option value="recovery" <?= $helpCenter['category'] === 'recovery' ? 'selected' : '' ?>>Recovery Plans</option>
+                                <option value="community" <?= $helpCenter['category'] === 'community' ? 'selected' : '' ?>>Community</option>
+                                <option value="technical" <?= $helpCenter['category'] === 'technical' ? 'selected' : '' ?>>Technical Support</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group"><label class="form-label" for="description">Description *</label><textarea class="form-textarea" id="description" name="description" rows="5"><?= htmlspecialchars($helpCenter['description']) ?></textarea></div>
                     <div class="form-group"><label class="form-label" for="specialties">Specialties</label><textarea class="form-textarea" id="specialties" name="specialties" rows="3"><?= htmlspecialchars($helpCenter['specialties']) ?></textarea></div>

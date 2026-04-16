@@ -119,8 +119,21 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 <form method="GET" action="/admin/resources" class="admin-filter-bar">
                     <input type="hidden" name="tab" value="help-centers">
                     <select name="centerStatus" class="admin-dropdown"><option value="all">All Status</option><option value="active" <?= $filters['centerStatus'] === 'active' ? 'selected' : '' ?>>Active</option><option value="inactive" <?= $filters['centerStatus'] === 'inactive' ? 'selected' : '' ?>>Inactive</option></select>
-                    <input type="text" name="type" value="<?= htmlspecialchars($filters['type'] === 'all' ? '' : $filters['type']) ?>" placeholder="Type">
-                    <input type="text" name="centerCategory" value="<?= htmlspecialchars($filters['centerCategory'] === 'all' ? '' : $filters['centerCategory']) ?>" placeholder="Category">
+                    <select name="type" class="admin-dropdown">
+                        <option value="all">All Types</option>
+                        <option value="hotline" <?= $filters['type'] === 'hotline' ? 'selected' : '' ?>>Hotline</option>
+                        <option value="chat" <?= $filters['type'] === 'chat' ? 'selected' : '' ?>>Live Chat</option>
+                        <option value="appointment" <?= $filters['type'] === 'appointment' ? 'selected' : '' ?>>Appointment</option>
+                        <option value="resources" <?= $filters['type'] === 'resources' ? 'selected' : '' ?>>Resources</option>
+                    </select>
+                    <select name="centerCategory" class="admin-dropdown">
+                        <option value="all">All Categories</option>
+                        <option value="emergency" <?= $filters['centerCategory'] === 'emergency' ? 'selected' : '' ?>>Emergency</option>
+                        <option value="counseling" <?= $filters['centerCategory'] === 'counseling' ? 'selected' : '' ?>>Counseling</option>
+                        <option value="recovery" <?= $filters['centerCategory'] === 'recovery' ? 'selected' : '' ?>>Recovery Plans</option>
+                        <option value="community" <?= $filters['centerCategory'] === 'community' ? 'selected' : '' ?>>Community</option>
+                        <option value="technical" <?= $filters['centerCategory'] === 'technical' ? 'selected' : '' ?>>Technical Support</option>
+                    </select>
                     <button type="submit" class="admin-button admin-button--secondary">Filter</button>
                 </form>
                 <table class="admin-table">

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../model.php';
+require_once __DIR__ . '/../help-center.model.php';
 
 class AddHelpCenterModel
 {
