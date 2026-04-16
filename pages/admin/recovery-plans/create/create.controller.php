@@ -4,7 +4,7 @@ require_once __DIR__ . '/create.model.php';
 $errorMessage = null;
 
 if (Request::isPost()) {
-    $result = AdminRecoveryPlanCreateModel::create($_POST);
+    $result = AdminRecoveryPlanCreateModel::create($_POST, $_FILES);
     if (is_array($result) && isset($result['error'])) {
         $errorMessage = $result['error'];
     } elseif ($result === true) {

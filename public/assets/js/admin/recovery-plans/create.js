@@ -57,7 +57,7 @@ async function generatePlanFromAI() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     try {
-        const res = await fetch('/counselor/recovery-plans/ai-generate', {
+        const res = await fetch('/admin/recovery-plans/ai-generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt }),

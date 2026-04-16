@@ -6,13 +6,15 @@ if (!Request::isPost()) {
     Response::redirect('/user/recovery/browse');
 }
 
-$planId = (int)(Request::post('planId') ?? 0);
+$planId  = (int)(Request::post('planId') ?? 0);
+$adopted = false;
+
 if ($planId > 0) {
-    $adopted = RecoveryModel::adoptGeneralPlan($planId, (int)$user['id']);
+    $adopted = RecoveryModel::adoptSystemPlan($planId, (int)$user['id']);
     if (!$adopted) {
         Response::redirect('/user/recovery/browse?error=already_active');
         exit;
     }
 }
 
-Response::redirect('/user/recovery');
+Response::redirect('/user/recovery/manage');

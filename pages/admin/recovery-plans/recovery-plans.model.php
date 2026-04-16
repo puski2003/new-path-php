@@ -10,9 +10,10 @@ class RecoveryPlansAdminModel
 
     public static function getTemplates(array $filters): array
     {
-        $search = trim((string) ($filters['search'] ?? ''));
+        $search   = trim((string) ($filters['search'] ?? ''));
         $category = trim((string) ($filters['category'] ?? 'all'));
-        $where = ["plan_type = 'counselor'"];
+        $where    = ['1=1'];
+
         if ($category !== '' && $category !== 'all') {
             $where[] = "category = '" . self::esc($category) . "'";
         }
@@ -22,21 +23,26 @@ class RecoveryPlansAdminModel
         }
 
         $rs = Database::search(
-            "SELECT title, description, COALESCE(category, 'General') AS category, updated_at, progress_percentage
-             FROM recovery_plans
+            "SELECT sp.plan_id, sp.title, sp.description,
+                    COALESCE(sp.category, 'General') AS category,
+                    sp.updated_at,
+                    (SELECT COUNT(*) FROM recovery_plans rp
+                     WHERE rp.source_plan_id = sp.plan_id) AS adoption_count
+             FROM system_plans sp
              WHERE " . implode(' AND ', $where) . "
-             ORDER BY updated_at DESC"
+             ORDER BY sp.updated_at DESC"
         );
 
         $plans = [];
         while ($rs && ($row = $rs->fetch_assoc())) {
             $plans[] = [
-                'planName' => $row['title'] ?? '',
-                'description' => $row['description'] ?? '',
-                'category' => $row['category'] ?? 'General',
-                'adoptionRate' => (int) ($row['progress_percentage'] ?? 0),
-                'createdBy' => 'Counselor',
-                'lastUpdated' => !empty($row['updated_at']) ? date('M j, Y', strtotime($row['updated_at'])) : '-',
+                'planId'        => (int)$row['plan_id'],
+                'planName'      => $row['title']       ?? '',
+                'description'   => $row['description'] ?? '',
+                'category'      => $row['category']    ?? 'General',
+                'adoptionCount' => (int)($row['adoption_count'] ?? 0),
+                'createdBy'     => 'Admin',
+                'lastUpdated'   => !empty($row['updated_at']) ? date('M j, Y', strtotime($row['updated_at'])) : '-',
             ];
         }
 

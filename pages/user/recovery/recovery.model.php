@@ -1087,4 +1087,204 @@ class RecoveryModel
 
         return true;
     }
+
+    // ── Self-managed plan task editing ───────────────────────────────
+
+    /**
+     * Add a task to a user-owned plan that has no counselor assigned.
+     */
+    public static function addUserTask(int $planId, int $userId, array $data): bool
+    {
+        if ($planId <= 0 || $userId <= 0) return false;
+
+        // Verify ownership and no counselor
+        $rs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE plan_id = $planId AND user_id = $userId AND counselor_id IS NULL LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+
+        Database::setUpConnection();
+        $title    = Database::$connection->real_escape_string(trim($data['title'] ?? ''));
+        $taskType = Database::$connection->real_escape_string(trim($data['taskType'] ?? 'custom'));
+        $priority = Database::$connection->real_escape_string(trim($data['priority'] ?? 'medium'));
+        $phase    = max(1, (int)($data['phase'] ?? 1));
+
+        if ($title === '') return false;
+
+        Database::iud(
+            "INSERT INTO recovery_tasks (plan_id, title, task_type, status, priority, phase, sort_order, created_at, updated_at)
+             VALUES ($planId, '$title', '$taskType', 'pending', '$priority', $phase, 999, NOW(), NOW())"
+        );
+        return true;
+    }
+
+    /**
+     * Edit a task that belongs to a user-owned plan with no counselor.
+     */
+    public static function updateUserTask(int $taskId, int $userId, array $data): bool
+    {
+        if ($taskId <= 0 || $userId <= 0) return false;
+
+        // Verify task → plan → user ownership and no counselor
+        $rs = Database::search(
+            "SELECT rt.task_id FROM recovery_tasks rt
+             INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
+             WHERE rt.task_id = $taskId AND rp.user_id = $userId AND rp.counselor_id IS NULL LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+
+        Database::setUpConnection();
+        $title    = Database::$connection->real_escape_string(trim($data['title'] ?? ''));
+        $taskType = Database::$connection->real_escape_string(trim($data['taskType'] ?? 'custom'));
+        $priority = Database::$connection->real_escape_string(trim($data['priority'] ?? 'medium'));
+
+        if ($title === '') return false;
+
+        Database::iud(
+            "UPDATE recovery_tasks SET title='$title', task_type='$taskType', priority='$priority', updated_at=NOW()
+             WHERE task_id = $taskId"
+        );
+        return true;
+    }
+
+    /**
+     * Delete a task from a user-owned plan with no counselor.
+     */
+    public static function deleteUserTask(int $taskId, int $userId): bool
+    {
+        if ($taskId <= 0 || $userId <= 0) return false;
+
+        $rs = Database::search(
+            "SELECT rt.task_id FROM recovery_tasks rt
+             INNER JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
+             WHERE rt.task_id = $taskId AND rp.user_id = $userId AND rp.counselor_id IS NULL LIMIT 1"
+        );
+        if (!$rs || $rs->num_rows === 0) return false;
+
+        Database::iud("DELETE FROM recovery_tasks WHERE task_id = $taskId");
+        return true;
+    }
+
+    // ── System plans (admin-created templates) ───────────────────────
+
+    /**
+     * Return all admin-created system plans for the browse page.
+     */
+    public static function getSystemPlans(): array
+    {
+        $rs = Database::search(
+            "SELECT plan_id, title, description, category, image, goal,
+                    short_term_goal_title, short_term_goal_days,
+                    long_term_goal_title,  long_term_goal_days
+             FROM system_plans
+             ORDER BY updated_at DESC"
+        );
+
+        $plans = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $plans[] = [
+                'planId'      => (int)$row['plan_id'],
+                'title'       => $row['title']       ?? 'Recovery Plan',
+                'description' => $row['description'] ?? '',
+                'category'    => $row['category']    ?? 'General',
+                'image'       => $row['image']       ?? '',
+                'goal'        => $row['goal']        ?? '',
+            ];
+        }
+        return $plans;
+    }
+
+    /**
+     * Deep-copy a system plan into recovery_plans for a user.
+     * Returns false if the user already has an active plan.
+     */
+    public static function adoptSystemPlan(int $systemPlanId, int $userId): bool
+    {
+        if ($systemPlanId <= 0 || $userId <= 0) return false;
+
+        // Block if user already has an active plan
+        $activeRs = Database::search(
+            "SELECT plan_id FROM recovery_plans
+             WHERE user_id = $userId AND status = 'active' AND is_template = 0
+             LIMIT 1"
+        );
+        if ($activeRs && $activeRs->num_rows > 0) return false;
+
+        $spRs = Database::search(
+            "SELECT * FROM system_plans WHERE plan_id = $systemPlanId LIMIT 1"
+        );
+        if (!$spRs || $spRs->num_rows === 0) return false;
+
+        $sp = $spRs->fetch_assoc();
+        Database::setUpConnection();
+        $conn = Database::$connection;
+
+        $title       = $conn->real_escape_string($sp['title']       ?? 'Recovery Plan');
+        $description = $conn->real_escape_string($sp['description'] ?? '');
+        $category    = $conn->real_escape_string($sp['category']    ?? 'General');
+        $startDate   = !empty($sp['start_date']) ? "'" . $conn->real_escape_string($sp['start_date']) . "'" : 'CURDATE()';
+
+        Database::iud(
+            "INSERT INTO recovery_plans
+                (user_id, title, description, category, plan_type, status,
+                 start_date, progress_percentage,
+                 is_template, assigned_status, source_plan_id, created_at, updated_at)
+             VALUES
+                ($userId, '$title', '$description', '$category', 'self', 'active',
+                 $startDate, 0,
+                 0, 'accepted', $systemPlanId, NOW(), NOW())"
+        );
+
+        $newPlanId = (int)$conn->insert_id;
+        if ($newPlanId <= 0) return false;
+
+        // Copy goals (short-term, long-term)
+        $stTitle = $conn->real_escape_string($sp['short_term_goal_title'] ?? '');
+        $stDays  = max(1, (int)($sp['short_term_goal_days'] ?? 30));
+        $ltTitle = $conn->real_escape_string($sp['long_term_goal_title']  ?? '');
+        $ltDays  = max(1, (int)($sp['long_term_goal_days']  ?? 90));
+
+        if ($stTitle !== '') {
+            Database::iud(
+                "INSERT INTO recovery_goals (plan_id, goal_type, title, target_days, current_progress, status, created_at, updated_at)
+                 VALUES ($newPlanId, 'short_term', '$stTitle', $stDays, 0, 'in_progress', NOW(), NOW())"
+            );
+        }
+        if ($ltTitle !== '') {
+            Database::iud(
+                "INSERT INTO recovery_goals (plan_id, goal_type, title, target_days, current_progress, status, created_at, updated_at)
+                 VALUES ($newPlanId, 'long_term', '$ltTitle', $ltDays, 0, 'in_progress', NOW(), NOW())"
+            );
+        }
+
+        // Copy tasks and milestones from system_plan_tasks
+        $tasksRs = Database::search(
+            "SELECT * FROM system_plan_tasks WHERE plan_id = $systemPlanId ORDER BY phase, sort_order"
+        );
+        while ($tasksRs && ($t = $tasksRs->fetch_assoc())) {
+            $tTitle     = $conn->real_escape_string($t['title']    ?? '');
+            $tType      = $conn->real_escape_string($t['task_type'] ?? 'custom');
+            $tPriority  = $conn->real_escape_string($t['priority'] ?? 'medium');
+            $tPhase     = (int)($t['phase'] ?? 1);
+            $tRecurring = (int)($t['is_recurring'] ?? 0);
+            $tPattern   = $t['recurrence_pattern'] ? "'" . $conn->real_escape_string($t['recurrence_pattern']) . "'" : 'NULL';
+            $tOrder     = (int)($t['sort_order'] ?? 0);
+            $tMilestone = (int)($t['is_milestone'] ?? 0);
+
+            if (!$tMilestone) {
+                // Tasks only — milestones are display-only in the admin view
+                Database::iud(
+                    "INSERT INTO recovery_tasks
+                        (plan_id, title, task_type, status, priority, phase,
+                         is_recurring, recurrence_pattern, sort_order, created_at, updated_at)
+                     VALUES
+                        ($newPlanId, '$tTitle', '$tType', 'pending', '$tPriority', $tPhase,
+                         $tRecurring, $tPattern, $tOrder, NOW(), NOW())"
+                );
+            }
+        }
+
+        return true;
+    }
 }

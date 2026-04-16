@@ -38,7 +38,7 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
         </div>
 
         <!-- Create form -->
-        <form id="createPlan-form" action="" method="post" class="rp-form" style="display:flex;flex-direction:column;gap:var(--spacing-2xl);">
+        <form id="createPlan-form" action="" method="post" enctype="multipart/form-data" class="rp-form" style="display:flex;flex-direction:column;gap:var(--spacing-2xl);">
 
             <!-- Plan Overview -->
             <div class="admin-sub-container-2">
@@ -54,6 +54,17 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
                     <div class="rp-form-group">
                         <label for="category">Category</label>
                         <input id="category" name="category" type="text" placeholder="e.g., Substance Abuse" />
+                    </div>
+                </div>
+
+                <div class="rp-form-group">
+                    <label for="planImage">Plan Image <span style="font-weight:400;color:var(--color-text-muted);">(optional — JPEG, PNG, WebP)</span></label>
+                    <input id="planImage" name="planImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                           style="padding:8px;border:1px solid var(--color-border-primary);border-radius:var(--radius-md);width:100%;cursor:pointer;"
+                           onchange="previewPlanImage(this)" />
+                    <div id="planImagePreview" style="margin-top:10px;display:none;">
+                        <img id="planImagePreviewImg" src="" alt="Preview"
+                             style="max-height:160px;border-radius:8px;object-fit:cover;border:1px solid var(--color-border-primary);" />
                     </div>
                 </div>
 
@@ -157,5 +168,22 @@ require_once __DIR__ . '/../../common/admin.html.head.php';
         </form>
     </section>
 </main>
+
+<script>
+function previewPlanImage(input) {
+    const preview = document.getElementById('planImagePreview');
+    const img     = document.getElementById('planImagePreviewImg');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/../../common/admin.footer.php'; ?>

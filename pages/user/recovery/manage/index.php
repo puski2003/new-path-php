@@ -31,7 +31,13 @@ $pageStyle = ['user/dashboard', 'user/manage-plans'];
                 </a>
                 <h2>Manage Recovery Plans</h2>
             </div>
-            <p class="page-subtitle">View and activate your recovery plans</p>
+            <div style="display:flex;align-items:center;gap:var(--spacing-md);">
+                <p class="page-subtitle" style="margin:0;">View and activate your recovery plans</p>
+                <a href="/user/recovery/browse" class="btn btn-primary" style="white-space:nowrap;">
+                    <i data-lucide="layout-template" style="width:14px;height:14px;margin-right:6px;vertical-align:-2px;"></i>
+                    Browse Recovery Plans
+                </a>
+            </div>
         </div>
 
         <div class="main-content-body">

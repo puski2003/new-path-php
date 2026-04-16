@@ -36,6 +36,8 @@ foreach ($tasksByPhase as $phase => $phaseTasks) {
 }
 }
 
+$isSelfManaged = empty($plan['counselorId']);
+
 $pageTitle = 'View Recovery Plan';
 $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
 ?>
@@ -62,13 +64,11 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
                     </p>
                 </div>
             </div>
+            <?php if (($plan['assignedStatus'] ?? '') === 'pending'): ?>
             <p class="page-subtitle">
-                <?php if (($plan['assignedStatus'] ?? '') === 'pending'): ?>
-                    <span style="background:#fef3c7;color:#b45309;padding:4px 12px;border-radius:20px;font-size:var(--font-size-xs);font-weight:600;">Pending Acceptance</span>
-                <?php else: ?>
-                    <span class="plan-status status-<?= htmlspecialchars($plan['status']) ?>"><?= ucfirst(htmlspecialchars($plan['status'])) ?></span>
-                <?php endif; ?>
+                <span style="background:#fef3c7;color:#b45309;padding:4px 12px;border-radius:20px;font-size:var(--font-size-xs);font-weight:600;">Pending Acceptance</span>
             </p>
+            <?php endif; ?>
         </div>
 
         <div class="main-content-body">
@@ -145,12 +145,54 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
                     <!-- Tasks grouped by phase -->
                     <div>
                         <div class="plans-section">
-                            <h3 class="section-title" style="font-size:var(--font-size-base);margin-bottom:var(--spacing-sm);">
-                                <span class="section-icon active">
-                                    <i data-lucide="list-checks" stroke-width="2"></i>
-                                </span>
-                                Tasks
-                            </h3>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--spacing-sm);">
+                                <h3 class="section-title" style="font-size:var(--font-size-base);margin:0;">
+                                    <span class="section-icon active">
+                                        <i data-lucide="list-checks" stroke-width="2"></i>
+                                    </span>
+                                    Tasks
+                                </h3>
+                                <?php if ($isSelfManaged): ?>
+                                <button type="button" onclick="document.getElementById('add-task-form').style.display=document.getElementById('add-task-form').style.display==='none'?'flex':'none'"
+                                        class="btn btn-secondary" style="padding:6px 14px;font-size:var(--font-size-xs);">
+                                    + Add Task
+                                </button>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($isSelfManaged): ?>
+                            <form id="add-task-form" method="post" action="/user/recovery/task/add"
+                                  style="display:none;flex-direction:column;gap:var(--spacing-sm);background:var(--color-bg-light-green);border-radius:var(--radius-md);padding:var(--spacing-md);margin-bottom:var(--spacing-md);">
+                                <input type="hidden" name="planId" value="<?= (int)$plan['planId'] ?>" />
+                                <input type="text" name="title" placeholder="Task title" required
+                                       style="padding:8px 12px;border:1px solid var(--color-border-primary);border-radius:var(--radius-md);font-size:var(--font-size-sm);" />
+                                <div style="display:flex;gap:var(--spacing-sm);">
+                                    <select name="phase" style="flex:1;padding:8px 12px;border:1px solid var(--color-border-primary);border-radius:var(--radius-md);font-size:var(--font-size-sm);">
+                                        <?php foreach (array_keys($tasksByPhase) ?: [1] as $p): ?>
+                                        <option value="<?= (int)$p ?>">Phase <?= (int)$p ?></option>
+                                        <?php endforeach; ?>
+                                        <option value="<?= count($tasksByPhase) + 1 ?>">New Phase</option>
+                                    </select>
+                                    <select name="taskType" style="flex:1;padding:8px 12px;border:1px solid var(--color-border-primary);border-radius:var(--radius-md);font-size:var(--font-size-sm);">
+                                        <option value="custom">Custom</option>
+                                        <option value="journal">Journal</option>
+                                        <option value="session">Session</option>
+                                        <option value="exercise">Exercise</option>
+                                        <option value="meditation">Meditation</option>
+                                    </select>
+                                    <select name="priority" style="flex:1;padding:8px 12px;border:1px solid var(--color-border-primary);border-radius:var(--radius-md);font-size:var(--font-size-sm);">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex;gap:var(--spacing-sm);">
+                                    <button type="submit" class="btn btn-primary" style="padding:6px 14px;font-size:var(--font-size-xs);">Add</button>
+                                    <button type="button" onclick="document.getElementById('add-task-form').style.display='none'"
+                                            class="btn btn-secondary" style="padding:6px 14px;font-size:var(--font-size-xs);">Cancel</button>
+                                </div>
+                            </form>
+                            <?php endif; ?>
 
                             <?php if (empty($tasks)): ?>
                             <div class="plan-card" style="text-align:center;padding:var(--spacing-xl);">
@@ -230,7 +272,23 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/recovery'];
                                                     <input type="hidden" name="taskId" value="<?= (int)$task['taskId'] ?>" />
                                                     <button class="btn btn-primary" style="padding:6px 14px;font-size:var(--font-size-xs);" type="submit">Complete</button>
                                                 </form>
-                                                <?php if (!empty($plan['counselorId'])): ?>
+                                                <?php if ($isSelfManaged): ?>
+                                                <a href="/user/recovery/task/edit?taskId=<?= (int)$task['taskId'] ?>"
+                                                   class="btn btn-secondary"
+                                                   style="padding:6px 14px;font-size:var(--font-size-xs);">
+                                                    <i data-lucide="pencil" style="width:13px;height:13px;margin-right:4px;" stroke-width="1.5"></i>
+                                                    Edit
+                                                </a>
+                                                <form method="post" action="/user/recovery/task/delete"
+                                                      onsubmit="return confirm('Delete this task?')">
+                                                    <input type="hidden" name="taskId" value="<?= (int)$task['taskId'] ?>" />
+                                                    <input type="hidden" name="planId"  value="<?= (int)$plan['planId'] ?>" />
+                                                    <button type="submit" class="btn btn-secondary"
+                                                            style="padding:6px 14px;font-size:var(--font-size-xs);color:#ef4444;border-color:#ef4444;">
+                                                        <i data-lucide="trash-2" style="width:13px;height:13px;" stroke-width="1.5"></i>
+                                                    </button>
+                                                </form>
+                                                <?php elseif (!empty($plan['counselorId'])): ?>
                                                 <a href="/user/recovery/task/request-change?taskId=<?= (int)$task['taskId'] ?>"
                                                    class="btn btn-secondary"
                                                    style="padding:6px 14px;font-size:var(--font-size-xs);">

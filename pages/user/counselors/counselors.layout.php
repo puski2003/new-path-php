@@ -56,7 +56,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                         <div class="no-results-message" style="margin-top: var(--spacing-2xl);">
                             <i data-lucide="user-x" style="width:48px;height:48px;color:var(--color-text-muted);display:block;margin:0 auto var(--spacing-md);"></i>
                             <p>You haven't completed a session with any counselor yet.</p>
-                            <a href="/user/counselors?tab=find" class="btn btn-primary">Find a Counselor</a>
+                            <div style="display: flex;justify-content: center;"><a href="/user/counselors?tab=find" class="btn btn-primary">Find a Counselor</a></div>
                         </div>
                     <?php else: ?>
                         <?php foreach ($myCounselors as $mc):
