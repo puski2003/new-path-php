@@ -18,7 +18,7 @@ $navItems = [
     ['Finances',             '/admin/finances',             'dollar-sign'],
     ['Content Management',   '/admin/content-management',   'file-text'],
     ['Help Centers',         '/admin/help-centers',         'circle-help'],
-    ['Settings',             '/admin/settings',             'settings'],
+    // ['Settings',             '/admin/settings',             'settings'],
 ];
 ?>
 
