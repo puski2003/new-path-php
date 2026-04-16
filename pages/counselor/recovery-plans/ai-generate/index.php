@@ -314,10 +314,12 @@ if ($prompt === '') {
     exit;
 }
 
-$apiKey = env('GEMINI_API_KEY', '');
-if ($apiKey === '') {
+$openRouterKey = env('OPENROUTER_API_KEY', '');
+$geminiKey     = env('GEMINI_API_KEY', '');
+
+if ($openRouterKey === '' && $geminiKey === '') {
     http_response_code(503);
-    echo json_encode(['ok' => false, 'error' => 'AI service is not configured. Add GEMINI_API_KEY to .env']);
+    echo json_encode(['ok' => false, 'error' => 'AI service is not configured. Add OPENROUTER_API_KEY to .env']);
     exit;
 }
 
@@ -375,51 +377,100 @@ Rules:
 - No explanatory text before or after the JSON
 PROMPT;
 
-$requestBody = json_encode([
-    'contents' => [[
-        'parts' => [[
-            'text' => $systemPrompt . "\n\nCounselor request:\n" . $prompt,
-        ]],
-    ]],
-    'generationConfig' => [
+// ── OpenRouter (primary) ──────────────────────────────────────────────────────
+if ($openRouterKey !== '') {
+    $requestBody = json_encode([
+        'model' => 'meta-llama/llama-3.3-70b-instruct',
+        'messages' => [
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user',   'content' => "Counselor request:\n" . $prompt],
+        ],
         'temperature' => 0.6,
-        'maxOutputTokens' => 2048,
-        'responseMimeType' => 'application/json',
-    ],
-]);
+        'max_tokens'  => 2048,
+    ]);
 
-$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . urlencode($apiKey);
+    $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $requestBody,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $openRouterKey,
+        ],
+        CURLOPT_TIMEOUT => 30,
+    ]);
 
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => $requestBody,
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-    CURLOPT_TIMEOUT => 30,
-]);
+    $raw      = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
 
-$raw = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlErr = curl_error($ch);
-curl_close($ch);
+    if ($curlErr || !$raw) {
+        http_response_code(502);
+        echo json_encode(['ok' => false, 'error' => 'Could not reach AI service. Check your internet connection.']);
+        exit;
+    }
 
-if ($curlErr || !$raw) {
-    http_response_code(502);
-    echo json_encode(['ok' => false, 'error' => 'Could not reach AI service. Check your internet connection.']);
-    exit;
+    if ($httpCode !== 200) {
+        $errBody = json_decode($raw, true);
+        $errMsg  = $errBody['error']['message'] ?? ('OpenRouter API error (' . $httpCode . ')');
+        http_response_code(502);
+        echo json_encode(['ok' => false, 'error' => $errMsg]);
+        exit;
+    }
+
+    $response = json_decode($raw, true);
+    $planText = $response['choices'][0]['message']['content'] ?? '';
+
+// ── Gemini (fallback) ─────────────────────────────────────────────────────────
+} else {
+    $requestBody = json_encode([
+        'contents' => [[
+            'parts' => [[
+                'text' => $systemPrompt . "\n\nCounselor request:\n" . $prompt,
+            ]],
+        ]],
+        'generationConfig' => [
+            'temperature'      => 0.6,
+            'maxOutputTokens'  => 2048,
+            'responseMimeType' => 'application/json',
+        ],
+    ]);
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . urlencode($geminiKey);
+    $ch  = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $requestBody,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 30,
+    ]);
+
+    $raw      = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlErr || !$raw) {
+        http_response_code(502);
+        echo json_encode(['ok' => false, 'error' => 'Could not reach AI service. Check your internet connection.']);
+        exit;
+    }
+
+    if ($httpCode !== 200) {
+        $errBody = json_decode($raw, true);
+        $errMsg  = $errBody['error']['message'] ?? ('Gemini API error (' . $httpCode . ')');
+        http_response_code(502);
+        echo json_encode(['ok' => false, 'error' => $errMsg]);
+        exit;
+    }
+
+    $geminiResp = json_decode($raw, true);
+    $planText   = $geminiResp['candidates'][0]['content']['parts'][0]['text'] ?? '';
 }
 
-if ($httpCode !== 200) {
-    $errBody = json_decode($raw, true);
-    $errMsg = $errBody['error']['message'] ?? ('Gemini API error (' . $httpCode . ')');
-    http_response_code(502);
-    echo json_encode(['ok' => false, 'error' => $errMsg]);
-    exit;
-}
-
-$gemini = json_decode($raw, true);
-$planText = $gemini['candidates'][0]['content']['parts'][0]['text'] ?? '';
 $planText = preg_replace('/^```(?:json)?\s*/m', '', $planText);
 $planText = preg_replace('/\s*```$/m', '', $planText);
 $planText = trim((string) $planText);
