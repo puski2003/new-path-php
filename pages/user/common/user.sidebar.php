@@ -62,6 +62,7 @@ $navItems = [
         <div class="user-details">
             <span class="user-name"><?= htmlspecialchars(explode(' ', $user['name'] ?? 'User')[0]) ?></span>
             <span class="user-role"><?= htmlspecialchars($user['role'] ?? 'User') ?></span>
+            <span class="user-age"><?= htmlspecialchars($user['age'] ?? 'Age not specified') ?></span>
         </div>
         <div class="user-menu-container">
             <i data-lucide="chevron-down" class="dropdown-icon" stroke-width="1"></i>
