@@ -8,3 +8,4 @@
 require_once 'dashboard.model.php';
 
 $data = DashboardModel::getSummary();
+$chartData = DashboardModel::getChartData();
