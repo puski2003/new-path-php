@@ -12,7 +12,10 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         </div>
         <?php if ($activeTab === 'pre-built'): ?>
             <div class="admin-sub-container-2">
-                <form method="GET" class="recovery-plans-actions"><input type="hidden" name="tab" value="pre-built"><input type="text" name="search" placeholder="Search plans..." value="<?= htmlspecialchars($filters['search']) ?>"><input type="text" name="category" placeholder="Category" value="<?= htmlspecialchars($filters['category'] === 'all' ? '' : $filters['category']) ?>"><button class="admin-button admin-button--secondary">Filter</button></form>
+                <div class="admin-page-header-row">
+                    <form method="GET" class="recovery-plans-actions"><input type="hidden" name="tab" value="pre-built"><input type="text" name="search" placeholder="Search plans..." value="<?= htmlspecialchars($filters['search']) ?>"><input type="text" name="category" placeholder="Category" value="<?= htmlspecialchars($filters['category'] === 'all' ? '' : $filters['category']) ?>"><button class="admin-button admin-button--secondary">Filter</button></form>
+                    <a href="/admin/recovery-plans/create" class="admin-button admin-button--primary">+ Create Plan</a>
+                </div>
                 <table class="admin-table"><thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Plan Name</th><th class="admin-table-th">Category</th><th class="admin-table-th">Adoption Rate</th><th class="admin-table-th">Created By</th><th class="admin-table-th">Last Updated</th></tr></thead><tbody class="admin-table-body"><?php foreach ($plans as $index => $plan): ?><tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>"><td class="admin-table-td"><strong><?= htmlspecialchars($plan['planName']) ?></strong><br><small><?= htmlspecialchars($plan['description']) ?></small></td><td class="admin-table-td"><?= htmlspecialchars($plan['category']) ?></td><td class="admin-table-td"><?= $plan['adoptionRate'] ?>%</td><td class="admin-table-td"><?= htmlspecialchars($plan['createdBy']) ?></td><td class="admin-table-td"><?= htmlspecialchars($plan['lastUpdated']) ?></td></tr><?php endforeach; ?></tbody></table>
 
                 <?php

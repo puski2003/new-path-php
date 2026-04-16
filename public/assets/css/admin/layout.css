@@ -63,6 +63,23 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* ── Page header row with actions ───────────────────────────── */
+.admin-page-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.admin-page-header-row .recovery-plans-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
 /* Section headings inside sub-containers */
 .admin-sub-container-2 > h2,
 .admin-sub-container-2 > .admin-sub-container-1 > h2 {

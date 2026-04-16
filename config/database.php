@@ -34,10 +34,11 @@ class Database
     /**
      * Execute INSERT, UPDATE, DELETE queries
      */
-    public static function iud($q)
+    public static function iud($q): bool
     {
         self::setUpConnection();
         self::$connection->query($q);
+        return self::$connection->affected_rows >= 0;
     }
 
     /**
