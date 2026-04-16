@@ -31,7 +31,7 @@ $pageStyle = ['user/dashboard', 'user/manage-plans'];
                 </a>
                 <h2>Manage Recovery Plans</h2>
             </div>
-            <div style="display:flex;align-items:center;gap:var(--spacing-md);">
+            <div style="display:flex;align-items:center;gap:var(--spacing-md);padding-right:var(--spacing-lg);">
                 <p class="page-subtitle" style="margin:0;">View and activate your recovery plans</p>
                 <a href="/user/recovery/browse" class="btn btn-primary" style="white-space:nowrap;">
                     <i data-lucide="layout-template" style="width:14px;height:14px;margin-right:6px;vertical-align:-2px;"></i>
@@ -41,9 +41,9 @@ $pageStyle = ['user/dashboard', 'user/manage-plans'];
         </div>
 
         <div class="main-content-body">
-            <?php if (!empty($_GET['error']) && $_GET['error'] === 'already_active'): ?>
-            <div class="error-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
-                You already have an active recovery plan. Complete or pause it before accepting a new one.
+            <?php if (!empty($_GET['success']) && $_GET['success'] === 'adopted'): ?>
+            <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                Plan activated successfully. Any previously active plans have been paused.
             </div>
             <?php endif; ?>
             <?php if (!empty($_GET['resumed'])): ?>
