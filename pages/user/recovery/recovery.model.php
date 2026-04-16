@@ -456,17 +456,15 @@ class RecoveryModel
     {
         if ($planId <= 0 || $userId <= 0) return false;
 
-        // Block if user already has an active plan — one active plan at a time.
-        $activeRs = Database::search(
-            "SELECT plan_id FROM recovery_plans
+        // Pause any currently active plan — the new plan takes over immediately.
+        Database::iud(
+            "UPDATE recovery_plans
+             SET status = 'paused', updated_at = NOW()
              WHERE user_id = $userId
                AND status = 'active'
                AND is_template = 0
-             LIMIT 1"
+               AND plan_id <> $planId"
         );
-        if ($activeRs && $activeRs->num_rows > 0) {
-            return false;
-        }
 
         Database::iud(
             "UPDATE recovery_plans
