@@ -222,6 +222,11 @@ if ($ajaxAction = Request::get('ajax')) {
             echo json_encode(['success' => true, 'requests' => $items]);
             exit;
 
+        case 'get_no_show_disputes':
+            $disputes = CounselorSessionsModel::getNoShowDisputes($counselorId);
+            echo json_encode(['success' => true, 'disputes' => $disputes]);
+            exit;
+
         case 'review_reschedule':
             $requestId = (int) Request::post('request_id');
             $action    = trim((string) (Request::post('action') ?? ''));

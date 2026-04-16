@@ -122,6 +122,55 @@ class CounselorSessionsModel
         return true;
     }
 
+    // ------------------------------------------------------------------
+    // No-show disputes (counselor view — read-only)
+    // ------------------------------------------------------------------
+
+    /**
+     * Returns all no-show disputes for sessions belonging to this counselor.
+     */
+    public static function getNoShowDisputes(int $counselorId): array
+    {
+        $rs = Database::search(
+            "SELECT
+                sd.dispute_id, sd.status AS dispute_status, sd.description,
+                sd.admin_note, sd.created_at AS reported_at,
+                s.session_id, s.session_datetime, s.status AS session_status,
+                COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'Client') AS client_name,
+                u.profile_picture AS client_avatar,
+                t.amount, t.currency, t.status AS txn_status
+             FROM session_disputes sd
+             JOIN sessions s ON s.session_id = sd.session_id
+             JOIN users u ON u.user_id = sd.reported_by
+             LEFT JOIN transactions t ON t.session_id = s.session_id AND t.user_id = sd.reported_by
+             WHERE s.counselor_id = $counselorId AND sd.reason = 'no_show'
+             ORDER BY sd.created_at DESC"
+        );
+
+        $items = [];
+        if ($rs) {
+            while ($row = $rs->fetch_assoc()) {
+                $sessionTs = !empty($row['session_datetime']) ? strtotime($row['session_datetime']) : null;
+                $items[] = [
+                    'disputeId'     => (int)$row['dispute_id'],
+                    'sessionId'     => (int)$row['session_id'],
+                    'disputeStatus' => $row['dispute_status'] ?? 'pending',
+                    'description'   => $row['description'] ?? '',
+                    'adminNote'     => $row['admin_note'] ?? '',
+                    'reportedAt'    => !empty($row['reported_at']) ? date('M j, Y g:i A', strtotime($row['reported_at'])) : '',
+                    'sessionDate'   => $sessionTs ? date('D, M j \a\t g:i A', $sessionTs) : 'Unknown',
+                    'sessionStatus' => $row['session_status'] ?? '',
+                    'clientName'    => $row['client_name'] ?? 'Client',
+                    'clientAvatar'  => $row['client_avatar'] ?: '/assets/img/avatar.png',
+                    'amount'        => $row['amount'] !== null ? number_format((float)$row['amount'], 2) . ' ' . ($row['currency'] ?: 'LKR') : null,
+                    'txnStatus'     => $row['txn_status'] ?? '',
+                ];
+            }
+        }
+
+        return $items;
+    }
+
     /**
      * Reject a reschedule request.
      * - Marks the request as rejected

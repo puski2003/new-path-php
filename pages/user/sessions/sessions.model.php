@@ -486,6 +486,30 @@ class SessionsModel
              VALUES ($sessionId, $userId, 'no_show', '$safeDesc')"
         );
 
+        // Notify the counselor that a no-show was reported
+        $counselorRs = Database::search(
+            "SELECT u.user_id,
+                    COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'Client') AS client_name
+             FROM sessions s
+             JOIN counselors c ON c.counselor_id = s.counselor_id
+             JOIN users u ON u.user_id = c.user_id
+             LEFT JOIN users client ON client.user_id = s.user_id
+             WHERE s.session_id = $sessionId
+             LIMIT 1"
+        );
+        if ($counselorRs && ($cRow = $counselorRs->fetch_assoc())) {
+            $counselorUserId = (int)($cRow['user_id'] ?? 0);
+            if ($counselorUserId > 0) {
+                $notifTitle = Database::$connection->real_escape_string('Absence Report Filed');
+                $notifMsg   = Database::$connection->real_escape_string('A client has reported that you did not attend a session. This will be reviewed by our admin team.');
+                $notifLink  = Database::$connection->real_escape_string('/counselor/sessions?tab=disputes');
+                Database::iud(
+                    "INSERT INTO notifications (user_id, type, title, message, link)
+                     VALUES ($counselorUserId, 'no_show_reported', '$notifTitle', '$notifMsg', '$notifLink')"
+                );
+            }
+        }
+
         $txRs = Database::search(
             "SELECT transaction_id, amount, currency
              FROM transactions

@@ -71,14 +71,9 @@ $durationMin   = $hold['durationMinutes'];
 $counselorInfo = BookingModel::getCounselorForBooking($counselorId);
 $counselorName = $counselorInfo ? $counselorInfo['name'] : 'Your Counselor';
 
-$meetLink = GoogleMeetService::createMeetLink(
-    title:         'New Path Counseling Session with ' . $counselorName,
-    startDatetime: $slotDt,
-    durationMin:   $durationMin,
-    timeZone:      env('APP_TIMEZONE', 'Asia/Colombo'),
-    description:   'Online counseling session booked via New Path (rescheduled).',
-    counselorEmail: $counselorInfo['email'] ?? null
-);
+$meetSpace  = GoogleMeetService::createMeetSpace();
+$meetLink   = $meetSpace['uri']       ?? null;
+$spaceName  = $meetSpace['spaceName'] ?? '';
 
 // ------------------------------------------------------------------
 // 4. Create session record
@@ -89,7 +84,8 @@ $sessionId = BookingModel::createSession(
     $slotDt,
     $durationMin,
     $sessionType,
-    $meetLink ?? ''
+    $meetLink ?? '',
+    $spaceName
 );
 
 if ($sessionId <= 0) {
@@ -131,7 +127,7 @@ $counselorUserId  = (int)($counselorInfo['userId'] ?? 0);
 $sessionDateLabel = date('F j, Y \a\t g:i A', strtotime($slotDt));
 
 if ($userEmail !== '') {
-    $meetLinkHtml = ($meetLink !== '' && $meetLink !== null)
+    $meetLinkHtml = (!empty($meetLink))
         ? "<p style='margin:8px 0;'><strong>Meeting link:</strong> <a href='" . htmlspecialchars($meetLink) . "' style='color:#4CAF50;'>" . htmlspecialchars($meetLink) . "</a></p>"
         : "<p style='color:#999;font-size:0.85rem;'>A meeting link will be shared before your session.</p>";
 

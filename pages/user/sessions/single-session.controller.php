@@ -23,8 +23,7 @@ $isUpcomingSession = in_array($sessionData['status'], ['scheduled', 'confirmed',
 $autoOpenReview = Request::get('review') === '1' && !$isUpcomingSession && !$sessionData['hasReview'];
 $autoOpenNoShow = Request::get('report') === '1'
     && !$isUpcomingSession
-    && !$sessionData['hasDispute']
-    && in_array($sessionData['status'], ['completed', 'no_show'], true);
+    && !$sessionData['hasDispute'];
 
 // Show a success banner when redirected from booking payment
 $justBooked = Request::get('booked') === '1';

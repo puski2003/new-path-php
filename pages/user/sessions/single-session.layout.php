@@ -64,7 +64,7 @@
                                 <?php endif; ?>
                                 <?php if ($sessionData['hasDispute']): ?>
                                     <button class="btn btn-secondary" type="button" disabled>Counselor Reported</button>
-                                <?php elseif (in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
+                                <?php else: ?>
                                     <button class="btn btn-secondary" type="button" id="openNoShowModal">Report Counselor Absence</button>
                                 <?php endif; ?>
                             <?php endif; ?>
@@ -206,7 +206,7 @@
     <?php endif; ?>
 
     <!-- No-show report modal -->
-    <?php if (!$isUpcomingSession && !$sessionData['hasDispute'] && in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
+    <?php if (!$isUpcomingSession && !$sessionData['hasDispute']): ?>
     <div class="session-modal-overlay" id="noShowModalOverlay" style="display:none;">
         <div class="session-modal">
             <div class="session-modal-header">
