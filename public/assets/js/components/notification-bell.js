@@ -14,9 +14,38 @@
 
     // ------------------------------------------------------------------ open/close
 
+    function positionDropdown() {
+        var rect = btn.getBoundingClientRect();
+        var dropW = 340;
+        var vpW   = window.innerWidth;
+
+        // Place above the bell button; if not enough room above, place below
+        var spaceAbove = rect.top;
+        var spaceBelow = vpW - rect.bottom;
+
+        // Horizontal: align right edge of dropdown to right edge of button,
+        // clamped so it doesn't overflow the viewport left edge.
+        var left = rect.right - dropW;
+        if (left < 8) left = 8;
+
+        dropdown.style.left   = left + 'px';
+        dropdown.style.width  = dropW + 'px';
+
+        if (spaceAbove > 200) {
+            // Place above
+            dropdown.style.top    = 'auto';
+            dropdown.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+        } else {
+            // Place below
+            dropdown.style.top    = (rect.bottom + 6) + 'px';
+            dropdown.style.bottom = 'auto';
+        }
+    }
+
     function openDropdown() {
         isOpen = true;
         dropdown.style.display = 'block';
+        positionDropdown();
         dropdown.offsetHeight; // force reflow for CSS transition
         dropdown.classList.add('show');
         if (!loaded) fetchNotifications();
@@ -29,6 +58,11 @@
             if (!isOpen) dropdown.style.display = 'none';
         }, 220);
     }
+
+    // Reposition if window resizes while open
+    window.addEventListener('resize', function () {
+        if (isOpen) positionDropdown();
+    });
 
     btn.addEventListener('click', function (e) {
         e.stopPropagation();

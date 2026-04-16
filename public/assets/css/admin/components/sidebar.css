@@ -13,9 +13,10 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 0;
     z-index: var(--z-sidebar);
-    overflow: hidden;
+    /* Allow overflow so notification / logout dropdowns can escape */
+    overflow: visible;
     background-color: var(--color-bg-white);
     border-right: 1px solid var(--color-border-primary);
 }
@@ -97,6 +98,31 @@
 }
 
 /* ── Mobile Breakpoint ──────────────────────────────────────── */
+/* ── Notification bell inside sidebar ──────────────────────── */
+/* The .notif-bell-wrapper sits inside .user-info which is inside .sidebar.
+   Since sidebar is position:fixed we need the dropdown to escape it via
+   a high z-index (above sidebar z-index). */
+.notif-bell-wrapper {
+    position: relative; /* anchor for dropdown */
+}
+
+.notif-dropdown {
+    /* Override any inline style – force it to be positioned relative to
+       the bell wrapper and use a z-index that sits above everything */
+    position: fixed !important;
+    z-index: 9999 !important;
+    /* Horizontal position is set via JS; vertical adjusted below */
+    bottom: auto;
+    right: auto;
+    width: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid rgba(13,28,23,0.15);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
 @media (max-width: 768px) {
     .sidebar-toggle {
         display: flex;

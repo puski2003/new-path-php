@@ -25,7 +25,7 @@ function finBadge(string $status): string {
 /* ── Finances page ───────────────────────────────────────── */
 .fin-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 .fin-kpi {

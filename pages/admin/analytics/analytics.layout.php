@@ -6,7 +6,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
 /* ── Analytics page ─────────────────────────────────────── */
 .an-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 .an-kpi {
