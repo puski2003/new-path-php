@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../common/user.head.php';
 require_once __DIR__ . '/../recovery.model.php';
 
 $plans = RecoveryModel::getSystemPlans();
+$activePlans = RecoveryModel::getUserActivePlans((int)$user['id']);
+$hasActivePlan = !empty($activePlans);
 $pageTitle = 'Browse Recovery Plans';
 $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/browse-plans'];
 ?>
@@ -28,9 +30,9 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/browse-plans'];
         <div class="main-content-body">
             <div style="max-width:860px;margin:0 auto;padding:var(--spacing-xl);">
 
-                <?php if (isset($_GET['error']) && $_GET['error'] === 'already_active'): ?>
-                <div class="error-message" style="margin-bottom:var(--spacing-lg);">
-                    You already have an active recovery plan. Complete or pause it before adopting a new one.
+                <?php if (isset($_GET['success']) && $_GET['success'] === 'adopted'): ?>
+                <div class="success-message" style="margin-bottom:var(--spacing-lg);">
+                    Plan adopted successfully. Any previously active plans have been paused.
                 </div>
                 <?php endif; ?>
 
@@ -67,10 +69,13 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/browse-plans'];
                             <?php if (!empty($plan['description'])): ?>
                             <p class="plan-description"><?= htmlspecialchars($plan['description']) ?></p>
                             <?php endif; ?>
-                            <form method="post" action="/user/recovery/adopt" style="margin-top:var(--spacing-md);">
-                                <input type="hidden" name="planId" value="<?= (int)$plan['planId'] ?>" />
-                                <button type="submit" class="btn btn-primary" style="width:100%;">Adopt Plan</button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-primary adopt-plan-btn"
+                                    style="width:100%;margin-top:var(--spacing-md);"
+                                    data-plan-id="<?= (int)$plan['planId'] ?>"
+                                    data-plan-title="<?= htmlspecialchars($plan['title'], ENT_QUOTES) ?>">
+                                Adopt Plan
+                            </button>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -81,7 +86,66 @@ $pageStyle = ['user/dashboard', 'user/manage-plans', 'user/browse-plans'];
         </div>
     </section>
 </main>
+<!-- Adopt Plan Confirmation Modal -->
+<div id="adopt-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary-light,#e8f5e9);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="clipboard-list" style="width:20px;height:20px;color:var(--color-primary,#2e7d32);"></i>
+            </div>
+            <h3 style="margin:0;font-size:1.1rem;font-weight:700;color:var(--color-text-primary);">Activate This Plan?</h3>
+        </div>
+        <p style="margin:0 0 8px;color:var(--color-text-secondary);font-size:0.95rem;">
+            You are about to activate <strong id="modal-plan-title"></strong>.
+        </p>
+        <?php if ($hasActivePlan): ?>
+        <p style="margin:0 0 24px;color:var(--color-text-secondary);font-size:0.95rem;">
+            Your current active plan will be <strong>paused</strong> and you can resume it later from Manage Plans.
+        </p>
+        <?php else: ?>
+        <p style="margin:0 0 24px;color:var(--color-text-secondary);font-size:0.95rem;">
+            This plan will be added to your active plans. You can manage it from Manage Plans.
+        </p>
+        <?php endif; ?>
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" id="modal-cancel" class="btn" style="background:var(--color-bg-cream,#f5f5f0);color:var(--color-text-primary);border:none;padding:10px 20px;border-radius:50px;font-weight:600;cursor:pointer;">
+                Cancel
+            </button>
+            <form id="adopt-form" method="post" action="/user/recovery/adopt" style="margin:0;">
+                <input type="hidden" id="adopt-plan-id" name="planId" value="" />
+                <button type="submit" class="btn btn-primary" style="padding:10px 24px;border-radius:50px;border:none;font-weight:600;cursor:pointer;">
+                    Yes, Activate
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/lucide@latest"></script>
-<script>lucide.createIcons();</script>
+<script>
+lucide.createIcons();
+
+const modal    = document.getElementById('adopt-modal');
+const planTitle = document.getElementById('modal-plan-title');
+const planIdInput = document.getElementById('adopt-plan-id');
+const cancelBtn = document.getElementById('modal-cancel');
+
+document.querySelectorAll('.adopt-plan-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        planTitle.textContent = btn.dataset.planTitle;
+        planIdInput.value = btn.dataset.planId;
+        modal.style.display = 'flex';
+        lucide.createIcons();
+    });
+});
+
+cancelBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+modal.addEventListener('click', e => {
+    if (e.target === modal) modal.style.display = 'none';
+});
+</script>
 </body>
 </html>

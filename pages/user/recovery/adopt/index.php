@@ -10,11 +10,7 @@ $planId  = (int)(Request::post('planId') ?? 0);
 $adopted = false;
 
 if ($planId > 0) {
-    $adopted = RecoveryModel::adoptSystemPlan($planId, (int)$user['id']);
-    if (!$adopted) {
-        Response::redirect('/user/recovery/browse?error=already_active');
-        exit;
-    }
+    RecoveryModel::adoptSystemPlan($planId, (int)$user['id']);
 }
 
-Response::redirect('/user/recovery/manage');
+Response::redirect('/user/recovery/manage?success=adopted');
