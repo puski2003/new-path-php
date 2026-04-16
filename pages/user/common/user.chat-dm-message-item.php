@@ -6,6 +6,7 @@ $senderName = (string)($message['senderName'] ?? 'User');
 $content = (string)($message['content'] ?? '');
 $timestamp = !empty($message['createdAt']) ? strtotime((string)$message['createdAt']) : false;
 $formattedTime = $timestamp ? date('M j, g:i A', $timestamp) : '';
+$isoTime = $timestamp ? date('c', $timestamp) : '';
 ?>
 <div class="message-wrapper <?= $isOwnMessage ? 'own' : 'other' ?>">
     <?php if (!$isOwnMessage): ?>
@@ -17,5 +18,5 @@ $formattedTime = $timestamp ? date('M j, g:i A', $timestamp) : '';
         </div>
     <?php endif; ?>
     <div class="message-bubble"><?= nl2br(htmlspecialchars($content)) ?></div>
-    <span class="message-time"><?= htmlspecialchars($formattedTime) ?></span>
+    <span class="message-time" data-time="<?= htmlspecialchars($isoTime) ?>"><?= htmlspecialchars($formattedTime) ?></span>
 </div>

@@ -7,6 +7,7 @@ $content = (string)($message['content'] ?? '');
 $memberRole = (string)($message['memberRole'] ?? 'member');
 $timestamp = !empty($message['createdAt']) ? strtotime((string)$message['createdAt']) : false;
 $formattedTime = $timestamp ? date('M j, g:i A', $timestamp) : '';
+$isoTime = $timestamp ? date('c', $timestamp) : '';
 $isPinned = !empty($message['isPinned']);
 ?>
 <div class="message-wrapper <?= $isOwnMessage ? 'own' : 'other' ?>">
@@ -29,5 +30,5 @@ $isPinned = !empty($message['isPinned']);
         <?php endif; ?>
         <?= nl2br(htmlspecialchars($content)) ?>
     </div>
-    <span class="message-time"><?= htmlspecialchars($formattedTime) ?></span>
+    <span class="message-time" data-time="<?= htmlspecialchars($isoTime) ?>"><?= htmlspecialchars($formattedTime) ?></span>
 </div>

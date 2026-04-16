@@ -268,7 +268,8 @@
 .conversation-view {
     display: none;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 .conversation-view.active {
@@ -373,6 +374,7 @@
 
 .messages-container {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: var(--spacing-md);
     display: flex;
@@ -678,6 +680,137 @@
 .group-meta-item svg {
     width: 14px;
     height: 14px;
+}
+
+/* Date Separator */
+.date-separator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+    color: var(--color-text-muted);
+    font-size: 11px;
+}
+
+.date-separator::before,
+.date-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border-primary);
+}
+
+.date-separator span {
+    white-space: nowrap;
+    padding: 0 var(--spacing-xs);
+}
+
+/* Chat list item meta (timestamp + unread badge) */
+.chat-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.chat-time {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* Load earlier messages button */
+.load-earlier-btn {
+    display: block;
+    width: calc(100% - var(--spacing-md) * 2);
+    margin: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--color-bg-light-green);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.load-earlier-btn:hover:not(:disabled) {
+    background: var(--color-primary-light);
+}
+
+.load-earlier-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Emoji button */
+.emoji-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 var(--spacing-xs);
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.emoji-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Emoji picker panel */
+.emoji-panel {
+    position: fixed;
+    width: 260px;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    padding: var(--spacing-sm);
+    z-index: 1100;
+    display: none;
+}
+
+.emoji-panel.active {
+    display: block;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.emoji-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 2px;
+}
+
+.emoji-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    line-height: 1;
+    text-align: center;
+    transition: background-color 0.15s ease;
+}
+
+.emoji-item:hover {
+    background: var(--color-bg-light-green);
 }
 
 /* Responsive */
