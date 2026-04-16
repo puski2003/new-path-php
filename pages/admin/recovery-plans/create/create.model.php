@@ -27,11 +27,11 @@ class AdminRecoveryPlanCreateModel
             $targetDate = !empty($input['targetCompletionDate']) ? self::esc($input['targetCompletionDate']) : null;
 
             $insertSql = "INSERT INTO recovery_plans
-                 (user_id, counselor_id, title, description, overall_goal, category, start_date,
+                 (user_id, counselor_id, title, description, category, start_date,
                   target_completion_date, plan_type, status, is_template, custom_notes,
                   progress_percentage, assigned_status, created_at, updated_at)
                  VALUES
-                 (NULL, NULL, '" . self::esc($title) . "', '$description', '$planGoal', '$category',
+                 (NULL, NULL, '" . self::esc($title) . "', '$description', '$category',
                   " . ($startDate ? "'$startDate'" : 'NULL') . ",
                   " . ($targetDate ? "'$targetDate'" : 'NULL') . ",
                   'counselor', 'draft', 1, '$customNotes',

@@ -14,12 +14,10 @@ $navItems = [
     ['Counselor Management', '/admin/counselor-management', 'user-check'],
     ['Analytics',            '/admin/analytics',            'bar-chart-2'],
     ['Recovery Plans',       '/admin/recovery-plans',       'heart-pulse'],
-    ['Resources',            '/admin/resources',            'book-open'],
     ['Support Groups',       '/admin/support-groups',       'users-round'],
     ['Finances',             '/admin/finances',             'dollar-sign'],
     ['Content Management',   '/admin/content-management',   'file-text'],
-    ['Job Posts',            '/admin/job-posts',            'briefcase'],
-    ['Help Center',          '/admin/help-center',          'circle-help'],
+    ['Help Centers',         '/admin/help-centers',         'circle-help'],
     ['Settings',             '/admin/settings',             'settings'],
 ];
 ?>
