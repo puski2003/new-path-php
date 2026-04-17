@@ -11,6 +11,7 @@ class CounselorRecoveryCreateModel
 
     public static function create(int $counselorId, array $input): bool
     {
+        ?><script>console.log("inside create")</script> <?php
         return CounselorData::createPlan($counselorId, $input);
     }
 }

@@ -4,7 +4,9 @@ $avatarUrl  = htmlspecialchars($client['avatarUrl'] ?? '/assets/img/avatar.png')
 $name       = htmlspecialchars($client['name'] ?? 'Client');
 $status     = htmlspecialchars($client['status'] ?? 'Active');
 $sessions   = (int) ($client['sessionCount'] ?? 0);
-$progress   = (int) ($client['progressPercentage'] ?? 0);
+$totalProgressSum   = (int) ($client['totalProgressSum'] ?? 0);
+$planCount = (int) ($client['planCount']?? 0);
+$totalProgess =$planCount>0 ? (int)($totalProgressSum/$planCount):0;
 $clientId   = (int) ($client['id'] ?? 0);
 $hasPlan    = !empty($client['latestPlanId']);
 $planId     = (int) ($client['latestPlanId'] ?? 0);
@@ -18,7 +20,7 @@ $planId     = (int) ($client['latestPlanId'] ?? 0);
     <div class="cc-client-info">
         <span class="cc-client-badge"><?= $status ?></span>
         <h3 class="cc-client-name"><?= $name ?></h3>
-        <p class="cc-client-sub">Plan progress: <?= $progress ?>%</p>
+        <p class="cc-client-sub">Total Plans: <?= $planCount ?></p>
         <div class="cc-client-pills">
             <span class="cc-pill">
                 <i data-lucide="calendar-check" stroke-width="1"></i>
@@ -26,7 +28,7 @@ $planId     = (int) ($client['latestPlanId'] ?? 0);
             </span>
             <span class="cc-pill">
                 <i data-lucide="trending-up" stroke-width="1"></i>
-                <?= $progress ?>% progress
+                <?= $totalProgess ?>% Total progress
             </span>
         </div>
     </div>

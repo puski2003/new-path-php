@@ -10,7 +10,7 @@
     var rejectBtn    = document.getElementById('rejectRescheduleBtn');
     var badge        = document.getElementById('rescheduleBadge');
     var listEl       = document.getElementById('reschedule-requests-list');
-
+    
     var currentRequestId = 0;
 
     // ── Load requests when tab is shown ──────────────────────────────

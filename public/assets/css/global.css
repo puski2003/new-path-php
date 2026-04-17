@@ -763,7 +763,7 @@ body {
   align-items: center;
   padding: 0 var(--spacing-sm);
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  /* margin-top: var(--spacing-sm); */
 
 
 }

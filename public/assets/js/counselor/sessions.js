@@ -19,7 +19,7 @@ function showSection(id) {
     "tab-cancelled": "btn-cancelled",
   };
 
-  const button = document.getElementById(buttonMap[id]);
+  const button = document.getElementById(buttonMap[id])
   if (button) {
     button.classList.add("active-button");
   }

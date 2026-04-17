@@ -9,3 +9,4 @@ class CounselorClientProfileModel
         return CounselorData::getClientProfile($counselorId, $clientUserId);
     }
 }
+ 

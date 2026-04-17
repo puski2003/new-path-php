@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../common/counselor.data.php';
 class CounselorDashboardModel
 {
     public static function getCounselorById(int $counselorId): ?array
@@ -48,7 +48,7 @@ class CounselorDashboardModel
     {
         $safeCounselorId = max(0, $counselorId);
         $rs = Database::search(
-            "SELECT s.session_id, s.user_id, s.session_datetime, s.session_type, s.status, s.meeting_link,
+            "SELECT s.session_id, s.user_id, s.session_datetime, s.session_type, s.status, s.meeting_link,u.profile_picture,
                     COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Client') AS user_name
              FROM sessions s
              JOIN users u ON u.user_id = s.user_id
@@ -68,6 +68,7 @@ class CounselorDashboardModel
                 'sessionType' => $row['session_type'] ?? 'video',
                 'status' => $row['status'] ?? 'scheduled',
                 'meetingLink' => $row['meeting_link'] ?? '',
+                'profilePicture' =>$row['profile_picture'] ?: '/assets/img/avatar.png',
             ];
         }
 
@@ -113,7 +114,7 @@ class CounselorDashboardModel
     {
         $safeCounselorId = max(0, $counselorId);
         $rs = Database::search(
-            "SELECT COALESCE(SUM(amount), 0) AS total
+            "SELECT SUM(amount) AS total
              FROM transactions
              WHERE counselor_id = $safeCounselorId
                AND status       = 'completed'"
@@ -134,6 +135,10 @@ class CounselorDashboardModel
         );
         $row = $rs ? $rs->fetch_assoc() : null;
         return (int) ($row['total'] ?? 0);
+    }
+    public static function getActiveClients(int $counselorId){
+        
+        return CounselorData::getClientsByCounselor($counselorId);
     }
 
     public static function getClientActivities(int $counselorId, int $limit = 5): array

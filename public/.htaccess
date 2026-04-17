@@ -5,7 +5,7 @@ RewriteEngine On
 RewriteBase /
 
 # Don't rewrite real files or directories
-RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-f 
 RewriteCond %{REQUEST_FILENAME} !-d
 
 # Route everything else to the front controller

@@ -15,7 +15,7 @@ $pageScripts = ['/assets/js/counselor/clientProfile.js'];
 <body>
 <main class="main-container theme-counselor">
     <?php require __DIR__ . '/../common/counselor.sidebar.php'; ?>
-
+    
     <section class="main-content">
         <?php require __DIR__ . '/../common/counselor.page-header.php'; ?>
 

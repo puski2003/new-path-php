@@ -13,16 +13,23 @@ class CounselorData
         $safeCounselorId = max(0, $counselorId);
         $rs = Database::search(
             "SELECT DISTINCT u.user_id, u.email, u.display_name, u.first_name, u.last_name,
-                    u.profile_picture, u.phone_number, u.is_active,
-                    MAX(s.session_datetime) AS last_session_at,
-                    COUNT(s.session_id) AS session_count,
-                    COALESCE(MAX(rp.progress_percentage), 0) AS progress_percentage
-             FROM sessions s
-             INNER JOIN users u ON u.user_id = s.user_id
-             LEFT JOIN recovery_plans rp ON rp.user_id = u.user_id AND rp.counselor_id = $safeCounselorId
-             WHERE s.counselor_id = $safeCounselorId
-             GROUP BY u.user_id, u.email, u.display_name, u.first_name, u.last_name, u.profile_picture, u.phone_number, u.is_active
-             ORDER BY MAX(s.session_datetime) DESC, u.display_name ASC"
+                u.profile_picture, u.phone_number, u.is_active,
+                MAX(s.session_datetime) AS last_session_at,
+                COUNT(DISTINCT s.session_id) AS session_count,
+                COALESCE((
+                    SELECT SUM(rp2.progress_percentage)
+                    FROM recovery_plans rp2
+                    WHERE rp2.user_id = u.user_id 
+                    AND rp2.counselor_id = $safeCounselorId 
+                    AND rp2.assigned_status = 'accepted'
+                ), 0) AS total_progress_sum,
+                COUNT(DISTINCT rp.plan_id) AS plan_count
+            FROM sessions s
+            INNER JOIN users u ON u.user_id = s.user_id
+            LEFT JOIN recovery_plans rp ON rp.user_id = u.user_id AND rp.counselor_id = $safeCounselorId 
+            WHERE s.counselor_id = $safeCounselorId
+            GROUP BY u.user_id, u.email, u.display_name, u.first_name, u.last_name, u.profile_picture, u.phone_number, u.is_active
+            ORDER BY MAX(s.session_datetime) DESC, u.display_name ASC"
         );
 
         $clients = [];
@@ -37,13 +44,13 @@ class CounselorData
                 'phone' => $row['phone_number'] ?? '',
                 'avatarUrl' => $row['profile_picture'] ?: '/assets/img/avatar.png',
                 'status' => !empty($row['is_active']) ? 'Active' : 'Inactive',
-                'progressPercentage' => (int) ($row['progress_percentage'] ?? 0),
+                'totalProgressSum' => (int) ($row['total_progress_sum'] ?? 0),
+                'planCount'=>(int)($row['plan_count'] ?? 0),
                 'sessionCount' => (int) ($row['session_count'] ?? 0),
                 'lastSessionAt' => $row['last_session_at'] ?? null,
                 'latestPlanId' => self::getLatestPlanIdForClient($safeCounselorId, (int) $row['user_id']),
             ];
         }
-
         return $clients;
     }
 
@@ -52,9 +59,6 @@ class CounselorData
         $safeCounselorId = max(0, $counselorId);
         $safeClientUserId = max(0, $clientUserId);
 
-        // Per PRD §3.3 and §9.1 (GDPR/PDPA compliance):
-        // Counselors may only see basic demographics + session/plan context.
-        // Private health data (sobriety, urge logs, check-ins, journals) must NOT be fetched.
         $rs = Database::search(
             "SELECT u.user_id, u.email, u.display_name, u.first_name, u.last_name,
                     u.profile_picture, u.phone_number, u.is_active
@@ -79,23 +83,23 @@ class CounselorData
         // Only fetch sessions that belong to THIS counselor
         $sessionStatsRs = Database::search(
             "SELECT COUNT(*) AS total_sessions,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_sessions,
-                    MAX(session_datetime) AS last_session_at,
-                    MAX(session_notes) AS latest_notes
-             FROM sessions
-             WHERE user_id = $safeClientUserId
-               AND counselor_id = $safeCounselorId"
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_sessions,
+                MAX(session_datetime) AS last_session_at,
+                MAX(session_notes) AS latest_notes
+            FROM sessions
+            WHERE user_id = $safeClientUserId
+            AND counselor_id = $safeCounselorId"
         );
         $sessionStats = $sessionStatsRs ? $sessionStatsRs->fetch_assoc() : [];
 
         // Only fetch recovery plans assigned by THIS counselor
         $planRs = Database::search(
             "SELECT plan_id, title, description, status, progress_percentage, custom_notes
-             FROM recovery_plans
-             WHERE user_id = $safeClientUserId
-               AND counselor_id = $safeCounselorId
-             ORDER BY updated_at DESC
-             LIMIT 1"
+            FROM recovery_plans
+            WHERE user_id = $safeClientUserId
+            AND counselor_id = $safeCounselorId
+            ORDER BY updated_at DESC
+            LIMIT 1"
         );
         $plan = $planRs ? $planRs->fetch_assoc() : null;
 
@@ -149,6 +153,7 @@ class CounselorData
                 'isUpcoming' => $timestamp ? $timestamp >= time() && in_array($row['status'], ['scheduled', 'confirmed', 'in_progress'], true) : false,
             ];
         }
+        
 
         return $sessions;
     }
@@ -188,11 +193,11 @@ class CounselorData
         $safePlanId = max(0, $planId);
         $rs = Database::search(
             "SELECT rp.*, COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Client') AS client_name
-             FROM recovery_plans rp
-             INNER JOIN users u ON u.user_id = rp.user_id
-             WHERE rp.plan_id = $safePlanId
-               AND rp.counselor_id = $safeCounselorId
-             LIMIT 1"
+            FROM recovery_plans rp
+            INNER JOIN users u ON u.user_id = rp.user_id
+            WHERE rp.plan_id = $safePlanId
+            AND rp.counselor_id = $safeCounselorId
+            LIMIT 1"
         );
         $row = $rs ? $rs->fetch_assoc() : null;
         if (!$row) {
@@ -324,12 +329,13 @@ class CounselorData
         $startDate = self::esc($input['startDate'] ?? date('Y-m-d'));
         $targetDate = self::esc($input['targetCompletionDate'] ?? date('Y-m-d'));
         $customNotes = self::esc($input['customNotes'] ?? '');
+        $frameworkId=self::esc($input['framework_id'] ?? '1');
 
         Database::iud(
             "INSERT INTO recovery_plans
-                (user_id, counselor_id, title, description, category, plan_type, status, start_date, target_completion_date, progress_percentage, custom_notes, assigned_status, created_at, updated_at)
+                (user_id, counselor_id, framework_id, title, description, category, plan_type, status, start_date, target_completion_date, progress_percentage, custom_notes, assigned_status, created_at, updated_at)
              VALUES
-                ($userId, $counselorId, '$title', '$description', '$category', '$planType', '$status', '$startDate', '$targetDate', 0, '$customNotes', 'pending', NOW(), NOW())"
+                ($userId, $counselorId,$frameworkId, '$title', '$description', '$category', '$planType', '$status', '$startDate', '$targetDate', 0, '$customNotes', 'pending', NOW(), NOW())"
         );
 
         $planId = (int) Database::$connection->insert_id;
@@ -391,11 +397,9 @@ class CounselorData
     public static function deletePlan(int $counselorId, int $planId): bool
     {
         Database::iud(
-            "UPDATE recovery_plans
-             SET status = 'cancelled', updated_at = NOW()
-             WHERE plan_id = $planId
-               AND counselor_id = $counselorId
-               AND status <> 'cancelled'"
+            "DELETE FROM recovery_plans
+            WHERE plan_id = $planId
+            AND counselor_id = $counselorId"
         );
         return true;
     }

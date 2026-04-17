@@ -21,7 +21,7 @@ $pagePath = ROOT . '/pages' . $path . '/index.php';
 if (str_contains($path, '..')) {
     Response::abort(400, 'Bad Request');
 }
-
+ 
 
 if ($path === '/') {
     Response::redirect('/auth/login');

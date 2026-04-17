@@ -4,9 +4,27 @@ require_once __DIR__ . '/../common/counselor.data.php';
 
 class CounselorSessionsModel
 {
-    public static function getAll(int $counselorId): array
-    {
+    public static function getAll(int $counselorId): array{
+
         return CounselorData::getSessionsByCounselor($counselorId);
+    }
+
+    public static function createReport(array $input){
+        $counselorUserId = $input['counselorUser_id'] ?? 0;
+        $sessionId = $input['session_id'] ?? 0;
+        $reason = $input['reason'] ?? 'other';
+        $desc = $input['description'] ?? '';
+        $rs=Database::iud("INSERT INTO session_disputes(session_id,reported_by,reason,description,created_at)
+        VALUES ('$sessionId','$counselorUserId','$reason','$desc',NOW())");
+        if($rs){
+            return ['ok' => true];
+        }else{
+            return ['ok' => false];
+        }
+
+    }
+    public static function isReported(){
+        
     }
 
     // ------------------------------------------------------------------

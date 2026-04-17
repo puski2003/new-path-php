@@ -14,10 +14,13 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
         <?php require __DIR__ . '/../common/counselor.page-header.php'; ?>
 
         <div class="main-content-body">
-
+            
             <!-- Toolbar -->
             <div class="rp-toolbar">
                 <span class="rp-toolbar-title">Created Plans</span>
+                <div class="cc-toolbar">
+                    <?php require __DIR__ . '/../common/counselor.searchbar.php'; ?>
+                </div>
                 <a href="/counselor/recovery-plans/create">
                     <button class="btn btn-primary" type="button">+ Create New Plan</button>
                 </a>
@@ -57,7 +60,7 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
                                 <i data-lucide="eye" style="width:14px;height:14px;margin-right:4px;" stroke-width="1"></i>
                                 View Plan
                             </a>
-                            <a href="/counselor/recovery-plans/delete?planId=<?= (int) $plan['planId'] ?>"
+                            <a href="/counselor/recovery-plans/delete?planId=<?= (int) $plan['planId']?>"
                                onclick="return confirm('Are you sure you want to delete this plan?');"
                                class="btn btn-secondary" style="font-size:var(--font-size-xs);color:#f43a3a;">
                                 <i data-lucide="trash-2" style="width:14px;height:14px;margin-right:4px;" stroke-width="1"></i>
@@ -67,6 +70,11 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
 
                     </div>
                     <?php endforeach; ?>
+                </div>
+            <?php elseif(!empty($query)):?>
+                <div class="rp-empty">
+                    <i data-lucide="clipboard-plus" stroke-width="1"></i>
+                    <p>No Search Results for "<?=htmlspecialchars($query) ?>"</p>
                 </div>
             <?php else: ?>
                 <div class="rp-empty">

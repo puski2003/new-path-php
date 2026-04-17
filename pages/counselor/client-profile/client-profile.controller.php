@@ -7,5 +7,5 @@ if ($clientId <= 0) {
 
 $clientProfile = CounselorClientProfileModel::getProfile((int) ($user['counselorId'] ?? 0), $clientId);
 if (!$clientProfile) {
-    Response::redirect('/counselor/clients');
+    Response::redirect('/counselor/clients'); 
 }
