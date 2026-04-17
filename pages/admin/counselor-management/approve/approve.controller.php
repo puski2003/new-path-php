@@ -12,7 +12,7 @@ if (!$application) {
     $error = 'Application not found or already processed.';
 } else {
     $username = ApproveApplicationModel::generateUsername($application['fullName']);
-    $password = PasswordPool::getRandom();
+    $password = ApproveApplicationModel::generatePassword();
 
     if (Request::isPost()) {
         $subject = trim(Request::post('subject') ?? '');
