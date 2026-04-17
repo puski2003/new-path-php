@@ -73,29 +73,14 @@
                     <?php endif; ?>
 
                     <div class="profile-community-activity">
-                        <div class="section-header">
-                            <h3>Community Activity</h3>
-                            <span><?= (int)$profile['communityPostsCount'] ?> posts</span>
-                        </div>
-
                         <?php if (!empty($profile['communityPosts'])): ?>
-                            <div class="profile-post-list">
-                                <?php foreach ($profile['communityPosts'] as $post): ?>
-                                    <div class="profile-post-card">
-                                        <div class="post-card-content">
-                                            <h4><?= htmlspecialchars($post['title'] ?: 'Untitled post') ?></h4>
-                                            <p><?= nl2br(htmlspecialchars(mb_strlen($post['content']) > 160 ? mb_substr($post['content'], 0, 160) . '...' : $post['content'])) ?></p>
-                                        </div>
-                                        <div class="post-card-meta">
-                                            <span><?= htmlspecialchars($post['createdAt'] ? date('M j, Y', strtotime($post['createdAt'])) : '') ?></span>
-                                            <span><?= (int)$post['likesCount'] ?> likes</span>
-                                            <span><?= (int)$post['commentsCount'] ?> comments</span>
-                                        </div>
-                                    </div>
+                            <div class="community-posts-container">
+                                <?php foreach ($profile['communityPosts'] as $currentPost): ?>
+                                    <?php require __DIR__ . '/../common/user.community-post-item.php'; ?>
                                 <?php endforeach; ?>
                             </div>
                         <?php else: ?>
-                            <p class="profile-activity-empty">No community posts yet.</p>
+                            <div class="community-post"><p class="post-text">No community posts yet.</p></div>
                         <?php endif; ?>
                     </div>
                 </div>

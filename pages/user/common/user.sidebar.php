@@ -59,7 +59,6 @@ $navItems = [
         <div class="user-details">
             <span class="user-name"><?= htmlspecialchars(explode(' ', $user['name'] ?? 'User')[0]) ?></span>
             <span class="user-role"><?= htmlspecialchars($user['role'] ?? 'User') ?></span>
-            <span class="user-age"><?= htmlspecialchars($user['age'] ?? 'Age not specified') ?></span>
         </div>
     </div>  
         <?php require_once __DIR__ . '/user.notification-bell.php'; ?>
