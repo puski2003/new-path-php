@@ -1,5 +1,7 @@
 <?php
 
+require_once ROOT . '/config/password-pool.php';
+
 class ApproveApplicationModel
 {
     private static function esc(string $value): string
@@ -52,19 +54,6 @@ class ApproveApplicationModel
             $username .= '_' . ($dupCount + 1);
         }
         return $username;
-    }
-
-    public static function generatePassword(int $length = 16): string
-    {
-        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
-        $maxIndex = strlen($alphabet) - 1;
-        $password = '';
-
-        for ($i = 0; $i < $length; $i++) {
-            $password .= $alphabet[random_int(0, $maxIndex)];
-        }
-
-        return $password;
     }
 
     public static function approve(int $applicationId, int $adminUserId, string $username, string $password): array
