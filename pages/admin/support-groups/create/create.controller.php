@@ -12,9 +12,9 @@ if (Request::isPost()) {
         }
     }
 
-    if ($errorMessage === '' && SupportGroupsCreateModel::create($_POST, (int) $user['id'])) {
+    if ($errorMessage === null && SupportGroupsCreateModel::create($_POST, (int) $user['id'])) {
         Response::redirect('/admin/support-groups?created=1');
-    } elseif ($errorMessage === '') {
+    } elseif ($errorMessage === null) {
         $errorMessage = 'Failed to create support group.';
     }
 }
