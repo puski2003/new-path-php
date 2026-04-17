@@ -41,6 +41,37 @@ class UserProfileModel
             $displayName = $row['display_name'] 
                 ?? trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')) 
                 ?: 'User';
+
+            $communityPostsCountRs = Database::search(
+                "SELECT COUNT(*) AS total_posts
+                 FROM community_posts
+                 WHERE user_id = $userId
+                   AND is_active = 1"
+            );
+            $communityPostsCount = $communityPostsCountRs ? (int)($communityPostsCountRs->fetch_assoc()['total_posts'] ?? 0) : 0;
+
+            $communityPostsRs = Database::search(
+                "SELECT post_id, title, content, image_url, likes_count, comments_count, shares_count, created_at
+                 FROM community_posts
+                 WHERE user_id = $userId
+                   AND is_active = 1
+                 ORDER BY created_at DESC
+                 LIMIT 3"
+            );
+
+            $communityPosts = [];
+            while ($communityPostsRs && ($postRow = $communityPostsRs->fetch_assoc())) {
+                $communityPosts[] = [
+                    'postId' => (int)$postRow['post_id'],
+                    'title' => $postRow['title'] ?? '',
+                    'content' => $postRow['content'] ?? '',
+                    'imageUrl' => $postRow['image_url'] ?? '',
+                    'likesCount' => (int)($postRow['likes_count'] ?? 0),
+                    'commentsCount' => (int)($postRow['comments_count'] ?? 0),
+                    'sharesCount' => (int)($postRow['shares_count'] ?? 0),
+                    'createdAt' => $postRow['created_at'] ?? null,
+                ];
+            }
             
             return [
                 'userId' => (int)$row['user_id'],
@@ -53,6 +84,8 @@ class UserProfileModel
                 'followersCount' => (int)$row['followers_count'],
                 'followingCount' => (int)$row['following_count'],
                 'createdAt' => $row['created_at'],
+                'communityPostsCount' => $communityPostsCount,
+                'communityPosts' => $communityPosts,
                 'isFollowing' => $isFollowing,
                 'isOwnProfile' => $viewerId === $userId,
             ];

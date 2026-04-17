@@ -57,7 +57,7 @@ class CounselorData
         // Private health data (sobriety, urge logs, check-ins, journals) must NOT be fetched.
         $rs = Database::search(
             "SELECT u.user_id, u.email, u.display_name, u.first_name, u.last_name,
-                    u.profile_picture, u.phone_number, u.is_active
+                    u.profile_picture, u.phone_number, u.is_active, u.bio, u.created_at
              FROM users u
              WHERE u.user_id = $safeClientUserId
                AND EXISTS (
@@ -99,11 +99,44 @@ class CounselorData
         );
         $plan = $planRs ? $planRs->fetch_assoc() : null;
 
+        $totalPostsRs = Database::search(
+            "SELECT COUNT(*) AS total_posts
+             FROM community_posts
+             WHERE user_id = $safeClientUserId
+               AND is_active = 1"
+        );
+        $communityPostsCount = $totalPostsRs ? (int)($totalPostsRs->fetch_assoc()['total_posts'] ?? 0) : 0;
+
+        $postRs = Database::search(
+            "SELECT post_id, title, content, image_url, likes_count, comments_count, shares_count, created_at
+             FROM community_posts
+             WHERE user_id = $safeClientUserId
+               AND is_active = 1
+             ORDER BY created_at DESC
+             LIMIT 3"
+        );
+
+        $communityPosts = [];
+        while ($postRs && ($postRow = $postRs->fetch_assoc())) {
+            $communityPosts[] = [
+                'postId' => (int)$postRow['post_id'],
+                'title' => $postRow['title'] ?? '',
+                'content' => $postRow['content'] ?? '',
+                'imageUrl' => $postRow['image_url'] ?? '',
+                'likesCount' => (int)($postRow['likes_count'] ?? 0),
+                'commentsCount' => (int)($postRow['comments_count'] ?? 0),
+                'sharesCount' => (int)($postRow['shares_count'] ?? 0),
+                'createdAt' => $postRow['created_at'] ?? null,
+            ];
+        }
+
         return [
             'id' => (int) $client['user_id'],
             'name' => $name,
             'email' => $client['email'] ?? '',
             'phone' => $client['phone_number'] ?? '',
+            'bio' => $client['bio'] ?? '',
+            'joinedAt' => !empty($client['created_at']) ? date('M j, Y', strtotime($client['created_at'])) : null,
             'avatarUrl' => $client['profile_picture'] ?: '/assets/img/avatar.png',
             'status' => !empty($client['is_active']) ? 'Active' : 'Inactive',
             'progressPercentage' => (int) ($plan['progress_percentage'] ?? 0),
@@ -117,6 +150,8 @@ class CounselorData
                 'description' => $plan['description'] ?? '',
                 'progressPercentage' => (int) ($plan['progress_percentage'] ?? 0),
             ] : null,
+            'communityPostsCount' => $communityPostsCount,
+            'communityPosts' => $communityPosts,
         ];
     }
 

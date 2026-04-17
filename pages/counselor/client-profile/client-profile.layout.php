@@ -41,6 +41,12 @@ $pageScripts = ['/assets/js/counselor/client-profile/clientProfile.js'];
                     <?php if (!empty($clientProfile['email'])): ?>
                         <p class="cc-profile-email"><?= htmlspecialchars($clientProfile['email']) ?></p>
                     <?php endif; ?>
+                    <?php if (!empty($clientProfile['bio'])): ?>
+                        <p class="cc-profile-bio"><?= nl2br(htmlspecialchars($clientProfile['bio'])) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($clientProfile['joinedAt'])): ?>
+                        <p class="cc-profile-joined">Joined <?= htmlspecialchars($clientProfile['joinedAt']) ?></p>
+                    <?php endif; ?>
                 </div>
                 <div class="cc-profile-pricing">
                     <span class="stat-label">Plan Progress</span>
@@ -88,6 +94,34 @@ $pageScripts = ['/assets/js/counselor/client-profile/clientProfile.js'];
                 <?php else: ?>
                     <p style="font-size:var(--font-size-sm);color:var(--color-text-muted);">
                         No recovery plan assigned yet. Create one to start tracking progress.
+                    </p>
+                <?php endif; ?>
+            </div>
+
+            <!-- ── Community activity section ── -->
+            <div class="cc-section">
+                <div class="cc-section-header">
+                    <h4>Community Activity</h4>
+                    <span class="cc-section-meta"><?= (int) $clientProfile['communityPostsCount'] ?> posts</span>
+                </div>
+
+                <?php if (!empty($clientProfile['communityPosts'])): ?>
+                    <div class="cc-community-posts">
+                        <?php foreach ($clientProfile['communityPosts'] as $post): ?>
+                            <div class="cc-community-post-card">
+                                <h5><?= htmlspecialchars($post['title'] ?: 'Community post') ?></h5>
+                                <p><?= nl2br(htmlspecialchars(mb_strlen($post['content']) > 180 ? mb_substr($post['content'], 0, 180) . '...' : $post['content'])) ?></p>
+                                <div class="cc-post-meta">
+                                    <span><?= htmlspecialchars($post['createdAt'] ? date('M j, Y', strtotime($post['createdAt'])) : '') ?></span>
+                                    <span><?= (int) $post['likesCount'] ?> likes</span>
+                                    <span><?= (int) $post['commentsCount'] ?> comments</span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p style="font-size:var(--font-size-sm);color:var(--color-text-muted);">
+                        No community posts yet.
                     </p>
                 <?php endif; ?>
             </div>
