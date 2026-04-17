@@ -172,7 +172,7 @@ class CommunityModel
                 "UPDATE community_posts
                  SET likes_count = GREATEST(0, likes_count - 1), updated_at = NOW()
                  WHERE post_id = $postId AND is_active = 1"
-            );getConversations
+            );
             
             return ['liked' => false];
         } else {
