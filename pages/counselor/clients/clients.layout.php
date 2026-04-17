@@ -18,7 +18,7 @@ $pageHeaderSubtitle = 'Your client directory';
             <!-- Toolbar: filter + search -->
             <div class="cc-toolbar">
                 <button class="btn btn-bg-light-green filter-button" type="button">
-                    <i data-lucide="filter" stroke-width="1" class="filter-icon"></i>
+                    <i data-lucide="filter" stroke-width="1" width="16" height="16" class="filter-icon"></i>
                     <span>Filter</span>
                 </button>
                 <?php require __DIR__ . '/../common/counselor.searchbar.php'; ?>

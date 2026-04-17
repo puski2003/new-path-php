@@ -5,7 +5,7 @@ $pageHeaderSubtitle = 'Create and manage client recovery plans';
 $prefilledUserId    = (int) (Request::get('userId') ?? 0);
 $pageScripts = [
     '/assets/js/components/toast.js',
-    '/assets/js/counselor/createRecoveryPlan.js',
+    '/assets/js/counselor/recovery-plans/createRecoveryPlan.js',
 ];
 ?>
 <!DOCTYPE html>

@@ -18,6 +18,12 @@ class CommunityModel
             $where .= " AND EXISTS (SELECT 1 FROM saved_posts sp WHERE sp.post_id = p.post_id AND sp.user_id = $userId)";
         }
 
+        $blockedUsers = DirectMessageModel::getBlockedUsers($userId);
+        if (!empty($blockedUsers)) {
+            $blockedIds = implode(',', $blockedUsers);
+            $where .= " AND p.user_id NOT IN ($blockedIds)";
+        }
+
         $order = $scope === 'trending'
             ? "ORDER BY p.likes_count DESC, p.comments_count DESC, p.created_at DESC"
             : "ORDER BY p.created_at DESC";
@@ -167,6 +173,7 @@ class CommunityModel
                  SET likes_count = GREATEST(0, likes_count - 1), updated_at = NOW()
                  WHERE post_id = $postId AND is_active = 1"
             );
+            
             return ['liked' => false];
         } else {
             // Not yet liked — add the like (toggle on)

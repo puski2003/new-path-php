@@ -29,8 +29,6 @@ $isAnonymous = !empty($currentPost['anonymous']);
                 <?php endif; ?>
                 <span class="post-time"><?= htmlspecialchars($createdAt) ?></span>
             </div>
-        </div>
-        
         <?php if (!$isOwner && !$isAnonymous): ?>
             <button class="btn-follow-post <?= $isFollowing ? 'following' : '' ?>" data-user-id="<?= $postUserId ?>">
                 <?php if ($isFollowing): ?>
@@ -41,6 +39,9 @@ $isAnonymous = !empty($currentPost['anonymous']);
                 <span><?= $isFollowing ? 'Following' : 'Follow' ?></span>
             </button>
         <?php endif; ?>
+        </div>
+        
+      
         <div class="post-menu-container">
             <button class="post-menu-btn" data-post-id="<?= $postId ?>">
                 <i data-lucide="more-horizontal" class="menu-icon"></i>

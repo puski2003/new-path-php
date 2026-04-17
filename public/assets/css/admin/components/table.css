@@ -195,3 +195,7 @@
 .admin-table-status-text--error {
     color: var(--color-error);
 }
+
+.pagination-container {
+    padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+}

@@ -56,7 +56,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
                         <div class="no-results-message" style="margin-top: var(--spacing-2xl);">
                             <i data-lucide="user-x" style="width:48px;height:48px;color:var(--color-text-muted);display:block;margin:0 auto var(--spacing-md);"></i>
                             <p>You haven't completed a session with any counselor yet.</p>
-                            <a href="/user/counselors?tab=find" class="btn btn-primary">Find a Counselor</a>
+                            <div style="display: flex;justify-content: center;"><a href="/user/counselors?tab=find" class="btn btn-primary">Find a Counselor</a></div>
                         </div>
                     <?php else: ?>
                         <?php foreach ($myCounselors as $mc):
@@ -83,6 +83,12 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                         <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
                                         <?= $mc['sessions_count'] ?> session<?= $mc['sessions_count'] !== 1 ? 's' : '' ?>
                                     </span>
+                                    <?php if (!empty($mc['hasFreeCredit'])): ?>
+                                    <span class="meta-pill meta-pill--free">
+                                        <i data-lucide="gift" style="width:12px;height:12px;"></i>
+                                        Free Session
+                                    </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="counselor-actions">
@@ -101,9 +107,10 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                     </button>
                                 <?php endif; ?>
                                 <a href="/user/counselors?id=<?= $mc['counselor_id'] ?>"
-                                   class="btn btn-secondary" style="font-size:var(--font-size-xs);">
-                                    <i data-lucide="calendar-plus" style="width:14px;height:14px;margin-right:4px;"></i>
-                                    Book Again
+                                   class="btn <?= !empty($mc['hasFreeCredit']) ? 'btn-primary' : 'btn-secondary' ?>"
+                                   style="font-size:var(--font-size-xs);">
+                                    <i data-lucide="<?= !empty($mc['hasFreeCredit']) ? 'gift' : 'calendar-plus' ?>" style="width:14px;height:14px;margin-right:4px;"></i>
+                                    <?= !empty($mc['hasFreeCredit']) ? 'Book Free' : 'Book Again' ?>
                                 </a>
                             </div>
                         </div>
@@ -122,7 +129,7 @@ require_once __DIR__ . '/../common/user.html.head.php';
 
                     <div class="">
                         <button class="btn btn-bg-light-green filter-button" onclick="toggleFilters()">
-                            <i data-lucide="filter" stroke-width="1" class="filter-icon"></i>
+                            <i data-lucide="filter"  width="16" height="16" stroke-width="1" class="filter-icon"></i>
                             <span>Filter</span>
                         </button>
                     </div>
@@ -276,8 +283,11 @@ require_once __DIR__ . '/../common/user.html.head.php';
             <?php endif; ?>
         });
     </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
-    <script src="/assets/js/user/counselors.js"></script>
+    <?php
+    $pageScripts = [
+        '/assets/js/user/counselors/counselors.js',
+    ];
+    require_once __DIR__ . '/../common/user.footer.php';
+    ?>
 </body>
 </html>

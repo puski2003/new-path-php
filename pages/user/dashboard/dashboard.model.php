@@ -12,16 +12,8 @@ class UserDashboardModel
      */
     public static function getDaysSober(int $userId): int
     {
-        $rs = Database::search(
-            "SELECT days_sober FROM user_progress
-             WHERE user_id = $userId
-             ORDER BY date DESC, progress_id DESC
-             LIMIT 1"
-        );
-        if ($row = $rs->fetch_assoc()) {
-            return max(0, (int)$row['days_sober']);
-        }
-
+        // Always compute live from sobriety_start_date — stale user_progress rows
+        // (days_sober = 0 from initialisation) must not override the real count.
         $rs = Database::search(
             "SELECT DATEDIFF(CURDATE(), sobriety_start_date) AS days
              FROM user_profiles
@@ -95,11 +87,18 @@ class UserDashboardModel
     public static function getDailyTasks(int $userId, int $limit = 5): array
     {
         $rs = Database::search(
-            "SELECT rt.task_id, rt.title, rt.status, rt.priority
+            "SELECT rt.task_id, rt.title, rt.status, rt.priority, rt.task_type
              FROM recovery_tasks rt
              JOIN recovery_plans rp ON rp.plan_id = rt.plan_id
              WHERE rp.user_id = $userId
                AND rp.status = 'active'
+               AND (rp.assigned_status IS NULL OR rp.assigned_status = 'accepted')
+               AND rt.phase = (
+                   SELECT MIN(rt2.phase)
+                   FROM recovery_tasks rt2
+                   WHERE rt2.plan_id = rp.plan_id
+                     AND rt2.status <> 'completed'
+               )
              ORDER BY rt.status ASC, rt.priority DESC, rt.sort_order ASC
              LIMIT $limit"
         );
@@ -111,6 +110,7 @@ class UserDashboardModel
                 'title'     => $row['title'],
                 'completed' => $row['status'] === 'completed',
                 'urgent'    => $row['priority'] === 'high',
+                'taskType'  => str_replace('_', ' ', $row['task_type'] ?? 'task'),
             ];
         }
         return $tasks;
@@ -164,10 +164,7 @@ class UserDashboardModel
             $prevMilestone = $m;
         }
 
-        $range = $nextMilestone - $prevMilestone;
-        $progress = $range > 0
-            ? (int) round((($daysSober - $prevMilestone) / $range) * 100)
-            : 100;
+        $progress = (int) round(($daysSober / $nextMilestone) * 100);
 
         return [
             'progress'      => min(100, max(0, $progress)),

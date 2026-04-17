@@ -39,7 +39,7 @@
             <span class="status-text">Active Plan: <?= htmlspecialchars($activePlans[0]['title']) ?></span>
         </div>
         <a href="/user/recovery/manage" class="btn btn-primary btn-sm" style="flex-shrink: 0;">
-            <i data-lucide="settings-2" stroke-width="1.5"></i>
+            <i data-lucide="settings-2" stroke-width="1.5" width="16" height="16"></i>
             Manage Plan
         </a>
     </div>

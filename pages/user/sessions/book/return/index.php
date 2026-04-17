@@ -73,14 +73,9 @@ $durationMin = $hold['durationMinutes'];
 $counselorInfo = BookingModel::getCounselorForBooking($counselorId);
 $counselorName = $counselorInfo ? $counselorInfo['name'] : 'Your Counselor';
 
-$meetLink = GoogleMeetService::createMeetLink(
-    title:          'New Path Counseling Session with ' . $counselorName,
-    startDatetime:  $slotDt,
-    durationMin:    $durationMin,
-    timeZone:       env('APP_TIMEZONE', 'Asia/Colombo'),
-    description:    'Online counseling session booked via New Path.',
-    counselorEmail: $counselorInfo['email'] ?? null
-);
+$meetSpace  = GoogleMeetService::createMeetSpace();
+$meetLink   = $meetSpace['uri']       ?? null;
+$spaceName  = $meetSpace['spaceName'] ?? '';
 
 // ------------------------------------------------------------------
 // 5. Create session record
@@ -91,7 +86,8 @@ $sessionId = BookingModel::createSession(
     $slotDt,
     $durationMin,
     'video',
-    $meetLink ?? ''
+    $meetLink   ?? '',
+    $spaceName
 );
 
 if ($sessionId <= 0) {

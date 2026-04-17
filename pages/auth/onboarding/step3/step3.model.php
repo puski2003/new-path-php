@@ -9,14 +9,20 @@ class Step3Model
      * Store assessment score and increment step
      */
     public static function saveAssessmentScore(int $userId, int $score): bool
-    {
-        $safeUserId = (int) $userId;
+{
+    $safeUserId = (int) $userId;
+    $safeScore  = (int) $score;
 
-        // Advance step
-        Database::iud(
-            "UPDATE users SET current_onboarding_step = 4 WHERE user_id = $safeUserId"
-        );
+    Database::iud(
+        "UPDATE user_profiles
+         SET risk_score = $safeScore, updated_at = NOW()
+         WHERE user_id = $safeUserId"
+    );
 
-        return true;
-    }
+    Database::iud(
+        "UPDATE users SET current_onboarding_step = 4 WHERE user_id = $safeUserId"
+    );
+
+    return true;
+}
 }

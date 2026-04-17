@@ -11,6 +11,7 @@ require_once ROOT . '/config/database.php';
 require_once ROOT . '/core/Auth.php';
 require_once ROOT . '/core/Response.php';
 require_once ROOT . '/core/Request.php';
+require_once ROOT . '/core/Pagination.php';
 
 
 $path     = Request::path();                    // e.g. "/admin/dashboard"
@@ -24,7 +25,8 @@ if (str_contains($path, '..')) {
 
 
 if ($path === '/') {
-    Response::redirect('/auth/login');
+    require_once ROOT . '/pages/landing/index.php';
+    exit;
 }
 
 // Serve the page if it exists

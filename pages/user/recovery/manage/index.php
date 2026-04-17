@@ -31,10 +31,26 @@ $pageStyle = ['user/dashboard', 'user/manage-plans'];
                 </a>
                 <h2>Manage Recovery Plans</h2>
             </div>
-            <p class="page-subtitle">View and activate your recovery plans</p>
+            <div style="display:flex;align-items:center;gap:var(--spacing-md);padding-right:var(--spacing-lg);">
+                <p class="page-subtitle" style="margin:0;">View and activate your recovery plans</p>
+                <a href="/user/recovery/browse" class="btn btn-primary" style="white-space:nowrap;">
+                    <i data-lucide="layout-template" style="width:14px;height:14px;margin-right:6px;vertical-align:-2px;"></i>
+                    Browse Recovery Plans
+                </a>
+            </div>
         </div>
 
         <div class="main-content-body">
+            <?php if (!empty($_GET['success']) && $_GET['success'] === 'adopted'): ?>
+            <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                Plan activated successfully. Any previously active plans have been paused.
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($_GET['resumed'])): ?>
+            <div class="success-message" style="margin:var(--spacing-md) var(--spacing-2xl) 0;">
+                Plan resumed. Your previous active plan has been paused.
+            </div>
+            <?php endif; ?>
             <div class="plans-container">
                 <?php if (!empty($activePlans)): ?>
                     <div class="plans-section">

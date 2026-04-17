@@ -35,55 +35,64 @@
                             <div class="filter-controls">
                                 <select class="filter-dropdown" id="categoryFilter">
                                     <option value="all">All Categories</option>
-                                    <option value="emergency">Emergency</option>
-                                    <option value="counseling">Counseling</option>
-                                    <option value="recovery">Recovery Plans</option>
-                                    <option value="community">Community</option>
-                                    <option value="technical">Technical Support</option>
+                                    <?php
+                                    $allServices = array_merge($helpServices, $emergencyServices);
+                                    $categories = array_unique(array_column($allServices, 'category'));
+                                    sort($categories);
+                                    foreach ($categories as $cat):
+                                        $label = ucwords(str_replace('-', ' ', $cat));
+                                    ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($label) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                                 <select class="filter-dropdown" id="typeFilter">
                                     <option value="all">All Types</option>
-                                    <option value="hotline">Hotlines</option>
-                                    <option value="chat">Live Chat</option>
-                                    <option value="appointment">Appointments</option>
-                                    <option value="resources">Resources</option>
+                                    <?php
+                                    $typeLabels = ['hotline' => 'Hotlines', 'chat' => 'Live Chat', 'appointment' => 'Appointments', 'resources' => 'Resources'];
+                                    $types = array_unique(array_column($allServices, 'type'));
+                                    sort($types);
+                                    foreach ($types as $t):
+                                        $tLabel = $typeLabels[$t] ?? ucwords(str_replace('-', ' ', $t));
+                                    ?>
+                                    <option value="<?= htmlspecialchars($t) ?>"><?= htmlspecialchars($tLabel) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
                     </div>
 
+                    <?php if (!empty($emergencyServices)): ?>
                     <div class="help-section emergency-section">
                         <div class="section-header">
                             <i data-lucide="alert-triangle" class="section-icon emergency-icon" stroke-width="1"></i>
                             <h3 class="section-title">Emergency Services</h3>
                         </div>
                         <div class="emergency-grid">
+                            <?php foreach ($emergencyServices as $emergency): ?>
                             <div class="emergency-card">
                                 <div class="emergency-info">
-                                    <h4>Crisis Hotline</h4>
-                                    <p>24/7 immediate crisis support</p>
-                                    <span class="emergency-number">1-800-273-8255</span>
+                                    <h4><?= htmlspecialchars($emergency['title']) ?></h4>
+                                    <p><?= htmlspecialchars($emergency['description']) ?></p>
+                                    <?php if (!empty($emergency['phoneNumber'])): ?>
+                                        <span class="emergency-number"><?= htmlspecialchars($emergency['phoneNumber']) ?></span>
+                                    <?php else: ?>
+                                        <span class="emergency-status"><?= htmlspecialchars($emergency['availability']) ?></span>
+                                    <?php endif; ?>
                                 </div>
-                                <button class="btn btn-primary emergency-btn" type="button">Call Now</button>
+                                <button
+                                    class="btn btn-primary emergency-btn service-contact-btn"
+                                    type="button"
+                                    data-phone="<?= htmlspecialchars($emergency['phoneNumber'], ENT_QUOTES) ?>"
+                                    data-email="<?= htmlspecialchars($emergency['email'], ENT_QUOTES) ?>"
+                                    data-website="<?= htmlspecialchars($emergency['website'], ENT_QUOTES) ?>"
+                                    data-title="<?= htmlspecialchars($emergency['title'], ENT_QUOTES) ?>"
+                                    data-service-id="<?= $emergency['id'] ?>"
+                                ><?= htmlspecialchars($emergency['contactLabel']) ?></button>
                             </div>
-                            <div class="emergency-card">
-                                <div class="emergency-info">
-                                    <h4>Text Crisis Line</h4>
-                                    <p>Text support available 24/7</p>
-                                    <span class="emergency-number">Text "HOME" to 741741</span>
-                                </div>
-                                <button class="btn btn-primary emergency-btn" type="button">Text Now</button>
-                            </div>
-                            <div class="emergency-card">
-                                <div class="emergency-info">
-                                    <h4>Emergency Chat</h4>
-                                    <p>Immediate online counselor</p>
-                                    <span class="emergency-status">Available Now</span>
-                                </div>
-                                <button class="btn btn-primary emergency-btn" type="button">Start Chat</button>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <div class="help-section support-services">
                         <h3 class="section-title">Support Services</h3>
@@ -154,8 +163,8 @@
             <?php require __DIR__ . '/../common/user.help-service-detail.php'; ?>
         <?php endforeach; ?>
     </div>
-    <script src="/assets/js/user/helpCenter.js"></script>
-    <script src="/assets/js/user/log-urge-popup.js"></script>
+    <script src="/assets/js/user/help/helpCenter.js"></script>
+    <script src="/assets/js/user/common/log-urge-popup.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
     </script>

@@ -1,13 +1,12 @@
 <?php
-$pageTitle = 'NewPath - Select Your Plan';
+$pageTitle = 'NewPath - Select Your Path';
 $authCss   = 'onboarding.css';
 require_once __DIR__ . '/../../common/auth.head.php';
 
-// Risk band display config
 $bandConfig = [
-    'LOW'      => ['label' => 'Low Risk',      'color' => '#2e7d32', 'bg' => '#e8f5e9', 'subtitle' => 'A self-guided plan is a great starting point for you.'],
-    'MODERATE' => ['label' => 'Moderate Risk',  'color' => '#e65100', 'bg' => '#fff3e0', 'subtitle' => 'Both options suit you well — choose what feels right.'],
-    'HIGH'     => ['label' => 'High Risk',      'color' => '#c62828', 'bg' => '#ffebee', 'subtitle' => 'We recommend starting with a counselor for personalised support.'],
+    'LOW'      => ['label' => 'Low Risk',     'color' => '#2e7d32', 'bg' => '#e8f5e9', 'subtitle' => 'A self-guided plan is a great starting point for you.'],
+    'MODERATE' => ['label' => 'Moderate Risk', 'color' => '#e65100', 'bg' => '#fff3e0', 'subtitle' => 'Both options suit you well — choose what feels right.'],
+    'HIGH'     => ['label' => 'High Risk',     'color' => '#c62828', 'bg' => '#ffebee', 'subtitle' => 'We recommend starting with a counselor for personalised support.'],
 ];
 $band = $bandConfig[$riskBand];
 ?>
@@ -24,9 +23,9 @@ $band = $bandConfig[$riskBand];
         <div class="onboarding-content">
             <div class="progress-container">
                 <div class="progress-bar">
-                    <div class="progress-text">Step 4 of 5</div>
+                    <div class="progress-text">Step 4 of 4</div>
                     <div class="progress-track" aria-label="Progress">
-                        <div class="progress-fill" style="width: 80%;"></div>
+                        <div class="progress-fill" style="width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -36,22 +35,22 @@ $band = $bandConfig[$riskBand];
 
                 <!-- Risk band banner -->
                 <div style="
-                    display: flex; align-items: center; gap: 12px;
-                    background: <?= $band['bg'] ?>; border-radius: 8px;
-                    padding: 12px 18px; margin-bottom: 24px; flex-wrap: wrap;
+                    display:flex;align-items:center;gap:12px;
+                    background:<?= $band['bg'] ?>;border-radius:8px;
+                    padding:12px 18px;margin-bottom:24px;flex-wrap:wrap;
                 ">
                     <span style="
-                        background: <?= $band['color'] ?>; color: #fff;
-                        font-size: 0.75rem; font-weight: 700; padding: 3px 10px;
-                        border-radius: 20px; white-space: nowrap; letter-spacing: 0.5px;
+                        background:<?= $band['color'] ?>;color:#fff;
+                        font-size:0.75rem;font-weight:700;padding:3px 10px;
+                        border-radius:20px;white-space:nowrap;letter-spacing:0.5px;
                     "><?= $band['label'] ?></span>
-                    <span style="color: <?= $band['color'] ?>; font-size: 0.9rem;">
+                    <span style="color:<?= $band['color'] ?>;font-size:0.9rem;">
                         <?= $band['subtitle'] ?>
                     </span>
                 </div>
 
                 <?php if ($error !== null): ?>
-                    <div class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; border: 1px solid red; background-color: #ffe6e6;">
+                    <div class="error-message" style="color:red;margin-bottom:15px;padding:10px;border:1px solid red;background-color:#ffe6e6;">
                         <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
@@ -61,45 +60,35 @@ $band = $bandConfig[$riskBand];
 
                         <!-- System Plan -->
                         <div class="plan-card <?= $defaultPlan === 'system' ? 'selected' : '' ?>"
-                             style="position: relative;"
+                             style="position:relative;"
                              onclick="selectPlan('system', this)">
 
-                            <?php if ($riskBand === 'LOW'): ?>
-                                <span style="
-                                    position: absolute; top: 12px; right: 12px;
-                                    background: #2e7d32; color: #fff;
-                                    font-size: 0.7rem; font-weight: 700;
-                                    padding: 2px 8px; border-radius: 20px;
-                                ">Recommended</span>
+                            <?php if ($riskBand !== 'HIGH'): ?>
+                            <span style="position:absolute;top:12px;right:12px;background:#2e7d32;color:#fff;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">Recommended</span>
                             <?php endif; ?>
 
                             <div class="plan-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
                                 </svg>
                             </div>
                             <h3 class="plan-title">System Plan</h3>
-                            <p class="plan-description">A structured, self-guided journey using our proven tools and resources.</p>
+                            <p class="plan-description">Browse our library of evidence-based recovery plans created by our team. Pick one that fits your goals and start immediately.</p>
                             <ul class="plan-features">
-                                <li>Daily check-ins &amp; tracking</li>
-                                <li>Guided exercises &amp; journaling</li>
-                                <li>Community support access</li>
+                                <li>Admin-curated recovery plans</li>
+                                <li>Guided phases &amp; milestones</li>
+                                <li>Fully editable after adoption</li>
                                 <li>Free forever</li>
                             </ul>
                         </div>
 
                         <!-- Counselor Plan -->
                         <div class="plan-card <?= $defaultPlan === 'counselor' ? 'selected' : '' ?>"
-                             style="position: relative;"
+                             style="position:relative;"
                              onclick="selectPlan('counselor', this)">
 
                             <?php if ($riskBand === 'HIGH'): ?>
-                                <span style="
-                                    position: absolute; top: 12px; right: 12px;
-                                    background: #c62828; color: #fff;
-                                    font-size: 0.7rem; font-weight: 700;
-                                    padding: 2px 8px; border-radius: 20px;
-                                ">Recommended</span>
+                            <span style="position:absolute;top:12px;right:12px;background:#c62828;color:#fff;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">Recommended</span>
                             <?php endif; ?>
 
                             <div class="plan-icon">
@@ -111,30 +100,28 @@ $band = $bandConfig[$riskBand];
                                 </svg>
                             </div>
                             <h3 class="plan-title">Counselor Plan</h3>
-                            <p class="plan-description">Work directly with a certified professional tailored to your specific needs.</p>
+                            <p class="plan-description">Work directly with a certified professional who will build a personalised plan tailored to your needs.</p>
                             <ul class="plan-features">
-                                <li>Everything in System Plan</li>
                                 <li>1-on-1 video sessions</li>
                                 <li>Personalised recovery strategy</li>
                                 <li>Direct messaging support</li>
+                                <li>Expert-guided milestones</li>
                             </ul>
                         </div>
+
                     </div>
 
-                    <!-- Disclaimer -->
-                    <p style="
-                        text-align: center; font-size: 0.8rem;
-                        color: var(--color-text-muted, #888); margin: 20px 0 8px;
-                    ">
+                    <p style="text-align:center;font-size:0.8rem;color:var(--color-text-muted,#888);margin:20px 0 8px;">
                         This recommendation is based on your answers and is not a medical diagnosis.
-                        You are free to choose either option.
+                        You are free to choose any option.
                     </p>
 
-                    <input type="hidden" name="selectedPlan" id="selectedPlan" value="<?= htmlspecialchars($defaultPlan) ?>" required>
+                    <input type="hidden" name="selectedPlan" id="selectedPlan"
+                           value="<?= htmlspecialchars($defaultPlan) ?>" required>
 
                     <div class="form-actions-recovery">
                         <button type="button" class="btn btn-secondary" onclick="window.location.href='/auth/onboarding/step3'">Back</button>
-                        <button type="submit" class="form-submit-btn">Continue to Dashboard</button>
+                        <button type="submit" class="form-submit-btn">Continue</button>
                     </div>
                 </form>
             </div>
@@ -142,8 +129,8 @@ $band = $bandConfig[$riskBand];
     </div>
 
     <script>
-        function selectPlan(planType, cardElement) {
-            document.getElementById('selectedPlan').value = planType;
+        function selectPlan(value, cardElement) {
+            document.getElementById('selectedPlan').value = value;
             document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
             cardElement.classList.add('selected');
         }

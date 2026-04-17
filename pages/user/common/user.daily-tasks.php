@@ -1,7 +1,13 @@
 <div class="col-2-row-1 dashboard-card">
     <div class="card-header">
         <h3>Daily Tasks</h3>
-        <span class="tasks-progress"><?= $completedCount ?>/<?= ($completedCount + $pendingCount) ?> completed</span>
+        <div style="display:flex;align-items:center;gap:var(--spacing-sm);">
+            <span class="tasks-progress"><?= $completedCount ?>/<?= ($completedCount + $pendingCount) ?> completed</span>
+            <a href="/user/recovery/goals" class="view-all-link">
+                <i data-lucide="target" stroke-width="2"></i>
+                Goals
+            </a>
+        </div>
     </div>
 
     <div class="tasks-list">
@@ -35,7 +41,7 @@
                         </div>
                     </div>
                     <?php if (($task['status'] ?? '') !== 'completed'): ?>
-                        <form action="/user/recovery/task/complete" method="post">
+                        <form action="/user/recovery/task/complete" method="post" class="task-complete-form">
                             <input type="hidden" name="taskId" value="<?= (int)$task['taskId'] ?>" />
                             <button type="submit" class="btn btn-primary btn-sm">Complete</button>
                         </form>

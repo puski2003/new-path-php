@@ -16,9 +16,9 @@ class Database
             self::$connection->real_connect(
                 env('DB_HOST', 'localhost'),
                 env('DB_USER', 'root'),
-                env('DB_PASS', ''),
+                env('DB_PASS', 'Pasidu2003@'),
                 env('DB_NAME', 'new_path_2'),
-                (int) env('DB_PORT', '3306'),
+                (int) env('DB_PORT', '3308'),
                 null,
                 MYSQLI_CLIENT_SSL
             );
@@ -34,10 +34,11 @@ class Database
     /**
      * Execute INSERT, UPDATE, DELETE queries
      */
-    public static function iud($q)
+    public static function iud($q): bool
     {
         self::setUpConnection();
         self::$connection->query($q);
+        return self::$connection->affected_rows >= 0;
     }
 
     /**

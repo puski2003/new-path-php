@@ -335,10 +335,14 @@ body {
   letter-spacing: var(--letter-spacing-widest);
 }
 
+i{
+  width: 16px;
+  height: 16px;
+}
 .btn {
   text-decoration: none;
   color: #000000;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-lg);
@@ -348,6 +352,7 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
+  
  gap:var(--spacing-xs);
 }
 
@@ -556,7 +561,8 @@ body {
 .user-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
+  
   margin: 0 var(--spacing-md) var(--spacing-2xl) var(--spacing-md);
   flex-shrink: 0;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -566,7 +572,13 @@ body {
 }
 
 
-
+.user-info-inner{
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+}
 
 .user-icon {
   width: 35px;
@@ -1173,6 +1185,34 @@ body.app-alert-open {
     transition: background 0.15s;
 }
 
+/* ── Bell inside user-info (replaces chevron arrow) ─────────── */
+.user-info .notif-bell-wrapper {
+    margin: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.user-info .notif-bell-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: none;
+}
+
+.user-info .notif-bell-btn svg,
+.user-info .notif-bell-btn i {
+    width: 17px;
+    height: 17px;
+}
+
+.user-info .notif-badge {
+    top: auto;
+    bottom: 2px;
+    right: 2px;
+}
+
 .notif-bell-btn:hover {
     background: var(--color-bg-light-green, #f0faf5);
     color: var(--color-primary);
@@ -1182,21 +1222,20 @@ body.app-alert-open {
 
 .notif-badge {
     position: absolute;
-    top: 6px;
-    right: 10px;
+    top: auto;
+    bottom: 7px;
+    right: calc(50% - 10px);
     background: #dc2626;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
     border-radius: 999px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
+    width: 8px;
+    min-width: 8px;
+    height: 8px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
     pointer-events: none;
+    box-shadow: 0 0 0 2px var(--color-bg-white, #fff);
 }
 
 /* Dropdown */

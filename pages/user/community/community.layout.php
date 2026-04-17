@@ -6,7 +6,7 @@ $pageScripts = [
     '/assets/js/user/community/chat.js',
 ];
 if ($tab === 'people') {
-    $pageScripts[] = '/assets/js/user/find-people.js';
+    $pageScripts[] = '/assets/js/user/community/find-people.js';
 }
 ?>
 <?php require_once __DIR__ . '/../common/user.html.head.php'; ?>

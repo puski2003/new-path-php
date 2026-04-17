@@ -5,7 +5,6 @@
  */
 $error = null;
 
-// Load risk score for recommendation UI (GET and POST)
 require_once __DIR__ . '/step4.model.php';
 $token   = $_COOKIE['jwt'] ?? '';
 $payload = Auth::decode($token);
@@ -26,20 +25,27 @@ if ($riskScore >= 12) {
 }
 
 if (Request::isPost()) {
-    $selectedPlan = Request::post('selectedPlan') ?? '';
+    $selectedPlan = trim(Request::post('selectedPlan') ?? '');
 
     if ($selectedPlan === '') {
-        $error = 'Please select a recovery plan to continue.';
+        $error = 'Please select a recovery path to continue.';
     } else {
         if (!$payload) $payload = Auth::decode($_COOKIE['jwt'] ?? '');
 
         if ($payload) {
-            $userId = $payload['id'];
+            $userId = (int)$payload['id'];
 
-            if (Step4Model::createPlanAndComplete($userId, $selectedPlan)) {
-                Response::redirect('/auth/onboarding/step5');
+            // Mark onboarding complete regardless of path chosen
+            Database::iud(
+                "UPDATE users SET onboarding_completed = 1, current_onboarding_step = 5
+                 WHERE user_id = $userId"
+            );
+
+            if ($selectedPlan === 'counselor') {
+                Response::redirect('/user/counselors');
             } else {
-                $error = 'Failed to generate plan. Please try again.';
+                // 'system' — send to browse page to pick a plan
+                Response::redirect('/user/recovery/browse');
             }
         } else {
             Response::redirect('/auth/login/user');

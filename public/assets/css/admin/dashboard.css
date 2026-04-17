@@ -7,6 +7,7 @@
 .admin-content {
     margin-left: var(--sidebar-width);
     flex: 1;
+    min-width: 0;
     padding: var(--spacing-xl);
     background: linear-gradient(0deg, var(--color-bg-overlay) 0%, var(--color-bg-overlay) 100%), var(--color-bg-white);
     min-height: 100vh;
@@ -51,7 +52,7 @@
     flex-direction: column;
     gap: var(--spacing-md);
     flex: 1 1 280px;
-    box-shadow: var(--shadow-sm);
+    /* box-shadow: var(--shadow-sm); */
 }
 
 .data-card--wide {
@@ -145,6 +146,7 @@
 
 .btn--full {
     width: 100%;
+    /* box-sizing: border-box;  */
     justify-content: flex-start;
     gap: var(--spacing-sm);
 }

@@ -5,6 +5,7 @@ $isUpcoming = !empty($isUpcoming);
 $sessionTs  = !empty($session['sessionDatetime']) ? strtotime((string) $session['sessionDatetime']) : null;
 $displayTime = $sessionTs ? date('D, M j \a\t g:i A', $sessionTs) : 'Schedule unavailable';
 $clientName  = $session['userName'] ?? 'Client';
+$clientAvatar = $session['userAvatar'] ?? '/assets/img/avatar.png';
 $sessionType = $session['sessionType'] ?? 'video';
 $status      = $session['status'] ?? ($isUpcoming ? 'scheduled' : 'completed');
 
@@ -34,5 +35,5 @@ $typeLabel = match ($sessionType) {
             </div>
         <?php endif; ?>
     </div>
-    <img src="/assets/img/avatar.png" alt="Client avatar" class="counselors-image" />
+    <img src="<?= htmlspecialchars($clientAvatar) ?>" alt="<?= htmlspecialchars($clientName) ?>" class="counselors-image" onerror="this.src='/assets/img/avatar.png'" />
 </div>

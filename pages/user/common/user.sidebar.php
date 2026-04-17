@@ -23,7 +23,7 @@ $navItems = [
     ['Recovery',       '/user/recovery',        'heart',     'recovery'],
     ['Community',      '/user/community',       'users',     'community'],
     ['Sessions',       '/user/sessions',        'video',     'sessions'],
-    ['Post Recovery',  '/user/post-recovery',   'trophy',    'post-recovery'],
+    
 ];
 ?>
 <section class="sidebar">
@@ -50,13 +50,10 @@ $navItems = [
         <a class="btn btn-primary" href="/user/help">Get Help Now</a>
     </div>
 
-    <!-- Notification Bell -->
-    
-
     <!-- User Info -->
-    <div class="user-info" id="userMenuBtn" style="cursor: pointer;">
-        
-        <img src="<?= !empty($user['profilePictureUrl']) ? htmlspecialchars($user['profilePictureUrl']) : '/assets/img/avatar.png' ?>"
+    <div class="user-info"  style="cursor: pointer;">
+    <div class="user-info-inner" id="userMenuBtn">
+    <img src="<?= !empty($user['profilePictureUrl']) ? htmlspecialchars($user['profilePictureUrl']) : '/assets/img/avatar.png' ?>"
             alt="User Icon"
             class="user-icon" />
         <div class="user-details">
@@ -64,20 +61,19 @@ $navItems = [
             <span class="user-role"><?= htmlspecialchars($user['role'] ?? 'User') ?></span>
             <span class="user-age"><?= htmlspecialchars($user['age'] ?? 'Age not specified') ?></span>
         </div>
-        <div class="user-menu-container">
-            <i data-lucide="chevron-down" class="dropdown-icon" stroke-width="1"></i>
-            <div class="user-menu-dropdown" id="userMenuDropdown">
-                <button class="menu-option" id="editProfileBtn">
-                    <i data-lucide="user" stroke-width="1"></i>
-                    <span>Edit Profile</span>
+    </div>  
+        <?php require_once __DIR__ . '/user.notification-bell.php'; ?>
+        <div class="user-menu-dropdown" id="userMenuDropdown">
+            <button class="menu-option" id="editProfileBtn">
+                <i data-lucide="user" stroke-width="1"></i>
+                <span>Edit Profile</span>
+            </button>
+            <form method="POST" action="/auth/logout" style="margin:0;">
+                <button type="submit" class="menu-option" style="width:100%;background:none;border:none;cursor:pointer;">
+                    <i data-lucide="log-out" stroke-width="1"></i>
+                    <span>Logout</span>
                 </button>
-                <form method="POST" action="/auth/logout" style="margin:0;">
-                    <button type="submit" class="menu-option" style="width:100%;background:none;border:none;cursor:pointer;">
-                        <i data-lucide="log-out" stroke-width="1"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 </section>

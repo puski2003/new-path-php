@@ -2,6 +2,75 @@
 
 class SessionsModel
 {
+    public static function getReportItems(int $userId, int $page = 1, int $perPage = 5): array
+    {
+        $safePage = max(1, $page);
+        $safePerPage = max(1, min(50, $perPage));
+        $offset = ($safePage - 1) * $safePerPage;
+
+        $countRs = Database::search(
+            "SELECT COUNT(*) AS total
+             FROM session_disputes sd
+             INNER JOIN sessions s ON s.session_id = sd.session_id
+             WHERE sd.reported_by = $userId"
+        );
+        $countRow = $countRs ? ($countRs->fetch_assoc() ?: []) : [];
+        $total = (int)($countRow['total'] ?? 0);
+
+        $rs = Database::search(
+            "SELECT sd.dispute_id, sd.reason, sd.description, sd.status AS report_status,
+                    sd.admin_note AS report_admin_note, sd.created_at AS reported_at,
+                    s.session_id, s.session_datetime, s.counselor_id, s.status AS session_status,
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name,
+                    u.profile_picture,
+                    t.transaction_id, t.transaction_uuid, t.amount, t.currency,
+                    rd.status AS refund_status, rd.admin_notes AS refund_admin_notes,
+                    rd.requested_amount, rd.refunded_amount, rd.created_at AS refund_created_at
+             FROM session_disputes sd
+             INNER JOIN sessions s ON s.session_id = sd.session_id
+             INNER JOIN counselors c ON c.counselor_id = s.counselor_id
+             INNER JOIN users u ON u.user_id = c.user_id
+             LEFT JOIN transactions t ON t.session_id = s.session_id
+             LEFT JOIN refund_disputes rd
+                    ON rd.transaction_id = t.transaction_id
+                   AND rd.user_id = sd.reported_by
+                   AND rd.issue_type = 'missed_session'
+             WHERE sd.reported_by = $userId
+             ORDER BY sd.created_at DESC
+             LIMIT $safePerPage OFFSET $offset"
+        );
+
+        $items = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $items[] = [
+                'disputeId' => (int)$row['dispute_id'],
+                'sessionId' => (int)$row['session_id'],
+                'counselorId' => (int)$row['counselor_id'],
+                'counselorName' => $row['counselor_name'] ?? 'Counselor',
+                'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
+                'sessionDate' => !empty($row['session_datetime']) ? date('M j, Y \a\t g:ia', strtotime($row['session_datetime'])) : '',
+                'sessionStatus' => $row['session_status'] ?? '',
+                'reason' => $row['reason'] ?? 'no_show',
+                'description' => trim((string)($row['description'] ?? '')),
+                'reportStatus' => $row['report_status'] ?? 'pending',
+                'reportAdminNote' => trim((string)($row['report_admin_note'] ?? '')),
+                'reportedAt' => !empty($row['reported_at']) ? date('M j, Y g:i A', strtotime($row['reported_at'])) : '',
+                'refundStatus' => $row['refund_status'] ?? null,
+                'refundAdminNotes' => trim((string)($row['refund_admin_notes'] ?? '')),
+                'requestedAmount' => $row['requested_amount'] !== null ? number_format((float)$row['requested_amount'], 2) . ' ' . ($row['currency'] ?: 'LKR') : null,
+                'refundedAmount' => $row['refunded_amount'] !== null ? number_format((float)$row['refunded_amount'], 2) . ' ' . ($row['currency'] ?: 'LKR') : null,
+                'transactionUuid' => $row['transaction_uuid'] ?? '',
+            ];
+        }
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $safePage,
+            'totalPages' => max(1, (int)ceil($total / $safePerPage)),
+        ];
+    }
+
     public static function getSessionsByType(int $userId, string $type, int $page = 1, int $perPage = 5): array
     {
         $safePage = max(1, $page);
@@ -29,7 +98,15 @@ class SessionsModel
                     s.rating,
                     c.title AS counselor_title, c.specialty,
                     u.profile_picture,
-                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name
+                    COALESCE(u.display_name, CONCAT(u.first_name, ' ', u.last_name), u.username, 'Counselor') AS counselor_name,
+                    (SELECT COUNT(1) FROM session_disputes sd
+                     WHERE sd.session_id = s.session_id AND sd.reported_by = s.user_id) AS has_dispute,
+                    (SELECT rr.status FROM reschedule_requests rr
+                     WHERE rr.session_id = s.session_id
+                     ORDER BY rr.requested_at DESC LIMIT 1) AS reschedule_status,
+                    (SELECT rr.counselor_note FROM reschedule_requests rr
+                     WHERE rr.session_id = s.session_id
+                     ORDER BY rr.requested_at DESC LIMIT 1) AS reschedule_note
              FROM sessions s
              JOIN counselors c ON c.counselor_id = s.counselor_id
              JOIN users u ON u.user_id = c.user_id
@@ -76,9 +153,24 @@ class SessionsModel
         $row = $rs->fetch_assoc();
         if (!$row) return null;
 
+        // Auto-complete sessions whose datetime has passed but status was never updated.
+        // Sessions are created as 'scheduled' and nothing flips them to 'completed' automatically.
+        if (
+            in_array($row['status'], ['scheduled', 'confirmed'], true)
+            && strtotime((string)$row['session_datetime']) < time()
+        ) {
+            Database::iud(
+                "UPDATE sessions SET status = 'completed', updated_at = NOW()
+                 WHERE session_id = {$row['session_id']} AND status IN ('scheduled','confirmed')"
+            );
+            $row['status'] = 'completed';
+        }
+
         $transaction = null;
         $txRs = Database::search(
-            "SELECT t.transaction_uuid, t.payment_method_id, t.processed_at, t.created_at
+            "SELECT t.transaction_id, t.transaction_uuid, t.payment_method_id, t.amount,
+                    t.currency, t.payment_type, t.status, t.payhere_order_id,
+                    t.payhere_payment_id, t.processed_at, t.created_at
              FROM transactions t
              WHERE t.session_id = $sessionId
              ORDER BY t.created_at DESC
@@ -89,12 +181,13 @@ class SessionsModel
             $transaction = $tx;
         }
 
-        $cardLast4 = '6714';
-        $cardExpiry = '03/25';
+        $cardLast4 = '';
+        $cardExpiry = '';
+        $cardBrand = '';
         if (!empty($transaction['payment_method_id'])) {
             $paymentMethodId = (int)$transaction['payment_method_id'];
             $pmRs = Database::search(
-                "SELECT card_last_four, expiry_month, expiry_year
+                "SELECT card_last_four, card_brand, expiry_month, expiry_year
                  FROM payment_methods
                  WHERE payment_method_id = $paymentMethodId
                  LIMIT 1"
@@ -104,6 +197,9 @@ class SessionsModel
                 if (!empty($pm['card_last_four'])) {
                     $cardLast4 = (string)$pm['card_last_four'];
                 }
+                if (!empty($pm['card_brand'])) {
+                    $cardBrand = strtoupper((string)$pm['card_brand']);
+                }
                 if (!empty($pm['expiry_month']) && !empty($pm['expiry_year'])) {
                     $cardExpiry = str_pad((string)$pm['expiry_month'], 2, '0', STR_PAD_LEFT) . '/' . substr((string)$pm['expiry_year'], -2);
                 }
@@ -111,28 +207,52 @@ class SessionsModel
         }
 
         $sessionDateTime = strtotime((string)$row['session_datetime']);
-        $joinWindow = $sessionDateTime ? date('Y-m-d H:i', $sessionDateTime - (15 * 60)) : null;
+        $joinWindow = $sessionDateTime ? date('Y-m-d H:i', $sessionDateTime - (15 * 60)) . ' Asia/Colombo' : null;
+        $bookedAt = !empty($row['created_at']) ? date('Y-m-d H:i', strtotime($row['created_at'])) . ' Asia/Colombo' : null;
+        $paymentCaptured = !empty($transaction['processed_at'])
+            ? date('Y-m-d H:i', strtotime($transaction['processed_at'])) . ' Asia/Colombo'
+            : (!empty($transaction['created_at']) ? date('Y-m-d H:i', strtotime($transaction['created_at'])) . ' Asia/Colombo' : null);
+        $bookingId = !empty($transaction['transaction_uuid'])
+            ? (string)$transaction['transaction_uuid']
+            : ('S' . str_pad((string)$row['session_id'], 10, '0', STR_PAD_LEFT));
+        $amount = isset($transaction['amount']) ? (float)$transaction['amount'] : null;
+        $currency = !empty($transaction['currency']) ? (string)$transaction['currency'] : 'LKR';
+        $hasPayment = $transaction !== null;
+        $paymentMethodLabel = $cardLast4 !== ''
+            ? trim(($cardBrand !== '' ? $cardBrand . ' ' : '') . '**** ' . $cardLast4)
+            : ($hasPayment ? 'Card details unavailable' : 'No payment record');
 
         return [
             'sessionId' => (int)$row['session_id'],
             'counselorId' => (int)$row['counselor_id'],
-            'doctorName' => $row['counselor_name'] ?? 'Dr. Amelia Harper',
-            'doctorTitle' => $row['counselor_title'] ?: 'Licensed Clinical Social Worker',
-            'specialization' => $row['specialty'] ?: 'Specializes in addiction recovery and trauma-informed care',
+            'doctorName' => $row['counselor_name'] ?? 'Counselor',
+            'doctorTitle' => $row['counselor_title'] ?: 'Counselor',
+            'specialization' => $row['specialty'] ?: 'Counseling',
             'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
             'sessionTypeRaw' => $row['session_type'] ?? 'video',
             'sessionType' => self::formatSessionType((string)($row['session_type'] ?? 'video')),
             'status' => $row['status'] ?? 'scheduled',
             'location' => $row['location'] ?: ucfirst((string)($row['session_type'] ?? 'video')),
-            'bookingId' => !empty($transaction['transaction_uuid']) ? $transaction['transaction_uuid'] : ('S' . str_pad((string)$row['session_id'], 10, '0', STR_PAD_LEFT)),
-            'bookedAt' => !empty($row['created_at']) ? date('Y-m-d H:i', strtotime($row['created_at'])) . ' Asia/Colombo' : '2025-09-01 10:00 Asia/Colombo',
-            'paymentCaptured' => !empty($transaction['processed_at'])
-                ? date('Y-m-d H:i', strtotime($transaction['processed_at'])) . ' Asia/Colombo'
-                : (!empty($transaction['created_at']) ? date('Y-m-d H:i', strtotime($transaction['created_at'])) . ' Asia/Colombo' : '2025-09-01 10:05 Asia/Colombo'),
-            'joinWindow' => $joinWindow ? ($joinWindow . ' Asia/Colombo') : '2025-09-01 14:15 Asia/Colombo',
-            'notes' => $row['session_notes'] ?: 'Discussing strategies for managing stress and improving communication in relationships.',
-            'cardNumber' => '**** ' . $cardLast4,
+            'bookingId' => $bookingId,
+            'bookedAt' => $bookedAt ?: 'Not available',
+            'paymentCaptured' => $paymentCaptured ?: 'Not available',
+            'joinWindow' => $joinWindow ?: 'Not available',
+            'notes' => trim((string)($row['session_notes'] ?? '')) !== '' ? trim((string)$row['session_notes']) : 'No session notes available.',
+            'cardNumber' => $paymentMethodLabel,
             'cardExpiry' => $cardExpiry,
+            'cardBrand' => $cardBrand,
+            'hasPayment' => $hasPayment,
+            'amount' => $amount,
+            'amountFormatted' => $amount !== null ? number_format($amount, 2) . ' ' . $currency : 'Not available',
+            'currency' => $currency,
+            'paymentStatus' => !empty($transaction['status']) ? ucfirst((string)$transaction['status']) : 'Not available',
+            'paymentType' => !empty($transaction['payment_type']) ? ucfirst((string)$transaction['payment_type']) : 'Session',
+            'transactionId' => !empty($transaction['transaction_id']) ? (int)$transaction['transaction_id'] : null,
+            'transactionUuid' => $transaction['transaction_uuid'] ?? '',
+            'payhereOrderId' => $transaction['payhere_order_id'] ?? '',
+            'payherePaymentId' => $transaction['payhere_payment_id'] ?? '',
+            'orderUrl' => $hasPayment ? '/user/sessions/order?id=' . (int)$row['session_id'] : '',
+            'receiptUrl' => $hasPayment ? '/user/sessions/receipt?id=' . (int)$row['session_id'] . '&print=1' : '',
             'meetingLink'     => $row['meeting_link'] ?: '',
             'sessionDateTime' => $row['session_datetime'],
             'rating'          => $row['rating'] !== null ? (int)$row['rating'] : null,
@@ -145,24 +265,26 @@ class SessionsModel
     private static function mapSessionCard(array $row, string $type): array
     {
         $sessionDate = strtotime((string)$row['session_datetime']);
-        $formattedDayTime = $sessionDate ? date('D g:ia', $sessionDate) : 'Wed 2pm';
-        $formattedDayTime = str_replace('am', 'am', str_replace('pm', 'pm', $formattedDayTime));
+        $formattedDayTime = $sessionDate ? date('M j, Y \a\t g:ia', $sessionDate) : '';
 
         $schedule = $type === 'upcoming'
-            ? (self::formatSessionTypeShort((string)($row['session_type'] ?? 'video')) . ' - ' . $formattedDayTime)
-            : ('Completed - ' . $formattedDayTime);
+            ? (self::formatSessionTypeShort((string)($row['session_type'] ?? 'video')) . ' · ' . $formattedDayTime)
+            : ('Completed · ' . $formattedDayTime);
 
         return [
-            'sessionId'      => (int)$row['session_id'],
-            'counselorId'    => (int)$row['counselor_id'],
-            'doctorName'     => $row['counselor_name'] ?? 'Counselor',
-            'specialty'      => $row['specialty'] ?: 'Addiction Specialist',
-            'profilePicture' => $row['profile_picture'] ?: '/assets/img/avatar.png',
-            'schedule'       => $schedule,
-            'sessionType'    => $type,
-            'status'         => $row['status'] ?? '',
-            'meetingLink'    => $row['meeting_link'] ?? '',
-            'hasReview'      => $row['rating'] !== null,
+            'sessionId'        => (int)$row['session_id'],
+            'counselorId'      => (int)$row['counselor_id'],
+            'doctorName'       => $row['counselor_name'] ?? 'Counselor',
+            'specialty'        => $row['specialty'] ?: 'Addiction Specialist',
+            'profilePicture'   => $row['profile_picture'] ?: '/assets/img/avatar.png',
+            'schedule'         => $schedule,
+            'sessionType'      => $type,
+            'status'           => $row['status'] ?? '',
+            'meetingLink'      => $row['meeting_link'] ?? '',
+            'hasReview'        => $row['rating'] !== null,
+            'hasDispute'       => (int)($row['has_dispute'] ?? 0) > 0,
+            'rescheduleStatus' => $row['reschedule_status'] ?? null,
+            'rescheduleNote'   => $row['reschedule_note']   ?? '',
         ];
     }
 
@@ -268,68 +390,6 @@ class SessionsModel
     }
 
     // ------------------------------------------------------------------
-    // Cancel session (counselor/admin-initiated only)
-    // ------------------------------------------------------------------
-
-    /**
-     * Cancel an upcoming session owned by $userId.
-     * Sets status = 'cancelled', records who cancelled and why,
-     * and inserts a notification for the counselor.
-     * Returns false if the session is not found, already past, or not cancellable.
-     */
-    public static function cancelSession(int $userId, int $sessionId, string $reason): bool
-    {
-        if ($sessionId <= 0) return false;
-
-        $rs = Database::search(
-            "SELECT session_id, counselor_id FROM sessions
-             WHERE session_id = $sessionId
-               AND user_id    = $userId
-               AND status     IN ('scheduled','confirmed')
-               AND session_datetime > NOW()
-             LIMIT 1"
-        );
-        if (!$rs || $rs->num_rows === 0) return false;
-
-        $session = $rs->fetch_assoc();
-
-        Database::setUpConnection();
-        $safeReason = Database::$connection->real_escape_string(trim($reason));
-
-        Database::iud(
-            "UPDATE sessions
-             SET status              = 'cancelled',
-                 cancelled_by        = $userId,
-                 cancellation_reason = '$safeReason',
-                 updated_at          = NOW()
-             WHERE session_id = $sessionId AND user_id = $userId"
-        );
-
-        // Notify the counselor
-        $counselorId = (int)$session['counselor_id'];
-        $cuRs = Database::search(
-            "SELECT u.user_id FROM counselors c
-             JOIN users u ON u.user_id = c.user_id
-             WHERE c.counselor_id = $counselorId LIMIT 1"
-        );
-        if ($cuRs) {
-            $cuRow = $cuRs->fetch_assoc();
-            $counselorUserId = (int)($cuRow['user_id'] ?? 0);
-            if ($counselorUserId > 0) {
-                $t = Database::$connection->real_escape_string('Session Cancelled');
-                $m = Database::$connection->real_escape_string('A client has cancelled their upcoming session.');
-                $l = Database::$connection->real_escape_string('/counselor/sessions');
-                Database::iud(
-                    "INSERT INTO notifications (user_id, type, title, message, link)
-                     VALUES ($counselorUserId, 'session_cancelled', '$t', '$m', '$l')"
-                );
-            }
-        }
-
-        return true;
-    }
-
-    // ------------------------------------------------------------------
     // Submit review + rating for a completed session
     // ------------------------------------------------------------------
 
@@ -346,7 +406,7 @@ class SessionsModel
             "SELECT session_id, counselor_id, rating FROM sessions
              WHERE session_id = $sessionId
                AND user_id   = $userId
-               AND status    = 'completed'
+               AND (status = 'completed' OR (status IN ('scheduled','confirmed') AND session_datetime < NOW()))
              LIMIT 1"
         );
         if (!$rs || $rs->num_rows === 0) return false;
@@ -425,6 +485,62 @@ class SessionsModel
             "INSERT INTO session_disputes (session_id, reported_by, reason, description)
              VALUES ($sessionId, $userId, 'no_show', '$safeDesc')"
         );
+
+        // Notify the counselor that a no-show was reported
+        $counselorRs = Database::search(
+            "SELECT u.user_id,
+                    COALESCE(u.display_name, CONCAT(u.first_name,' ',u.last_name), u.username, 'Client') AS client_name
+             FROM sessions s
+             JOIN counselors c ON c.counselor_id = s.counselor_id
+             JOIN users u ON u.user_id = c.user_id
+             LEFT JOIN users client ON client.user_id = s.user_id
+             WHERE s.session_id = $sessionId
+             LIMIT 1"
+        );
+        if ($counselorRs && ($cRow = $counselorRs->fetch_assoc())) {
+            $counselorUserId = (int)($cRow['user_id'] ?? 0);
+            if ($counselorUserId > 0) {
+                $notifTitle = Database::$connection->real_escape_string('Absence Report Filed');
+                $notifMsg   = Database::$connection->real_escape_string('A client has reported that you did not attend a session. This will be reviewed by our admin team.');
+                $notifLink  = Database::$connection->real_escape_string('/counselor/sessions?tab=disputes');
+                Database::iud(
+                    "INSERT INTO notifications (user_id, type, title, message, link)
+                     VALUES ($counselorUserId, 'no_show_reported', '$notifTitle', '$notifMsg', '$notifLink')"
+                );
+            }
+        }
+
+        $txRs = Database::search(
+            "SELECT transaction_id, amount, currency
+             FROM transactions
+             WHERE session_id = $sessionId
+               AND user_id = $userId
+               AND status = 'completed'
+             ORDER BY created_at DESC
+             LIMIT 1"
+        );
+        $txRow = $txRs ? $txRs->fetch_assoc() : null;
+
+        if ($txRow) {
+            $transactionId = (int)($txRow['transaction_id'] ?? 0);
+            if ($transactionId > 0) {
+                $refundExisting = Database::search(
+                    "SELECT dispute_id FROM refund_disputes
+                     WHERE transaction_id = $transactionId
+                       AND user_id = $userId
+                       AND issue_type = 'missed_session'
+                     LIMIT 1"
+                );
+
+                if (!$refundExisting || $refundExisting->num_rows === 0) {
+                    $requestedAmount = isset($txRow['amount']) ? number_format((float)$txRow['amount'], 2, '.', '') : '0.00';
+                    Database::iud(
+                        "INSERT INTO refund_disputes (transaction_id, user_id, issue_type, description, requested_amount, status)
+                         VALUES ($transactionId, $userId, 'missed_session', '$safeDesc', $requestedAmount, 'pending')"
+                    );
+                }
+            }
+        }
 
         return true;
     }

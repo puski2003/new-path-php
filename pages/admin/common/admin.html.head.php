@@ -36,9 +36,11 @@ $_renderCss = array_merge($_pageStyles, $_extraCss);
     <link rel="stylesheet" href="/assets/css/admin/components/text-input.css">
     <link rel="stylesheet" href="/assets/css/admin/components/toggle-switch.css">
     <link rel="stylesheet" href="/assets/css/admin/components/file-upload.css">
+    <link rel="stylesheet" href="/assets/css/admin/components/pagination.css">
     <link rel="stylesheet" href="/assets/css/components/profile-menu.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="/assets/js/components/alert.js" defer></script>
     <?php foreach ($_renderCss as $css): ?>
         <?php if (empty($css)) continue; ?>

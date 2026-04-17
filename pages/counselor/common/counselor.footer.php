@@ -1,7 +1,12 @@
 <?php
 $_defaultScripts = [
+    '/assets/js/components/polling.js',
     '/assets/js/components/sidebar.js',
     '/assets/js/components/profile-menu.js',
+    '/assets/js/components/notification-bell.js',
+    '/assets/js/counselor/counselor-search.js',
+    '/assets/js/components/followup-thread.js',
+    '/assets/js/counselor/sessions/followUp.js',
 ];
 $_pageScripts = [];
 if (!empty($pageScripts)) {

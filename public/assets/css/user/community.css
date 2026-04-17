@@ -551,6 +551,15 @@
     color: var(--color-text-muted);
 }
 
+.filter-btn.active {
+    background-color: #2CAD91;
+    color: #ffffff;
+}
+
+.filter-btn.active:hover {
+    background-color: #2CAD91;
+    color: #ffffff;
+}
 /* Post Modal Styles */
 .post-modal-overlay {
     position: fixed;

@@ -56,10 +56,6 @@ class CounselorsModel
         $counselors = [];
 
         while ($row = $rs->fetch_assoc()) {
-            if ($row['rating_value'] === null) {
-                // Determine random fallback rating between 4.0 and 5.0 for UI if none exists
-                $row['rating_value'] = rand(40, 50) / 10;
-            }
             $counselors[] = $row;
         }
 
@@ -110,14 +106,14 @@ class CounselorsModel
 
         $row = $rs->fetch_assoc();
 
-        $rating = $row['rating_value'] !== null ? (float)$row['rating_value'] : 4.8;
-        if ($rating <= 0) {
-            $rating = 4.8;
+        $rating = $row['rating_value'] !== null ? (float)$row['rating_value'] : null;
+        if ($rating !== null && $rating <= 0) {
+            $rating = null;
         }
 
-        $totalReviews = isset($row['total_reviews']) ? (int)$row['total_reviews'] : 150;
-        if ($totalReviews <= 0) {
-            $totalReviews = 150;
+        $totalReviews = isset($row['total_reviews']) ? (int)$row['total_reviews'] : 0;
+        if ($totalReviews < 0) {
+            $totalReviews = 0;
         }
 
         $price = isset($row['consultation_fee']) ? (float)$row['consultation_fee'] : 0.0;
@@ -132,7 +128,7 @@ class CounselorsModel
             'experience_years' => isset($row['experience_years']) ? (int)$row['experience_years'] : 0,
             'consultation_fee' => $price,
             'price_formatted' => 'Rs. ' . number_format($price, 2),
-            'rating' => number_format($rating, 1, '.', ''),
+            'rating' => $rating !== null ? number_format($rating, 1, '.', '') : null,
             'total_reviews' => $totalReviews,
             'availability_schedule' => !empty($row['availability_schedule']) ? $row['availability_schedule'] : '{}'
         ];
@@ -213,6 +209,33 @@ class CounselorsModel
     }
 
     /**
+     * Return counselor_ids for which the user has an unused approved
+     * reschedule credit (approved request with no new non-cancelled session booked after it).
+     */
+    public static function getFreeCreditCounselorIds(int $userId): array
+    {
+        if ($userId <= 0) return [];
+        $rs = Database::search(
+            "SELECT DISTINCT rr.counselor_id
+             FROM reschedule_requests rr
+             WHERE rr.user_id = $userId
+               AND rr.status  = 'approved'
+               AND NOT EXISTS (
+                   SELECT 1 FROM sessions s
+                   WHERE s.user_id      = $userId
+                     AND s.counselor_id = rr.counselor_id
+                     AND s.created_at   > rr.reviewed_at
+                     AND s.status NOT IN ('cancelled')
+               )"
+        );
+        $ids = [];
+        while ($rs && ($row = $rs->fetch_assoc())) {
+            $ids[] = (int)$row['counselor_id'];
+        }
+        return $ids;
+    }
+
+    /**
      * Counselors the user has had at least one completed session with,
      * ordered by most recent session.
      */
@@ -256,6 +279,94 @@ class CounselorsModel
             ];
         }
         return $list;
+    }
+
+    /**
+     * Fetch paginated reviews (completed sessions that have a rating) for a counselor.
+     * Returns ['data' => [...], 'total' => int].
+     */
+    public static function getReviewsByCounselor(int $counselorId, int $page = 1, int $perPage = 5): array
+    {
+        if ($counselorId <= 0) {
+            return ['data' => [], 'total' => 0];
+        }
+
+        $offset = ($page - 1) * $perPage;
+
+        $rs = Database::search("
+            SELECT
+                s.session_id,
+                s.rating,
+                s.review,
+                s.updated_at,
+                s.session_datetime,
+                COALESCE(u.display_name, u.username) AS reviewer_name,
+                u.profile_picture AS reviewer_avatar
+            FROM sessions s
+            JOIN users u ON u.user_id = s.user_id
+            WHERE s.counselor_id = $counselorId
+              AND s.rating IS NOT NULL
+              AND s.status = 'completed'
+            ORDER BY s.updated_at DESC
+            LIMIT $perPage OFFSET $offset
+        ");
+
+        $reviews = [];
+        if ($rs) {
+            while ($row = $rs->fetch_assoc()) {
+                $reviews[] = [
+                    'session_id'      => (int)$row['session_id'],
+                    'rating'          => (int)$row['rating'],
+                    'review'          => $row['review'],
+                    'date'            => !empty($row['updated_at']) ? $row['updated_at'] : $row['session_datetime'],
+                    'reviewer_name'   => $row['reviewer_name'] ?? 'Anonymous',
+                    'reviewer_avatar' => !empty($row['reviewer_avatar']) ? $row['reviewer_avatar'] : '/assets/img/avatar.png',
+                ];
+            }
+        }
+
+        $countRs = Database::search("
+            SELECT COUNT(*) AS total
+            FROM sessions
+            WHERE counselor_id = $counselorId
+              AND rating IS NOT NULL
+              AND status = 'completed'
+        ");
+        $total = $countRs ? (int)($countRs->fetch_assoc()['total'] ?? 0) : 0;
+
+        return ['data' => $reviews, 'total' => $total];
+    }
+
+    /**
+     * Returns the count of each star rating (1–5) for a counselor.
+     * ['1' => N, '2' => N, '3' => N, '4' => N, '5' => N]
+     */
+    public static function getRatingBreakdown(int $counselorId): array
+    {
+        $breakdown = ['1' => 0, '2' => 0, '3' => 0, '4' => 0, '5' => 0];
+        if ($counselorId <= 0) {
+            return $breakdown;
+        }
+
+        $rs = Database::search("
+            SELECT rating, COUNT(*) AS cnt
+            FROM sessions
+            WHERE counselor_id = $counselorId
+              AND rating IS NOT NULL
+              AND status = 'completed'
+            GROUP BY rating
+        ");
+
+        if ($rs) {
+            while ($row = $rs->fetch_assoc()) {
+                $star = (string)(int)$row['rating'];
+                if (isset($breakdown[$star])) {
+                    $breakdown[$star] = (int)$row['cnt'];
+                }
+            }
+        }
+
+        return $breakdown;
     }
 
     /**

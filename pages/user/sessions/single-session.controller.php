@@ -21,10 +21,12 @@ $isUpcomingSession = in_array($sessionData['status'], ['scheduled', 'confirmed',
 
 // Auto-open review modal if redirected from the sessions list ?review=1
 $autoOpenReview = Request::get('review') === '1' && !$isUpcomingSession && !$sessionData['hasReview'];
+$autoOpenNoShow = Request::get('report') === '1'
+    && !$isUpcomingSession
+    && !$sessionData['hasDispute'];
 
 // Show a success banner when redirected from booking payment
 $justBooked = Request::get('booked') === '1';
 
 $pageTitle = 'Session Details';
 $pageStyle = ['user/dashboard', 'user/sessions'];
-

@@ -71,6 +71,33 @@
                         <p><?= nl2br(htmlspecialchars($profile['bio'])) ?></p>
                     </div>
                     <?php endif; ?>
+
+                    <div class="profile-community-activity">
+                        <div class="section-header">
+                            <h3>Community Activity</h3>
+                            <span><?= (int)$profile['communityPostsCount'] ?> posts</span>
+                        </div>
+
+                        <?php if (!empty($profile['communityPosts'])): ?>
+                            <div class="profile-post-list">
+                                <?php foreach ($profile['communityPosts'] as $post): ?>
+                                    <div class="profile-post-card">
+                                        <div class="post-card-content">
+                                            <h4><?= htmlspecialchars($post['title'] ?: 'Untitled post') ?></h4>
+                                            <p><?= nl2br(htmlspecialchars(mb_strlen($post['content']) > 160 ? mb_substr($post['content'], 0, 160) . '...' : $post['content'])) ?></p>
+                                        </div>
+                                        <div class="post-card-meta">
+                                            <span><?= htmlspecialchars($post['createdAt'] ? date('M j, Y', strtotime($post['createdAt'])) : '') ?></span>
+                                            <span><?= (int)$post['likesCount'] ?> likes</span>
+                                            <span><?= (int)$post['commentsCount'] ?> comments</span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="profile-activity-empty">No community posts yet.</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </section>
@@ -101,7 +128,8 @@
     <?php require __DIR__ . '/../common/user.community-chat.php'; ?>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="/assets/js/user/profile.js"></script>
+    <script src="/assets/js/user/profile/profile.js"></script>
+    <script src="/assets/js/components/polling.js"></script>
     <script src="/assets/js/user/community/chat.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

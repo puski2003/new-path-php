@@ -63,9 +63,9 @@
                                     <button class="btn btn-secondary" type="button" id="openReviewModal">Leave Review</button>
                                 <?php endif; ?>
                                 <?php if ($sessionData['hasDispute']): ?>
-                                    <button class="btn btn-secondary" type="button" disabled>No-Show Reported</button>
-                                <?php elseif (in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
-                                    <button class="btn btn-secondary" type="button" id="openNoShowModal">Report No-Show</button>
+                                    <button class="btn btn-secondary" type="button" disabled>Counselor Reported</button>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary" type="button" id="openNoShowModal">Report Counselor Absence</button>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -121,15 +121,25 @@
                     <div class="session-payment-section">
                         <div class="payment-header">
                             <h3 class="payment-title">Payment</h3>
-                            <button class="btn btn-bg-light-green view-order-btn" type="button">View order</button>
+                            <?php if (!empty($sessionData['orderUrl'])): ?>
+                                <a class="btn btn-bg-light-green view-order-btn" href="<?= htmlspecialchars($sessionData['orderUrl']) ?>">View order</a>
+                            <?php else: ?>
+                                <button class="btn btn-bg-light-green view-order-btn" type="button" disabled>View order</button>
+                            <?php endif; ?>
                         </div>
                         <div class="payment-details">
                             <div class="payment-method">
-                                <img src="/assets/img/visa.png" alt="Visa" class="payment-icon" />
+                                <img src="/assets/img/visa.png" alt="Payment method" class="payment-icon" />
                                 <span class="payment-card"><?= htmlspecialchars($sessionData['cardNumber']) ?></span>
-                                <span class="payment-expiry"><?= htmlspecialchars($sessionData['cardExpiry']) ?></span>
+                                <?php if (!empty($sessionData['cardExpiry'])): ?>
+                                    <span class="payment-expiry"><?= htmlspecialchars($sessionData['cardExpiry']) ?></span>
+                                <?php endif; ?>
                             </div>
-                            <button class="btn btn-bg-light-green download-receipt-btn" type="button">Download receipt (PDF)</button>
+                            <?php if (!empty($sessionData['receiptUrl'])): ?>
+                                <a class="btn btn-bg-light-green download-receipt-btn" href="<?= htmlspecialchars($sessionData['receiptUrl']) ?>" target="_blank" rel="noopener">Download receipt (PDF)</a>
+                            <?php else: ?>
+                                <button class="btn btn-bg-light-green download-receipt-btn" type="button" disabled>Download receipt (PDF)</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -196,15 +206,15 @@
     <?php endif; ?>
 
     <!-- No-show report modal -->
-    <?php if (!$isUpcomingSession && !$sessionData['hasDispute'] && in_array($sessionData['status'], ['completed', 'no_show'], true)): ?>
+    <?php if (!$isUpcomingSession && !$sessionData['hasDispute']): ?>
     <div class="session-modal-overlay" id="noShowModalOverlay" style="display:none;">
         <div class="session-modal">
             <div class="session-modal-header">
-                <h3>Report No-Show</h3>
+                <h3>Report Counselor Absence</h3>
                 <button type="button" class="session-modal-close" id="closeNoShowModal">&times;</button>
             </div>
             <div class="session-modal-body">
-                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Let us know if your counselor did not attend this session. Our team will review your report and may issue a refund.</p>
+                <p style="color:var(--color-text-secondary);margin-bottom:var(--spacing-lg);">Let us know if your counselor did not show up for this session. Our team will review your report and may issue a refund.</p>
                 <div class="form-group">
                     <label for="noShowDescription">Details <span class="optional">(optional)</span></label>
                     <textarea class="form-input" id="noShowDescription" rows="3" maxlength="1000"
@@ -220,7 +230,7 @@
     </div>
     <?php endif; ?>
 
-    <script src="/assets/js/user/sessions-view-more.js"></script>
+    <script src="/assets/js/user/sessions/sessions-view-more.js"></script>
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -366,6 +376,7 @@
             ];
             var noShowError = document.getElementById('noShowError');
             var submitNoShowBtn = document.getElementById('submitNoShowBtn');
+            var autoOpenNoShow = <?= $autoOpenNoShow ? 'true' : 'false' ?>;
 
             if (openNoShowBtn && noShowOverlay) {
                 openNoShowBtn.addEventListener('click', function () {
@@ -379,6 +390,9 @@
                 noShowOverlay.addEventListener('click', function (e) {
                     if (e.target === noShowOverlay) closeNoShow();
                 });
+                if (autoOpenNoShow) {
+                    openNoShowBtn.click();
+                }
             }
             function closeNoShow() {
                 if (!noShowOverlay) return;
@@ -400,7 +414,7 @@
                             if (data.success) {
                                 closeNoShow();
                                 if (openNoShowBtn) {
-                                    openNoShowBtn.textContent = 'No-Show Reported';
+                                    openNoShowBtn.textContent = 'Counselor Reported';
                                     openNoShowBtn.disabled = true;
                                 }
                             } else {

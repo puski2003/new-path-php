@@ -45,7 +45,7 @@
     <script>
         lucide.createIcons();
     </script>
-    <script src="/assets/js/user/counselors.js"></script>
+    <script src="/assets/js/user/counselors/counselors.js"></script>
 </body>
 
 </html>

@@ -1,6 +1,5 @@
 <?php
 
-const FOLLOWUP_MAX_MESSAGES = 5;
 const FOLLOWUP_WINDOW_DAYS  = 7;
 
 $counselorId     = (int) ($user['counselorId'] ?? 0);
@@ -31,7 +30,7 @@ if ($ajaxAction = Request::get('ajax')) {
             while ($rs && ($row = $rs->fetch_assoc())) {
                 $completedTs = !empty($row['updated_at']) ? strtotime($row['updated_at']) : strtotime($row['session_datetime']);
                 $daysLeft    = max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400));
-                $isLocked    = (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400) || ((int) $row['msg_count'] >= FOLLOWUP_MAX_MESSAGES);
+                $isLocked    = time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400;
                 $items[] = [
                     'sessionId'   => (int) $row['session_id'],
                     'clientName'  => $row['client_name'],
@@ -63,7 +62,7 @@ if ($ajaxAction = Request::get('ajax')) {
             $isLocked    = (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400);
 
             $msgsRs = Database::search(
-                "SELECT sm.sender_id, sm.message, sm.created_at,
+                "SELECT sm.message_id, sm.sender_id, sm.message, sm.created_at,
                         COALESCE(u.display_name, u.username) AS sender_name,
                         u.profile_picture AS sender_avatar
                  FROM session_messages sm
@@ -71,30 +70,85 @@ if ($ajaxAction = Request::get('ajax')) {
                  WHERE sm.session_id = $sessionId
                  ORDER BY sm.created_at ASC"
             );
-            $msgs     = [];
-            $msgCount = 0;
+            $msgs      = [];
+            $msgCount  = 0;
+            $lastMsgId = 0;
             while ($msgsRs && ($row = $msgsRs->fetch_assoc())) {
                 $isMe   = (int) $row['sender_id'] === $counselorUserId;
                 $avatar = $row['sender_avatar'] ?: '/assets/img/avatar.png';
                 $msgs[] = [
-                    'isMe'     => $isMe,
-                    'name'     => $isMe ? 'You' : $row['sender_name'],
-                    'avatar'   => $avatar,
-                    'message'  => $row['message'],
-                    'time'     => date('M j, g:i A', strtotime($row['created_at'])),
+                    'id'      => (int) $row['message_id'],
+                    'isMe'    => $isMe,
+                    'name'    => $isMe ? 'You' : $row['sender_name'],
+                    'avatar'  => $avatar,
+                    'message' => $row['message'],
+                    'time'    => date('M j, g:i A', strtotime($row['created_at'])),
                 ];
+                $lastMsgId = max($lastMsgId, (int) $row['message_id']);
                 $msgCount++;
             }
 
-            $isLocked = $isLocked || ($msgCount >= FOLLOWUP_MAX_MESSAGES);
             $daysLeft = max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400));
 
             echo json_encode([
-                'success'  => true,
-                'messages' => $msgs,
-                'isLocked' => $isLocked,
-                'msgCount' => $msgCount,
-                'daysLeft' => $daysLeft,
+                'success'   => true,
+                'messages'  => $msgs,
+                'isLocked'  => $isLocked,
+                'msgCount'  => $msgCount,
+                'daysLeft'  => $daysLeft,
+                'lastMsgId' => $lastMsgId,
+            ]);
+            exit;
+
+        /* Poll for messages newer than last_id — used by 4-second poller */
+        case 'poll_messages':
+            $sessionId = (int) Request::get('session_id');
+            $lastId    = (int) Request::get('last_id');
+
+            $check = Database::search(
+                "SELECT s.session_id, s.updated_at, s.session_datetime
+                 FROM sessions s
+                 WHERE s.session_id = $sessionId AND s.counselor_id = $counselorId AND s.status = 'completed'
+                 LIMIT 1"
+            );
+            if (!$check || $check->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Not found']);
+                exit;
+            }
+            $sess        = $check->fetch_assoc();
+            $completedTs = !empty($sess['updated_at']) ? strtotime($sess['updated_at']) : strtotime($sess['session_datetime']);
+            $isLocked    = time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400;
+
+            $newRs = Database::search(
+                "SELECT sm.message_id, sm.sender_id, sm.message, sm.created_at,
+                        COALESCE(u.display_name, u.username) AS sender_name,
+                        u.profile_picture AS sender_avatar
+                 FROM session_messages sm
+                 JOIN users u ON u.user_id = sm.sender_id
+                 WHERE sm.session_id = $sessionId AND sm.message_id > $lastId
+                 ORDER BY sm.created_at ASC"
+            );
+            $newMsgs   = [];
+            $newLastId = $lastId;
+            while ($newRs && ($row = $newRs->fetch_assoc())) {
+                $isMe   = (int) $row['sender_id'] === $counselorUserId;
+                $avatar = $row['sender_avatar'] ?: '/assets/img/avatar.png';
+                $newMsgs[] = [
+                    'id'      => (int) $row['message_id'],
+                    'isMe'    => $isMe,
+                    'name'    => $isMe ? 'You' : $row['sender_name'],
+                    'avatar'  => $avatar,
+                    'message' => $row['message'],
+                    'time'    => date('M j, g:i A', strtotime($row['created_at'])),
+                ];
+                $newLastId = max($newLastId, (int) $row['message_id']);
+            }
+
+            echo json_encode([
+                'success'   => true,
+                'messages'  => $newMsgs,
+                'isLocked'  => $isLocked,
+                'lastMsgId' => $newLastId,
             ]);
             exit;
 
@@ -126,7 +180,7 @@ if ($ajaxAction = Request::get('ajax')) {
             $completedTs = !empty($sess['updated_at']) ? strtotime($sess['updated_at']) : strtotime($sess['session_datetime']);
             $msgCount    = (int) $sess['msg_count'];
 
-            if (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400 || $msgCount >= FOLLOWUP_MAX_MESSAGES) {
+            if (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400) {
                 echo json_encode(['success' => false, 'error' => 'Thread is closed']);
                 exit;
             }
@@ -136,6 +190,7 @@ if ($ajaxAction = Request::get('ajax')) {
             $clientUserId  = (int) $sess['user_id'];
 
             Database::iud("INSERT INTO session_messages (session_id, sender_id, message) VALUES ($sessionId, $counselorUserId, '$safeMsg')");
+            $newMsgId = (int) Database::$connection->insert_id;
 
             // Notify client
             if ($clientUserId > 0) {
@@ -150,6 +205,7 @@ if ($ajaxAction = Request::get('ajax')) {
         echo json_encode([
             'success' => true,
             'message' => [
+                'id'      => $newMsgId,
                 'isMe'    => true,
                 'name'    => 'You',
                 'avatar'  => $myAvatar,
@@ -164,6 +220,11 @@ if ($ajaxAction = Request::get('ajax')) {
     case 'get_reschedule_requests':
             $items = CounselorSessionsModel::getPendingRescheduleRequests($counselorId);
             echo json_encode(['success' => true, 'requests' => $items]);
+            exit;
+
+        case 'get_no_show_disputes':
+            $disputes = CounselorSessionsModel::getNoShowDisputes($counselorId);
+            echo json_encode(['success' => true, 'disputes' => $disputes]);
             exit;
 
         case 'review_reschedule':
@@ -239,7 +300,7 @@ $rs = Database::search(
 while ($rs && ($row = $rs->fetch_assoc())) {
     $completedTs = !empty($row['updated_at']) ? strtotime($row['updated_at']) : strtotime($row['session_datetime']);
     $daysLeft    = max(0, (int) ceil(($completedTs + FOLLOWUP_WINDOW_DAYS * 86400 - time()) / 86400));
-    $isLocked    = (time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400) || ((int) $row['msg_count'] >= FOLLOWUP_MAX_MESSAGES);
+    $isLocked    = time() > $completedTs + FOLLOWUP_WINDOW_DAYS * 86400;
     $followupSessions[] = [
         'sessionId'    => (int) $row['session_id'],
         'clientName'   => $row['client_name'],
@@ -251,6 +312,7 @@ while ($rs && ($row = $rs->fetch_assoc())) {
     ];
 }
 
-$searchPlaceholder = 'Search sessions';
+$searchPlaceholder  = 'Search sessions';
+$searchFilterType   = 'sessions';
 $pageHeaderTitle    = 'Schedule';
 $pageHeaderSubtitle = 'Your session calendar and history';

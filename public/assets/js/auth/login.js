@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Detect if this is counselor, admin, or user login
-  const isCounselorLogin =
-    document.getElementById("counselorLoginForm") !== null;
+  const isCounselorLogin =document.getElementById("counselorLoginForm") !== null;
   const isAdminLogin = document.getElementById("adminLoginForm") !== null;
   const isUserLogin = document.getElementById("loginForm") !== null;
 

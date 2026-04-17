@@ -18,8 +18,14 @@ $selectedMinRating   = '';
 $currentPage         = 1;
 $totalPages          = 1;
 
+$freeCreditIds = CounselorsModel::getFreeCreditCounselorIds((int)$user['id']);
+
 if ($activeTab === 'my') {
     $myCounselors = CounselorsModel::getMyCounselors((int)$user['id']);
+    foreach ($myCounselors as &$mc) {
+        $mc['hasFreeCredit'] = in_array((int)$mc['counselor_id'], $freeCreditIds, true);
+    }
+    unset($mc);
 } else {
     $searchQuery         = $_GET['q'] ?? '';
     $selectedSpecialty   = $_GET['specialty'] ?? '';
@@ -44,4 +50,9 @@ if ($activeTab === 'my') {
     $totalCount  = $result['total'];
     $specialties = CounselorsModel::getSpecialties();
     $totalPages  = (int)ceil($totalCount / $limit);
+
+    foreach ($counselors as &$c) {
+        $c['hasFreeCredit'] = in_array((int)$c['counselor_id'], $freeCreditIds, true);
+    }
+    unset($c);
 }

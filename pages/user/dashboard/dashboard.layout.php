@@ -6,7 +6,7 @@
  */
 $activePage = 'dashboard';
 $pageScripts = [
-    '/assets/js/user/dashboard.js',
+    '/assets/js/user/dashboard/dashboard.js',
 ];
 
 
@@ -155,19 +155,41 @@ require_once __DIR__ . '/../common/user.html.head.php';
                                     <i data-lucide="arrow-right" stroke-width="2"></i>
                                 </a>
                             </div>
+                            <?php if (isset($_GET['taskBlocked'])): ?>
+                            <div class="error-message" style="margin:var(--spacing-xs) var(--spacing-md);">
+                                Complete all tasks in the current phase first.
+                            </div>
+                            <?php endif; ?>
                             <div class="daily-tasks">
                                 <?php if (!empty($dailyTasks)): ?>
                                     <?php foreach ($dailyTasks as $task): ?>
-                                        <div class="task-item" data-task-id="<?= $task['id'] ?>">
-                                            <div class="task-checkbox <?= $task['completed'] ? 'completed' : '' ?> <?= $task['urgent'] ? 'urgent' : '' ?>">
-                                              <?= $task['completed'] ? '<i data-lucide="check" stroke-width="2" color="white"></i>' : '' ?>
+                                        <div class="task-item <?= $task['completed'] ? 'task-item--done' : '' ?> <?= $task['urgent'] ? 'task-item--urgent' : '' ?>" data-task-id="<?= $task['id'] ?>">
+                                            <div class="task-checkbox <?= $task['completed'] ? 'completed' : ($task['urgent'] ? 'urgent' : '') ?>">
+                                                <?php if ($task['completed']): ?>
+                                                    <i data-lucide="check" style="width:14px;height:14px;" color="white"></i>
+                                                <?php elseif ($task['urgent']): ?>
+                                                    <i data-lucide="alert-circle" style="width:14px;height:14px;color:var(--color-warning);"></i>
+                                                <?php endif; ?>
                                             </div>
-                                            <span class="task-text <?= $task['completed'] ? 'completed' : '' ?>"><?= htmlspecialchars($task['title']) ?></span>
+                                            <div class="task-item-body">
+                                                <span class="task-text <?= $task['completed'] ? 'completed' : '' ?>"><?= htmlspecialchars($task['title']) ?></span>
+                                                <span class="task-type-label"><?= htmlspecialchars($task['taskType']) ?></span>
+                                            </div>
+                                            <?php if (!$task['completed']): ?>
+                                            <form method="post" action="/user/recovery/task/complete">
+                                                <input type="hidden" name="taskId" value="<?= $task['id'] ?>" />
+                                                <input type="hidden" name="returnTo" value="dashboard" />
+                                                <button type="submit" class="task-done-btn">Done</button>
+                                            </form>
+                                            <?php else: ?>
+                                            <span class="task-done-label">Done</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <div class="task-item">
-                                        <span class="task-text" style="color: var(--color-text-muted)">No tasks for today</span>
+                                    <div class="task-item-empty">
+                                        <i data-lucide="clipboard-check" style="width:28px;height:28px;color:var(--color-text-muted);"></i>
+                                        <span>No tasks for today</span>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -272,20 +294,56 @@ require_once __DIR__ . '/../common/user.html.head.php';
                             </div>
                         </div>
 
-                        <!-- Motivational Quote Section -->
-                        <div class="col-3-row-3 dashboard-card quote-card">
-                            <div class="quote-content">
-                                <i
-                                    data-lucide="quote"
-                                    stroke-width="2"
-                                    class="quote-icon"
-                                    style="color: #335345; transform: scale(-1, -1)"></i>
-                                <p
-                                    class="quote-text"
-                                    style="color: #335345; font-weight: 600">
-                                    "You are stronger than you think."
-                                </p>
+                        <!-- Goals Widget -->
+                        <div class="col-3-row-3 dashboard-card goals-widget-card">
+                            <div class="card-header">
+                                <h3>My Goals</h3>
+                                <a href="/user/recovery/goals" class="view-all-link">
+                                    Manage <i data-lucide="arrow-right" stroke-width="2"></i>
+                                </a>
                             </div>
+
+                            <?php if (empty($userGoals)): ?>
+                            <div class="goals-empty">
+                                <i data-lucide="target" style="width:26px;height:26px;color:var(--color-text-muted);"></i>
+                                <p>No goals set yet.</p>
+                                <a href="/user/recovery/goals" class="goal-add-link">+ Add a goal</a>
+                            </div>
+                            <?php else: ?>
+                            <div class="goals-list">
+                                <?php foreach (array_slice($userGoals, 0, 3) as $g):
+                                    $isAchieved = $g['status'] === 'achieved';
+                                ?>
+                                <div class="goal-widget-item <?= $isAchieved ? 'goal-widget-item--done' : '' ?>">
+                                    <div class="goal-widget-top">
+                                        <span class="goal-widget-title"><?= htmlspecialchars($g['title']) ?></span>
+                                        <span class="goal-widget-days"><?= $g['currentProgress'] ?>/<?= $g['targetDays'] ?>d</span>
+                                    </div>
+                                    <div class="goal-widget-bar">
+                                        <div class="goal-widget-fill" style="width:<?= $g['progressPercentage'] ?>%"></div>
+                                    </div>
+                                    <?php if (!$isAchieved): ?>
+                                    <form method="post" action="/user/recovery/goal/log-progress" style="display:inline;">
+                                        <input type="hidden" name="goal_id" value="<?= $g['goalId'] ?>" />
+                                        <input type="hidden" name="days" value="1" />
+                                        <input type="hidden" name="returnTo" value="dashboard" />
+                                        <button type="submit" class="goal-log-btn">+1 day</button>
+                                    </form>
+                                    <?php else: ?>
+                                    <span class="goal-achieved-badge">
+                                        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:middle;"></i> Achieved
+                                    </span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endforeach; ?>
+                                <?php if (count($userGoals) > 3): ?>
+                                <p style="font-size:var(--font-size-xs);color:var(--color-text-muted);text-align:center;margin-top:4px;">
+                                    +<?= count($userGoals) - 3 ?> more — <a href="/user/recovery/goals" style="color:var(--color-primary);">view all</a>
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                            <a href="/user/recovery/goals" class="goal-add-link" style="margin-top:auto;">+ Add goal</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

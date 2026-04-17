@@ -12,15 +12,14 @@ $navItems = [
     ['Dashboard',            '/admin/dashboard',            'layout-dashboard'],
     ['User Management',      '/admin/user-management',      'users'],
     ['Counselor Management', '/admin/counselor-management', 'user-check'],
+    ['Sessions',             '/admin/sessions',             'video'],
     ['Analytics',            '/admin/analytics',            'bar-chart-2'],
     ['Recovery Plans',       '/admin/recovery-plans',       'heart-pulse'],
-    ['Resources',            '/admin/resources',            'book-open'],
     ['Support Groups',       '/admin/support-groups',       'users-round'],
     ['Finances',             '/admin/finances',             'dollar-sign'],
     ['Content Management',   '/admin/content-management',   'file-text'],
-    ['Job Posts',            '/admin/job-posts',            'briefcase'],
-    ['Help Center',          '/admin/help-center',          'circle-help'],
-    ['Settings',             '/admin/settings',             'settings'],
+    ['Help Centers',         '/admin/help-centers',         'circle-help'],
+    // ['Settings',             '/admin/settings',             'settings'],
 ];
 ?>
 
@@ -50,44 +49,24 @@ $navItems = [
         <?php endforeach; ?>
     </div>
 
-    <div class="user-info" id="adminMenuBtn">
-        <img src="/assets/img/avatar.png" alt="" class="user-icon">
-        <div class="user-details">
-            <span class="user-name"><?= htmlspecialchars(explode(' ', $user['name'] ?? 'Admin')[0]) ?></span>
-            <span class="user-role">Admin</span>
-        </div>
-        <div class="user-menu-container">
-            <i data-lucide="chevron-down" class="dropdown-icon" stroke-width="1"></i>
-            <div class="user-menu-dropdown" id="adminMenuDropdown">
-                <form method="POST" action="/auth/logout" style="margin:0;">
-                    <button type="submit" class="menu-option">
-                        <i data-lucide="log-out" stroke-width="1"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
+    <!-- Admin Info -->
+    <div class="user-info" style="cursor: pointer;">
+        <div class="user-info-inner" id="adminMenuBtn">
+            <img src="/assets/img/avatar.png" alt="" class="user-icon">
+            <div class="user-details">
+                <span class="user-name"><?= htmlspecialchars(explode(' ', $user['name'] ?? 'Admin')[0]) ?></span>
+                <span class="user-role">Admin</span>
             </div>
+        </div>
+        <?php require_once ROOT . '/core/notification-bell.php'; ?>
+        <div class="user-menu-dropdown" id="adminMenuDropdown">
+            <form method="POST" action="/auth/logout" style="margin:0;">
+                <button type="submit" class="menu-option">
+                    <i data-lucide="log-out" stroke-width="1"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
         </div>
     </div>
 
 </section>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('adminMenuBtn');
-    var dropdown = document.getElementById('adminMenuDropdown');
-    if (btn && dropdown) {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', function (e) {
-            if (!btn.contains(e.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
-    }
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-});
-</script>

@@ -1,10 +1,10 @@
 <?php
 $navItems = [
-    ['Today',           '/counselor/dashboard',       'home',           'dashboard'],
-    ['Schedule',        '/counselor/sessions',        'calendar-days',  'sessions'],
-    ['Clients',         '/counselor/clients',         'heart-pulse',    'clients'],
-    ['Recovery Plans',  '/counselor/recovery-plans',  'clipboard-plus', 'recovery'],
-    
+    ['Today',           '/counselor/dashboard',                  'home',           'dashboard'],
+    ['Schedule',        '/counselor/sessions',                   'calendar-days',  'sessions'],
+    ['Clients',         '/counselor/clients',                    'heart-pulse',    'clients'],
+    ['Recovery Plans',  '/counselor/recovery-plans',             'clipboard-plus', 'recovery'],
+    ['Finances',        '/counselor/finances',                   'wallet',         'finances'],
 ];
 ?>
 <section class="sidebar">
@@ -24,24 +24,27 @@ $navItems = [
         <?php endforeach; ?>
     </div>
 
-    <div class="user-info" id="counselorInfoClick">
-        <img src="<?= htmlspecialchars($currentCounselor['profilePictureUrl'] ?? '/assets/img/avatar.png') ?>" alt="Counselor Icon" class="user-icon" />
-        <div class="user-details">
-            <span class="user-name"><?= htmlspecialchars(explode(' ', $currentCounselor['displayName'] ?? 'Counselor')[0]) ?></span>
-            <span class="user-role"><?= htmlspecialchars($currentCounselor['title'] ?? 'Counselor') ?></span>
-        </div>
-        <div class="user-menu-container">
-            <i data-lucide="chevron-down" class="dropdown-icon" stroke-width="1"></i>
-            <div class="user-menu-dropdown" id="counselorMenuDropdown">
-                <button class="menu-option" id="editCounselorProfileBtn" type="button">
-                    <i data-lucide="user" stroke-width="1"></i>
-                    <span>Edit Profile</span>
-                </button>
-                <button class="menu-option" id="counselorLogoutBtn" type="button">
-                    <i data-lucide="log-out" stroke-width="1"></i>
-                    <span>Logout</span>
-                </button>
+    <!-- Counselor Info -->
+    <div class="user-info" style="cursor: pointer;">
+        <div class="user-info-inner" id="counselorMenuBtn">
+            <img src="<?= htmlspecialchars($currentCounselor['profilePictureUrl'] ?? '/assets/img/avatar.png') ?>"
+                 alt="Counselor Icon"
+                 class="user-icon" />
+            <div class="user-details">
+                <span class="user-name"><?= htmlspecialchars(explode(' ', $currentCounselor['displayName'] ?? 'Counselor')[0]) ?></span>
+                <span class="user-role"><?= htmlspecialchars($currentCounselor['title'] ?? 'Counselor') ?></span>
             </div>
+        </div>
+        <?php require_once ROOT . '/core/notification-bell.php'; ?>
+        <div class="user-menu-dropdown" id="counselorMenuDropdown">
+            <button class="menu-option" id="editCounselorProfileBtn" type="button">
+                <i data-lucide="user" stroke-width="1"></i>
+                <span>Edit Profile</span>
+            </button>
+            <button class="menu-option" id="counselorLogoutBtn" type="button">
+                <i data-lucide="log-out" stroke-width="1"></i>
+                <span>Logout</span>
+            </button>
         </div>
     </div>
 </section>
@@ -49,3 +52,4 @@ $navItems = [
 <form id="counselorLogoutForm" method="POST" action="/auth/logout" style="display: none;"></form>
 
 <?php require_once __DIR__ . '/counselor-profile-modal.php'; ?>
+<?php require_once __DIR__ . '/counselor.followup-popup.php'; ?>

@@ -16,6 +16,7 @@
 .admin-main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
+    min-width: 0;        /* prevent flex children from overflowing grid/charts */
     background: linear-gradient(0deg, var(--color-bg-overlay) 0%, var(--color-bg-overlay) 100%), var(--color-bg-white);
     padding: var(--spacing-xl);
     display: flex;
@@ -60,7 +61,24 @@
     background: var(--color-bg-white);
     border-radius: var(--radius-sm);
     padding: var(--spacing-xl);
-    box-shadow: var(--shadow-sm);
+    /* box-shadow: var(--shadow-sm); */
+}
+
+/* ── Page header row with actions ───────────────────────────── */
+.admin-page-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.admin-page-header-row .recovery-plans-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
 }
 
 /* Section headings inside sub-containers */

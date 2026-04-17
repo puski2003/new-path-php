@@ -63,8 +63,8 @@ require_once __DIR__ . '/../../common/auth.head.php';
                             <div class="form-links">
                                 <a href="/auth/forgot-password" class="forgot-password form-link">Forgot password?</a>
                                 <div class="signup-link form-link">
-                                    <span>Need access? </span>
-                                    <a href="/counselor/register" class="create-account form-link">Register as Counselor</a>
+                                    <span>New here? </span>
+                                    <a href="/counselor/applications" class="create-account form-link">Apply as a Counselor</a>
                                 </div>
                             </div>
                         </form>
