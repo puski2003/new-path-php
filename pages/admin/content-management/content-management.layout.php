@@ -11,6 +11,7 @@ $statusColors = [
 ?>
 <main class="admin-main-container">
     <?php require_once __DIR__ . '/../common/admin.sidebar.php'; ?>
+
     <section class="admin-main-content">
         <h1>Content Management</h1>
 

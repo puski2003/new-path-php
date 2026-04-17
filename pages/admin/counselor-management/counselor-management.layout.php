@@ -32,34 +32,38 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 </div>
             </div>
 
-            <table class="admin-table">
-                <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Name</th><th class="admin-table-th">Email</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Experience</th><th class="admin-table-th">Application Date</th><th class="admin-table-th">Status</th><th class="admin-table-th">Actions</th></tr></thead>
-                <tbody class="admin-table-body">
-                <?php if ($applications === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="7">No applications found.</td></tr><?php endif; ?>
-                <?php foreach ($applications as $index => $app): ?>
-                    <tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>">
-                        <td class="admin-table-td"><strong><?= htmlspecialchars($app['fullName']) ?></strong><?php if ($app['title'] !== ''): ?><br><small><?= htmlspecialchars($app['title']) ?></small><?php endif; ?></td>
-                        <td class="admin-table-td"><?= htmlspecialchars($app['email']) ?></td>
-                        <td class="admin-table-td"><?= htmlspecialchars($app['specialty']) ?></td>
-                        <td class="admin-table-td"><?= $app['experienceYears'] !== null ? $app['experienceYears'] . ' years' : '-' ?></td>
-                        <td class="admin-table-td"><?= htmlspecialchars($app['applicationDate']) ?></td>
-                        <td class="admin-table-td"><?= htmlspecialchars(ucfirst($app['status'])) ?></td>
-                        <td class="admin-table-td admin-table-td--action">
-                            <div class="admin-table-actions">
-                                <a href="/admin/counselor-management/application-view?id=<?= (int) $app['applicationId'] ?>" class="admin-button admin-button--ghost">View</a>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Name</th><th class="admin-table-th">Email</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Experience</th><th class="admin-table-th">Application Date</th><th class="admin-table-th">Status</th><th class="admin-table-th">Actions</th></tr></thead>
+                    <tbody class="admin-table-body">
+                    <?php if ($applications === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="7">No applications found.</td></tr><?php endif; ?>
+                    <?php foreach ($applications as $index => $app): ?>
+                        <tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>">
+                            <td class="admin-table-td"><strong><?= htmlspecialchars($app['fullName']) ?></strong><?php if ($app['title'] !== ''): ?><br><small><?= htmlspecialchars($app['title']) ?></small><?php endif; ?></td>
+                            <td class="admin-table-td"><?= htmlspecialchars($app['email']) ?></td>
+                            <td class="admin-table-td"><?= htmlspecialchars($app['specialty']) ?></td>
+                            <td class="admin-table-td"><?= $app['experienceYears'] !== null ? $app['experienceYears'] . ' years' : '-' ?></td>
+                            <td class="admin-table-td"><?= htmlspecialchars($app['applicationDate']) ?></td>
+                            <td class="admin-table-td"><?= htmlspecialchars(ucfirst($app['status'])) ?></td>
+                            <td class="admin-table-td admin-table-td--action">
+                                <div class="admin-table-actions">
+                                    <a href="/admin/counselor-management/application-view?id=<?= (int) $app['applicationId'] ?>" class="admin-button admin-button--ghost">View</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
 
-            <?php
-            $pagination = $applicationsPagination;
-            $basePath = '/admin/counselor-management';
-            $query = $filters;
-            require __DIR__ . '/../common/admin.pagination.php';
-            ?>
+            <div class="pagination-container">
+                <?php
+                    $pagination = $applicationsPagination;
+                    $basePath = '/admin/counselor-management';
+                    $query = $filters;
+                    require __DIR__ . '/../common/admin.pagination.php';
+                ?>
+            </div>
         </div>
 
         <div class="admin-sub-container-2">
@@ -81,33 +85,35 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                     </div>
                 </form>
             </div>
-
-            <table class="admin-table">
-                <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Counselor</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Languages</th><th class="admin-table-th">Rating</th><th class="admin-table-th">Reviews</th><th class="admin-table-th">Status</th><th class="admin-table-th">Actions</th></tr></thead>
-                <tbody class="admin-table-body">
-                <?php if ($counselors === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="7">No counselors found.</td></tr><?php endif; ?>
-                <?php foreach ($counselors as $index => $counselor): ?>
-                    <tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>">
-                        <td class="admin-table-td"><strong><?= htmlspecialchars($counselor['fullName']) ?></strong><br><small><?= htmlspecialchars($counselor['email']) ?></small></td>
-                        <td class="admin-table-td"><?= htmlspecialchars($counselor['specialty']) ?></td>
-                        <td class="admin-table-td"><?= htmlspecialchars($counselor['languagesSpoken'] ?: '-') ?></td>
-                        <td class="admin-table-td"><?= $counselor['rating'] > 0 ? number_format($counselor['rating'], 1) : '-' ?></td>
-                        <td class="admin-table-td"><?= $counselor['totalReviews'] ?></td>
-                        <td class="admin-table-td"><?= $counselor['active'] ? 'Active' : 'Inactive' ?></td>
-                        <td class="admin-table-td admin-table-td--action">
-                            <a href="/admin/counselor-management/counselor-view?id=<?= (int) $counselor['counselorId'] ?>" class="admin-button admin-button--ghost">View</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-
-            <?php
-            $pagination = $counselorsPagination;
-            $basePath = '/admin/counselor-management';
-            $query = $filters;
-            require __DIR__ . '/../common/admin.pagination.php';
-            ?>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead class="admin-table-header"><tr class="admin-table-row"><th class="admin-table-th">Counselor</th><th class="admin-table-th">Specialization</th><th class="admin-table-th">Languages</th><th class="admin-table-th">Rating</th><th class="admin-table-th">Reviews</th><th class="admin-table-th">Status</th><th class="admin-table-th">Actions</th></tr></thead>
+                    <tbody class="admin-table-body">
+                    <?php if ($counselors === []): ?><tr class="admin-table-row"><td class="admin-table-td" colspan="7">No counselors found.</td></tr><?php endif; ?>
+                    <?php foreach ($counselors as $index => $counselor): ?>
+                        <tr class="admin-table-row <?= $index % 2 === 0 ? 'admin-table-row--even' : 'admin-table-row--odd' ?>">
+                            <td class="admin-table-td"><strong><?= htmlspecialchars($counselor['fullName']) ?></strong><br><small><?= htmlspecialchars($counselor['email']) ?></small></td>
+                            <td class="admin-table-td"><?= htmlspecialchars($counselor['specialty']) ?></td>
+                            <td class="admin-table-td"><?= htmlspecialchars($counselor['languagesSpoken'] ?: '-') ?></td>
+                            <td class="admin-table-td"><?= $counselor['rating'] > 0 ? number_format($counselor['rating'], 1) : '-' ?></td>
+                            <td class="admin-table-td"><?= $counselor['totalReviews'] ?></td>
+                            <td class="admin-table-td"><?= $counselor['active'] ? 'Active' : 'Inactive' ?></td>
+                            <td class="admin-table-td admin-table-td--action">
+                                <a href="/admin/counselor-management/counselor-view?id=<?= (int) $counselor['counselorId'] ?>" class="admin-button admin-button--ghost">View</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-container">
+                <?php
+                    $pagination = $counselorsPagination;
+                    $basePath = '/admin/counselor-management';
+                    $query = $filters;
+                    require __DIR__ . '/../common/admin.pagination.php';
+                ?>
+            </div>
         </div>
     </section>
 </main>

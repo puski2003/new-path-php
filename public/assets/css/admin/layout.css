@@ -61,7 +61,7 @@
     background: var(--color-bg-white);
     border-radius: var(--radius-sm);
     padding: var(--spacing-xl);
-    box-shadow: var(--shadow-sm);
+    /* box-shadow: var(--shadow-sm); */
 }
 
 /* ── Page header row with actions ───────────────────────────── */
