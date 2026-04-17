@@ -680,6 +680,146 @@
     height: 14px;
 }
 
+/* Browse / Discover Groups */
+.browse-groups-section {
+    border-top: 1px solid var(--color-border-primary);
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.browse-groups-divider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.browse-groups-divider-text {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.browse-groups-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+}
+
+.browse-groups-toggle-btn:hover {
+    color: var(--color-primary);
+}
+
+.browse-groups-toggle-btn svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.25s ease;
+}
+
+.available-groups-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.available-groups-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.available-groups-list::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 2px;
+}
+
+.browse-groups-loading {
+    padding: 10px 16px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.available-group-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--color-border-primary);
+    transition: background-color 0.2s ease;
+}
+
+.available-group-item:last-child {
+    border-bottom: none;
+}
+
+.available-group-item:hover {
+    background-color: var(--color-bg-light-green);
+}
+
+.available-group-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.available-group-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.available-group-meta {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.available-group-schedule {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.join-group-btn {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border: none;
+    color: #000;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 50px;
+    text-align: center;
+}
+
+.join-group-btn:hover:not([disabled]) {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(61, 228, 185, 0.4);
+}
+
+.join-group-btn--full,
+.join-group-btn[disabled]:not(.join-group-btn--joined) {
+    background: var(--color-bg-light-green);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+
+.join-group-btn--joined {
+    background: var(--color-success);
+    color: white;
+    cursor: default;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .chat-popup {

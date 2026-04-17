@@ -89,14 +89,14 @@ $totalUnread = $totalDmUnread + $totalGroupUnread;
         <div class="chat-tab-content" id="supportTab">
             <div class="chat-list" id="supportChatList">
                 <?php if (empty($supportGroups)): ?>
-                <div class="empty-state">
+                <div class="empty-state" id="noGroupsState">
                     <i data-lucide="users" class="empty-state-icon" stroke-width="1.5"></i>
                     <h4 class="empty-state-title">No groups joined</h4>
-                    <p class="empty-state-text">Join a support group to connect with others</p>
+                    <p class="empty-state-text">Discover and join a group below</p>
                 </div>
                 <?php else: ?>
                     <?php foreach ($supportGroups as $group): ?>
-                    <div class="chat-item support-group-item" 
+                    <div class="chat-item support-group-item"
                          data-group-id="<?= $group['groupId'] ?>"
                          data-group-name="<?= htmlspecialchars($group['name']) ?>"
                          data-group-category="<?= htmlspecialchars($group['category']) ?>"
@@ -115,6 +115,17 @@ $totalUnread = $totalDmUnread + $totalGroupUnread;
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+            </div>
+
+            <!-- Discover Groups section -->
+            <div class="browse-groups-section">
+                <div class="browse-groups-divider">
+                    <span class="browse-groups-divider-text">Discover Groups</span>
+                    <button class="browse-groups-toggle-btn" id="browseGroupsToggle" title="Browse available groups">
+                        <i data-lucide="chevron-down" stroke-width="2"></i>
+                    </button>
+                </div>
+                <div class="available-groups-list" id="availableGroupsList" style="display:none;"></div>
             </div>
         </div>
 

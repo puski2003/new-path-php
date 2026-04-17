@@ -466,4 +466,116 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // ── Browse / Discover Groups ──────────────────────────────────
+    let browseGroupsLoaded = false;
+    let browseGroupsVisible = false;
+
+    const browseGroupsToggle = document.getElementById('browseGroupsToggle');
+    const availableGroupsList = document.getElementById('availableGroupsList');
+
+    if (browseGroupsToggle && availableGroupsList) {
+        browseGroupsToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            browseGroupsVisible = !browseGroupsVisible;
+            availableGroupsList.style.display = browseGroupsVisible ? 'block' : 'none';
+            const svg = this.querySelector('svg');
+            if (svg) svg.style.transform = browseGroupsVisible ? 'rotate(180deg)' : 'rotate(0deg)';
+            if (browseGroupsVisible && !browseGroupsLoaded) {
+                loadAvailableGroups();
+            }
+        });
+    }
+
+    // Auto-open browse panel when Support tab is clicked and no groups are joined
+    chatTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            if (this.getAttribute('data-tab') === 'support') {
+                const noGroupsState = document.getElementById('noGroupsState');
+                if (noGroupsState && !browseGroupsLoaded) {
+                    browseGroupsVisible = true;
+                    if (availableGroupsList) availableGroupsList.style.display = 'block';
+                    const svg = browseGroupsToggle ? browseGroupsToggle.querySelector('svg') : null;
+                    if (svg) svg.style.transform = 'rotate(180deg)';
+                    loadAvailableGroups();
+                }
+            }
+        });
+    });
+
+    function loadAvailableGroups() {
+        if (!availableGroupsList) return;
+        availableGroupsList.innerHTML = '<div class="browse-groups-loading">Loading groups...</div>';
+
+        fetch('/user/community?ajax=get_available_groups')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success || !data.groups) {
+                    availableGroupsList.innerHTML = '<div class="browse-groups-loading">Failed to load groups.</div>';
+                    return;
+                }
+                browseGroupsLoaded = true;
+                var nonMembers = data.groups.filter(function(g) { return !g.isMember; });
+                if (nonMembers.length === 0) {
+                    availableGroupsList.innerHTML = '<div class="browse-groups-loading">You\'ve joined all available groups!</div>';
+                    return;
+                }
+                availableGroupsList.innerHTML = nonMembers.map(function(g) {
+                    var full = g.isFull;
+                    return '<div class="available-group-item" data-group-id="' + g.groupId + '">' +
+                        '<div class="available-group-info">' +
+                        '<h5 class="available-group-name">' + escapeHtml(g.name) + '</h5>' +
+                        '<span class="available-group-meta">' + g.memberCount + ' members &middot; ' + escapeHtml(g.category) + '</span>' +
+                        (g.meetingSchedule ? '<span class="available-group-schedule">' + escapeHtml(g.meetingSchedule) + '</span>' : '') +
+                        '</div>' +
+                        '<button class="join-group-btn' + (full ? ' join-group-btn--full' : '') + '" data-group-id="' + g.groupId + '"' + (full ? ' disabled' : '') + '>' +
+                        (full ? 'Full' : 'Join') +
+                        '</button></div>';
+                }).join('');
+
+                availableGroupsList.querySelectorAll('.join-group-btn:not([disabled])').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        handleJoinGroup(this.dataset.groupId, this);
+                    });
+                });
+
+                lucide.createIcons();
+            })
+            .catch(function() {
+                availableGroupsList.innerHTML = '<div class="browse-groups-loading">Failed to load groups.</div>';
+            });
+    }
+
+    function handleJoinGroup(groupId, btn) {
+        btn.disabled = true;
+        btn.textContent = 'Joining...';
+
+        var formData = new FormData();
+        formData.append('group_id', groupId);
+
+        fetch('/user/community?ajax=join_group', { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    btn.textContent = 'Joined!';
+                    btn.classList.add('join-group-btn--joined');
+                    setTimeout(function() { window.location.reload(); }, 700);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Join';
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = 'Join';
+            });
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(String(str || '')));
+        return div.innerHTML;
+    }
+    // ─────────────────────────────────────────────────────────────
 });
