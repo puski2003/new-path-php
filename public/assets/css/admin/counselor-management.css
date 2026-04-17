@@ -11,7 +11,7 @@
     background-color: var(--color-bg-white);
     border-radius: var(--radius-sm);
     padding: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
+    /* box-shadow: var(--shadow-sm); */
 }
 
 .admin-summary-card {
@@ -19,7 +19,7 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-md);
     flex: 1 1 200px;
-    box-shadow: var(--shadow-sm);
+    /* box-shadow: var(--shadow-sm); */
     display: flex;
     align-items: center;
 }

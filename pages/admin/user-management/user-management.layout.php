@@ -45,7 +45,7 @@ require_once __DIR__ . '/../common/admin.html.head.php';
             </div>
         </form>
 
-        <div class="admin-sub-container-2">
+        <div class="admin-table-container">
             <table class="admin-table">
                 <thead class="admin-table-header">
                 <tr class="admin-table-row">
@@ -108,11 +108,13 @@ require_once __DIR__ . '/../common/admin.html.head.php';
                 </tbody>
             </table>
 
-            <?php
-            $basePath = '/admin/user-management';
-            $query = $filters;
-            require __DIR__ . '/../common/admin.pagination.php';
-            ?>
+            <div class="pagination-container">
+                <?php
+                    $basePath = '/admin/user-management';
+                    $query = $filters;
+                    require __DIR__ . '/../common/admin.pagination.php';
+                ?>
+            </div>
         </div>
     </section>
 </main>

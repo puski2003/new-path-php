@@ -10,7 +10,6 @@ require_once __DIR__ . '/../common/admin.html.head.php';
         <section class="admin-content">
             <div class="page-header">
                 <h1>Dashboard Overview</h1>
-                <span class="welcome-text">Welcome, <?= htmlspecialchars($user['name']) ?></span>
             </div>
 
             <div class="summary-cards">
