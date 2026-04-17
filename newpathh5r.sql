@@ -1534,3 +1534,129 @@ INSERT INTO `user_progress` (`progress_id`, `user_id`, `date`, `days_sober`, `is
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
+-- Onboarding step 2 questions
+CREATE TABLE onboarding_questions_step_2 (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--  question_id     VARCHAR(10)      NOT NULL UNIQUE,
+    question_text   TEXT             NOT NULL,
+    weight          DECIMAL(3,1)     NOT NULL,
+    scale_id        TINYINT UNSIGNED NOT NULL, -- Replaced ENUM scale_type
+    path            ENUM(
+                        'BOTH', 
+                        'LITE', 
+                        'DEEP'
+                    )                NOT NULL DEFAULT 'BOTH',
+    display_order   TINYINT UNSIGNED NOT NULL,
+    status          ENUM(
+                        'ACTIVE', 
+                        'DISABLED'
+                    )                NOT NULL DEFAULT 'ACTIVE',
+
+    -- Foreign Key Constraint
+    CONSTRAINT fk_scale_step2 FOREIGN KEY (scale_id) 
+        REFERENCES onboarding_question_scale(id) ON DELETE RESTRICT
+);
+
+-- Table for addiction modules
+CREATE TABLE addiction_type_module (
+    id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    module_key VARCHAR(50) NOT NULL UNIQUE, -- e.g., 'MOD_GAMING'
+    display_name VARCHAR(100) NOT NULL      -- e.g., 'Gaming'
+);
+
+-- Table for scale types
+CREATE TABLE onboarding_question_scale (
+    id TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    scale_name VARCHAR(50) NOT NULL UNIQUE  -- e.g., 'FREQUENCY'
+);
+
+-- Onboarding step 3 questions
+CREATE TABLE onboarding_questions_step_3 (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--  question_id     VARCHAR(10)      NOT NULL UNIQUE,
+    module_id       TINYINT UNSIGNED NOT NULL,
+    question_text   TEXT             NOT NULL,
+    weight          DECIMAL(3,1)     NOT NULL,
+    scale_id        TINYINT UNSIGNED NOT NULL,
+    display_order   TINYINT UNSIGNED NOT NULL,
+    status          ENUM('ACTIVE', 'DISABLED') NOT NULL DEFAULT 'ACTIVE',
+
+    -- Foreign Key Constraints
+    CONSTRAINT fk_module FOREIGN KEY (module_id) 
+        REFERENCES addiction_type_module(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_scale FOREIGN KEY (scale_id) 
+        REFERENCES onboarding_question_scale(id) ON DELETE RESTRICT
+);
+
+INSERT INTO onboarding_questions_step_2 (
+    question_id,
+    question_text,
+    weight,
+    scale_id,     -- Updated column name
+    path,
+    display_order,
+    status
+) VALUES
+('C1',  'When you start this activity, how often do you end up doing it for much longer than you planned?', 1.5, 1, 'BOTH', 1,  'ACTIVE'),
+('C2',  'When you decide to cut back or stop this activity, how often do you find yourself unable to follow through?', 1.5, 1, 'BOTH', 2,  'ACTIVE'),
+('C3',  'How often do thoughts or urges about this activity occupy your mind when you are doing something else?', 1.0, 1, 'BOTH', 3,  'ACTIVE'),
+('C4',  'How often do you feel the need to spend more and more time on this activity to get the same sense of enjoyment or satisfaction you used to get?', 1.0, 1, 'BOTH', 4,  'ACTIVE'),
+('C5',  'How intensely do you experience restlessness, irritability, or anxiety when you are unable to engage in this activity?', 1.5, 2, 'BOTH', 5,  'ACTIVE'),
+('C6',  'How often does this activity cause you to neglect or delay your responsibilities at work, school, or home?', 1.5, 1, 'BOTH', 6,  'ACTIVE'),
+('C7',  'How often do you choose this activity over spending time with friends or family?', 1.0, 1, 'BOTH', 7,  'ACTIVE'),
+('C8',  'How often do you continue this activity even when you are aware it is causing problems in your relationships, health, or daily life?', 1.5, 1, 'BOTH', 8,  'ACTIVE'),
+('C9',  'How often do you downplay or hide from others how much time or resources you spend on this activity?', 1.0, 1, 'BOTH', 9,  'ACTIVE'),
+('C10', 'How often do you turn to this activity specifically to cope with or escape from stress, anxiety, boredom, or emotional pain?', 1.0, 1, 'BOTH', 10, 'ACTIVE');
+
+INSERT INTO onboarding_questions_step_3 (
+    question_id,
+    module_id,       -- Updated to use ID
+    question_text,
+    weight,
+    scale_id,        -- Updated to use ID
+    display_order,
+    status
+) VALUES
+
+-- MOD_GAMING (module_id: 1)
+('G1', 1, 'How often do you lose track of time while gaming — skipping meals, staying up late, or gaming through other obligations?', 1.0, 1, 1, 'ACTIVE'),
+('G2', 1, 'How often do you feel compelled to reach the next goal, level, or reward before you can stop?', 0.8, 1, 2, 'ACTIVE'),
+('G3', 1, 'How often do you spend money on in-game purchases beyond what you originally planned?', 1.0, 1, 3, 'ACTIVE'),
+('G4', 1, 'How strongly does your gaming performance affect how you feel about yourself as a person?', 0.8, 2, 4, 'ACTIVE'),
+('G5', 1, 'How often do you prefer gaming alone over spending time with people in person?', 1.0, 1, 5, 'ACTIVE'),
+
+-- MOD_SOCIAL (module_id: 2)
+('S1', 2, 'How often is checking social media one of the first or last things you do each day?', 0.8, 1, 1, 'ACTIVE'),
+('S2', 2, 'How often do you feel anxious, unsettled, or on edge when you haven''t checked social media for a few hours?', 1.0, 1, 2, 'ACTIVE'),
+('S3', 2, 'How often does viewing others'' content on social media leave you feeling worse about yourself?', 0.8, 1, 3, 'ACTIVE'),
+('S4', 2, 'How often do you post or engage online primarily to seek reassurance or validation from others?', 1.0, 1, 4, 'ACTIVE'),
+('S5', 2, 'How often do you find yourself scrolling without purpose, wanting to stop but unable to?', 1.5, 1, 5, 'ACTIVE'),
+
+-- MOD_PORN (module_id: 3)
+('P1', 3, 'How often do you find that you need more, longer, or different content to feel the same effect as before?', 1.5, 1, 1, 'ACTIVE'),
+('P2', 3, 'How significantly has your use affected your interest in or satisfaction with real-life relationships or intimacy?', 1.5, 3, 2, 'ACTIVE'),
+('P3', 3, 'How often do you feel guilt or shame after viewing, yet return to it again soon after?', 1.0, 1, 3, 'ACTIVE'),
+('P4', 3, 'How often have you viewed content in settings where it was clearly inappropriate — at work, school, or in public?', 1.0, 1, 4, 'ACTIVE'),
+('P5', 3, 'How often do you use this behavior primarily as a way to cope with loneliness, boredom, or emotional distress?', 0.8, 1, 5, 'ACTIVE'),
+
+-- MOD_SHOPPING (module_id: 4)
+('SH1', 4, 'How often do you notice a strong rush or excitement when browsing or making an online purchase?', 0.8, 1, 1, 'ACTIVE'),
+('SH2', 4, 'How often do you make purchases you don''t need or can''t afford in order to feel better in the moment?', 1.5, 1, 2, 'ACTIVE'),
+('SH3', 4, 'How often do you hide purchases or feel the need to conceal how much you spend from others?', 1.0, 1, 3, 'ACTIVE'),
+('SH4', 4, 'How often do you experience regret after shopping, only to find yourself shopping again shortly after?', 1.0, 1, 4, 'ACTIVE'),
+('SH5', 4, 'How often is shopping your primary strategy for dealing with stress, boredom, or difficult emotions?', 1.0, 1, 5, 'ACTIVE'),
+
+-- MOD_GAMBLING (module_id: 5)
+('GB1', 5, 'How often do you spend significantly more time or in-game resources on chance-based rewards than you originally intended?', 1.5, 1, 1, 'ACTIVE'),
+('GB2', 5, 'How often do you increase your spending or attempts after a loss, trying to recover what you lost?', 1.5, 1, 2, 'ACTIVE'),
+('GB3', 5, 'How often do you experience a strong high after winning and a significant crash or low after losing?', 1.0, 1, 3, 'ACTIVE'),
+('GB4', 5, 'How often do you spend real money to acquire more in-game currency, attempts, or chances?', 1.0, 1, 4, 'ACTIVE'),
+('GB5', 5, 'How frequently do thoughts about your next chance to play or win occupy your mind throughout the day?', 0.8, 1, 5, 'ACTIVE'),
+
+-- MOD_STREAMING (module_id: 6)
+('ST1', 6, 'How often do you continue watching well past when you intended to stop, despite telling yourself you''ll quit after one more episode?', 1.5, 1, 1, 'ACTIVE'),
+('ST2', 6, 'How often do you feel genuinely restless, uncomfortable, or unsettled when you are not watching anything?', 1.0, 1, 2, 'ACTIVE'),
+('ST3', 6, 'How often do you skip sleep, meals, or important responsibilities in order to keep watching?', 1.5, 1, 3, 'ACTIVE'),
+('ST4', 6, 'How often is streaming your default or primary method of dealing with stress or avoiding problems?', 1.0, 1, 4, 'ACTIVE'),
+('ST5', 6, 'How often do you experience a noticeable sense of emptiness or loss after finishing a series?', 0.8, 1, 5, 'ACTIVE');
