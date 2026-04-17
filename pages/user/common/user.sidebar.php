@@ -23,7 +23,7 @@ $navItems = [
     ['Recovery',       '/user/recovery',        'heart',     'recovery'],
     ['Community',      '/user/community',       'users',     'community'],
     ['Sessions',       '/user/sessions',        'video',     'sessions'],
-    ['Post Recovery',  '/user/post-recovery',   'trophy',    'post-recovery'],
+    
 ];
 ?>
 <section class="sidebar">
