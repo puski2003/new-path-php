@@ -18,6 +18,12 @@ class CommunityModel
             $where .= " AND EXISTS (SELECT 1 FROM saved_posts sp WHERE sp.post_id = p.post_id AND sp.user_id = $userId)";
         }
 
+        $blockedUsers = DirectMessageModel::getBlockedUsers($userId);
+        if (!empty($blockedUsers)) {
+            $blockedIds = implode(',', $blockedUsers);
+            $where .= " AND p.user_id NOT IN ($blockedIds)";
+        }
+
         $order = $scope === 'trending'
             ? "ORDER BY p.likes_count DESC, p.comments_count DESC, p.created_at DESC"
             : "ORDER BY p.created_at DESC";
@@ -166,7 +172,8 @@ class CommunityModel
                 "UPDATE community_posts
                  SET likes_count = GREATEST(0, likes_count - 1), updated_at = NOW()
                  WHERE post_id = $postId AND is_active = 1"
-            );
+            );getConversations
+            
             return ['liked' => false];
         } else {
             // Not yet liked — add the like (toggle on)
@@ -584,29 +591,28 @@ class DirectMessageModel
         return $conversations;
     }
 
-    public static function getConversationMessages(int $userId, int $conversationId, int $limit = 50, int $afterId = 0): array
+    public static function getConversationMessages(int $userId, int $conversationId, int $limit = 50): array
     {
         $check = Database::search(
-            "SELECT conversation_id FROM dm_conversations
-             WHERE conversation_id = $conversationId
+            "SELECT conversation_id FROM dm_conversations 
+             WHERE conversation_id = $conversationId 
              AND (user1_id = $userId OR user2_id = $userId)
              LIMIT 1"
         );
-
+        
         if (!$check || $check->num_rows === 0) {
             return [];
         }
-
+        
         Database::iud(
-            "UPDATE direct_messages SET is_read = 1
-             WHERE conversation_id = $conversationId
-             AND sender_id != $userId
+            "UPDATE direct_messages SET is_read = 1 
+             WHERE conversation_id = $conversationId 
+             AND sender_id != $userId 
              AND is_read = 0"
         );
-
-        $afterClause = $afterId > 0 ? "AND m.message_id > $afterId" : '';
+        
         $sql = "
-            SELECT
+            SELECT 
                 m.message_id,
                 m.sender_id,
                 m.content,
@@ -616,7 +622,7 @@ class DirectMessageModel
                 u.profile_picture
             FROM direct_messages m
             JOIN users u ON u.user_id = m.sender_id
-            WHERE m.conversation_id = $conversationId $afterClause
+            WHERE m.conversation_id = $conversationId
             ORDER BY m.created_at ASC
             LIMIT $limit
         ";
@@ -1031,21 +1037,20 @@ class SupportGroupModel
         return true;
     }
 
-    public static function getGroupMessages(int $groupId, int $userId, int $limit = 50, int $afterId = 0): array
+    public static function getGroupMessages(int $groupId, int $userId, int $limit = 50): array
     {
         $check = Database::search(
-            "SELECT membership_id FROM support_group_members
+            "SELECT membership_id FROM support_group_members 
              WHERE group_id = $groupId AND user_id = $userId
              LIMIT 1"
         );
-
+        
         if (!$check || $check->num_rows === 0) {
             return [];
         }
-
-        $afterClause = $afterId > 0 ? "AND m.message_id > $afterId" : '';
+        
         $sql = "
-            SELECT
+            SELECT 
                 m.message_id,
                 m.user_id,
                 m.content,
@@ -1060,7 +1065,7 @@ class SupportGroupModel
             JOIN users u ON u.user_id = m.user_id
             LEFT JOIN support_group_members sgm ON sgm.group_id = m.group_id AND sgm.user_id = m.user_id
             WHERE m.group_id = $groupId
-            AND m.is_deleted = 0 $afterClause
+            AND m.is_deleted = 0
             ORDER BY m.created_at ASC
             LIMIT $limit
         ";
