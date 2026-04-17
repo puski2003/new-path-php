@@ -572,6 +572,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    function refreshChatData() {
+        // Reload the page after accepting to reflect updated conversation list
+        setTimeout(function () { window.location.reload(); }, 600);
+    }
+
     function escapeHtml(str) {
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(String(str || '')));
