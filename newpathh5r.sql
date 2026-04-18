@@ -1660,3 +1660,14 @@ INSERT INTO onboarding_questions_step_3 (
 ('ST3', 6, 'How often do you skip sleep, meals, or important responsibilities in order to keep watching?', 1.5, 1, 3, 'ACTIVE'),
 ('ST4', 6, 'How often is streaming your default or primary method of dealing with stress or avoiding problems?', 1.0, 1, 4, 'ACTIVE'),
 ('ST5', 6, 'How often do you experience a noticeable sense of emptiness or loss after finishing a series?', 0.8, 1, 5, 'ACTIVE');
+
+CREATE TABLE onboarding_evaluation (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    addictions VARCHAR(500),
+    answers TEXT,
+    final_score FLOAT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
