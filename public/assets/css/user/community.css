@@ -135,8 +135,10 @@
 
 /* Community Posts Container */
 .community-posts-container {
+    width: 100%;
+    max-width: 980px;
     padding: 0 var(--spacing-xl);
-    margin-bottom: var(--spacing-xl);
+    margin: 0 auto var(--spacing-xl);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
@@ -151,9 +153,9 @@
     padding: var(--spacing-lg);
     display: flex;
     flex-direction: column;
-    width: 80%;
+    width: 100%;
     gap: var(--spacing-md);
-
+    box-sizing: border-box;
 }
 
 

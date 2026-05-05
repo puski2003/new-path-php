@@ -63,6 +63,7 @@ class UserProfileModel
             while ($communityPostsRs && ($postRow = $communityPostsRs->fetch_assoc())) {
                 $communityPosts[] = [
                     'postId' => (int)$postRow['post_id'],
+                    'userId' => $userId,
                     'title' => $postRow['title'] ?? '',
                     'content' => $postRow['content'] ?? '',
                     'imageUrl' => $postRow['image_url'] ?? '',
@@ -70,6 +71,13 @@ class UserProfileModel
                     'commentsCount' => (int)($postRow['comments_count'] ?? 0),
                     'sharesCount' => (int)($postRow['shares_count'] ?? 0),
                     'createdAt' => $postRow['created_at'] ?? null,
+                    'displayName' => $displayName,
+                    'username' => $row['username'] ?? '',
+                    'profilePictureUrl' => $row['profile_picture'] ?? '',
+                    'isFollowing' => false,
+                    'anonymous' => false,
+                    'isSaved' => false,
+                    'postType' => 'general',
                 ];
             }
             
